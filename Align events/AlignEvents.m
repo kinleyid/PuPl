@@ -1,18 +1,18 @@
 function AlignEvents
 
-[EyeFiles,EyePath,EyeFormat] = GetRawEyeFiles;
+[eyeDataFiles,eyeDataPath,eyeDataFormat] = getraweyefiles;
 
 AttachEventLogEvents = questdlg('Attach events from event logs?', ...
     'Attach events from event logs?', ...
     'Yes','No','Merge event logs first','Yes');
 
 if strcmp(AttachEventLogEvents,'Merge event logs first')
-    MergeEventLogs;
+    % MergeEventLogs; does not yet exist
 elseif strcmp(AttachEventLogEvents,'No')
     uiwait(msgbox('Select a folder to save the formatted eye data to.','','modal'));
     SaveTo = uigetdir([EYEPath '\..'],'Where will the formatted eye data be saved?');
-    for Idx = 1:length(EyeFiles)
-        EYE = LoadRawEyeData(EyeFiles{Idx},EyePath,EyeFormat);
+    for Idx = 1:length(eyeDataFiles)
+        EYE = LoadRawEyeData(eyeDataFiles{Idx},eyeDataPath,eyeDataFormat);
         EYE = GetEYESpecs(EYE);
         save([SaveTo '\' EYE.name '.eyedata'],'EYE');
     end
@@ -21,14 +21,14 @@ end
 
 [EventLogFiles,EventLogPath,EventLogFormat] = GetRawEventLogFiles;
 
-[EyeFiles,EventLogFiles] = FixFileCorrespondence(EyeFiles,EventLogFiles);
+[eyeDataFiles,EventLogFiles] = FixFileCorrespondence(eyeDataFiles,EventLogFiles);
 
 Idx = listdlg('PromptString',{'Select an eye data file to use as a template'},...
     'SelectionMode','single',...
     'ListSize',[500,300],...
-    'ListString',EyeFiles);
+    'ListString',eyeDataFiles);
 
-EYE = LoadRawEyeData(EyeFiles{Idx},EyePath,EyeFormat);
+EYE = LoadRawEyeData(eyeDataFiles{Idx},eyeDataPath,eyeDataFormat);
 
 Idx = listdlg('PromptString',{'Select an event log file to use as a template' '(Does not have to correspond to eye data file)'},...
     'SelectionMode','single',...
@@ -41,8 +41,8 @@ EventLog = LoadRawEventLog(EventLogFiles{Idx},EventLogPath,EventLogFormat);
 uiwait(msgbox('Select a folder to save the aligned eye data to.','','modal'));
 SaveTo = uigetdir('..\..\..','Where will the aligned eye data be saved?');
 
-for i = 1:length(EyeFiles)
-    EYE = LoadRawEyeData(EyeFiles{i},EyePath,EyeFormat);
+for i = 1:length(eyeDataFiles)
+    EYE = LoadRawEyeData(eyeDataFiles{i},eyeDataPath,eyeDataFormat);
     EYE = GetEYESpecs(EYE);
     EventLog = LoadRawEventLog(EventLogFiles{i},EventLogPath,EventLogFormat);
     Params = FindOffset(EYE,EventLog,EYEEventBins,EventLogEventBins);
