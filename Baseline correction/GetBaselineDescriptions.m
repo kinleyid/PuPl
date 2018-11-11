@@ -1,4 +1,5 @@
-function BaselineDescriptions = GetBaselineDescriptions(EYE)
+
+function BaselineDescriptions = GetBaselineDescriptions(EYE, varargin)
 
 BaselineDescriptions = [];
 

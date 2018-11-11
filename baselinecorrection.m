@@ -1,0 +1,46 @@
+function EYE = baselinecorrection(EYE, baselineDescriptions, correctionType)
+
+for dataIdx = 1:numel(EYE)
+    dataStreams = fieldnames(EYE(dataIdx).data);
+    for bIdx = 1:numel(baselineDescriptions)
+        latencies = getlatenciesfromspandescription(EYE(dataIdx),...
+            baselineDescriptions(bIdx));
+        epochsToCorrect = find(ismember({EYE(dataIdx).epoch.name},...
+            baselineDescriptions(bIdx).epochsToCorrect));
+        if numel(latencies) > 1 && numel(latencies) ~= numel(epochsToCorrect)
+            error('different numbers of baselines and epochs');
+        else
+            baselineCount = 0;
+            epochCount = 0;
+            while true
+                epochCount = epochCount + 1;
+                baselineCount = min(baselineCount + 1, numel(latencies));
+                if epochCount > numel(epochsToCorrect)
+                    break
+                else
+                    currLats = latencies{baselineCount};
+                    epochIdx = epochsToCorrect(epochCount);
+                    for stream = dataStreams(:)'
+                        EYE(dataIdx).epoch(epochIdx).data.(stream{:}) = ...
+                            correctionFunc(...
+                                EYE(dataIdx).epoch(epochIdx).data.(stream{:}),...
+                                EYE(dataIdx).data.(stream{:})(currLats),...
+                                correctionType);
+                    end
+                end
+            end
+        end
+    end
+end
+
+end
+
+function dataVector = correctionFunc(dataVector, baselineData, corrType)
+
+if strcmp(corrType, 'subtract baseline mean')
+    dataVector = dataVector - mean(baselineData);
+elseif strcmp(corrType, 'percent change from baseline mean')
+    dataVector = dataVector/mean(baselineData);
+end
+
+end
