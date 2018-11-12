@@ -11,7 +11,7 @@ function EYE = applybindescriptions(EYE, binDescriptions)
 % length)--I.e., each row 
 
 for dataIdx = 1:numel(EYE)
-    EYE(dataIdx).bins = [];
+    EYE(dataIdx).bin = [];
     for binIdx = 1:numel(binDescriptions)
         currBin = struct('name', binDescriptions(binIdx).name,...
             'data', []);
@@ -27,7 +27,7 @@ for dataIdx = 1:numel(EYE)
                 end
             end
         end
-        EYE(dataIdx).bins = [EYE(dataIdx).bins currBin];
+        EYE(dataIdx).bin = [EYE(dataIdx).bin currBin];
     end
 end
 

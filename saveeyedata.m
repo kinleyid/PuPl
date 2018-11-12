@@ -1,14 +1,37 @@
-function saveeyedata(EYE, saveDirectory, name)
+function saveeyedata(varargin)
+
+EYE = varargin{1};
+if nargin >= 2
+    saveDirectory = varargin{2};
+else
+    saveDirectory = [];
+end
+
+names = {};
+
+if nargin >= 3
+    names(1) = varargin{3};
+else
+    names(1) = '';
+end
+
+if nargin >= 4
+    names(2) = varargin{4};
+else
+    names(2) = '';
+end
+
+name = sprintf('%s eye data %s', names{:});
 
 if strcmp(saveDirectory, 'none')
-    fprintf('Not saving %s eye data\n', name);
+    fprintf('Not saving %s\n', name);
     return;
 elseif isempty(saveDirectory)
-    uiwait(msgbox(sprintf('Select a directory to save the %s eye data', name)));
+    uiwait(msgbox(sprintf('Save %s', name)));
     saveDirectory = uigetdir('.',...
-        sprintf('Select a directory to save the %s eye data to', name));
+        sprintf('Save %s', name));
     if saveDirectory == 0
-        fprintf('Not saving %s eye data\n', name);
+        fprintf('Not saving %s\n', name);
         return
     end
 end

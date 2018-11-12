@@ -61,16 +61,4 @@ for dataIdx = 1:numel(EYE)
         namesToAttach);
 end
 
-if isempty(p.Results.saveto)
-    saveDirectory = uigetdir(eyeDirectory,...
-        'Save eye data');
-else
-    saveDirectory = p.Results.saveto;
-end
-
-for currEYE = EYE
-    fprintf('Saving %s to %s\n', currEYE.name, saveDirectory);
-    save([saveDirectory '\' currEYE.name '.eyedata'], 'currEYE');
-end
-
-end
+saveeyedata(EYE, p.Results.saveto, '', 'with events attached');
