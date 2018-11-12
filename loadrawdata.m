@@ -1,34 +1,36 @@
-function outStruct = loadrawdata(fileName,fileDirectory,fileFormat)
+function outStruct = loadrawdata(dataType, fileName, fileDirectory, fileFormat)
 
 % EYE DATA
-if strcmpi(fileFormat,'Tobii Excel files')
-    fprintf(['Loading eye data from ' fileName ':\n'])
-    fprintf('Reading excel file...')
-    [~ , ~, R] = xlsread([fileDirectory '\' fileName]);
-    fprintf('converting to usable table...')
-    fprintf('creating EYE struct...')
-    outStruct = [];
-    [~, Name] = fileparts(fileName);
-    outStruct.name = Name;
-    RecordingTimestamps = cell2mat(R(2:end, strcmp(R(1,:), 'RecordingTimestamp')));
-    outStruct.srate = round((length(RecordingTimestamps))/((max(RecordingTimestamps) - min(RecordingTimestamps))/1000));
-    outStruct.data.left = cellfun(@ProcessBadCells, R(2:end,strcmp(R(1,:),'PupilLeft')));
-    outStruct.data.right = cellfun(@ProcessBadCells, R(2:end,strcmp(R(1,:),'PupilRight')));
-    outStruct.urData = outStruct.data;
-    Events = [];
-    Times = {};
-    for EventType = {'KeyPressEvent' 'MouseEvent' 'StudioEvent' 'ExternalEvent'}
-        CurrEvents = R(2:end, strcmp(R(1, :), EventType{:}));
-        Events = [Events; CurrEvents(~cellfun(@isempty, CurrEvents))];
-        Times = [Times; num2cell(RecordingTimestamps(~cellfun(@isempty,CurrEvents)))];
+if strcmpi(dataType, 'eye data')
+    if strcmpi(fileFormat,'Tobii Excel files')
+        fprintf(['Loading eye data from ' fileName ':\n'])
+        fprintf('Reading excel file...')
+        [~ , ~, R] = xlsread([fileDirectory '\' fileName]);
+        fprintf('converting to usable table...')
+        fprintf('creating EYE struct...')
+        outStruct = [];
+        [~, Name] = fileparts(fileName);
+        outStruct.name = Name;
+        RecordingTimestamps = cell2mat(R(2:end, strcmp(R(1,:), 'RecordingTimestamp')));
+        outStruct.srate = round((length(RecordingTimestamps))/((max(RecordingTimestamps) - min(RecordingTimestamps))/1000));
+        outStruct.data.left = cellfun(@ProcessBadCells, R(2:end,strcmp(R(1,:),'PupilLeft')));
+        outStruct.data.right = cellfun(@ProcessBadCells, R(2:end,strcmp(R(1,:),'PupilRight')));
+        outStruct.urData = outStruct.data;
+        Events = [];
+        Times = {};
+        for EventType = {'KeyPressEvent' 'MouseEvent' 'StudioEvent' 'ExternalEvent'}
+            CurrEvents = R(2:end, strcmp(R(1, :), EventType{:}));
+            Events = [Events; CurrEvents(~cellfun(@isempty, CurrEvents))];
+            Times = [Times; num2cell(RecordingTimestamps(~cellfun(@isempty,CurrEvents)))];
+        end
+        outStruct.event.type = [];
+        outStruct.event.time = [];
+        [outStruct.event(1:length(Events)).type] = Events{:};
+        [outStruct.event(1:length(Times)).time] = Times{:};
+        outStruct.event = ArrangeStructByField(outStruct.event,'time');
+        fprintf('done.\n');
     end
-    outStruct.event.type = [];
-    outStruct.event.time = [];
-    [outStruct.event(1:length(Events)).type] = Events{:};
-    [outStruct.event(1:length(Times)).time] = Times{:};
-    outStruct.event = ArrangeStructByField(outStruct.event,'time');
-    fprintf('done.\n');
-else % Event logs
+elseif strcmpi(dataType, 'event logs')
     if strcmp(EventLogFormat,'Noldus Excel files')
         [~,~,R] = xlsread([EventLogPath '\' EventLogFile]);
         EventNames = R(2:end,strcmp(R(1,:),'Behavior'));

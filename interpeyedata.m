@@ -1,15 +1,9 @@
-function EYE = interpeyedata(EYE, varargin)
-
-p = inputParser;
-addParameter(p, 'saveTo', []);
-parse(p, varargin{:});
+function EYE = interpeyedata(EYE)
 
 for dataIdx = 1:numel(EYE)
     EYE.data.left = applyinterpolation(EYE.data.left);
     EYE.data.right = applyinterpolation(EYE.data.right);
 end
-
-saveeyedata(EYE, p.Results.saveTo, 'interpolated');
 
 end
 

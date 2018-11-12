@@ -8,7 +8,6 @@ function EYE = binepochs(EYE, varargin)
 
 p = inputParser;
 addParameter(p, 'binDescriptions', []);
-addParameter(p, 'saveTo', []);
 parse(p, varargin{:});
 
 if isempty(p.Results.binDescriptions)
@@ -18,7 +17,5 @@ else
 end
 
 EYE = applybindescriptions(EYE, binDescriptions);
-
-saveeyedata(EYE, p.Results.saveTo, 'binful');
 
 end

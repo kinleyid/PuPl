@@ -1,6 +1,6 @@
 function EYE = epoch(EYE, varargin)
 
-%  Inputs
+%   Inputs
 % epochDescriptions--struct array
 % baselineDescriptions--struct array
 % epochsToCorrect--cell array of epoch names or 'default' for the ones already in previous struct array
@@ -9,7 +9,6 @@ function EYE = epoch(EYE, varargin)
 %       'subtract baseline mean'
 %       'percent change from baseline mean'
 %       'none'
-% saveTo--directory to save data to
 
 correctionOptions = {'none'
     'subtract baseline mean'
@@ -21,7 +20,6 @@ addParameter(p, 'rejectionThreshold', []);
 addParameter(p, 'baselineDescriptions', []);
 addParameter(p, 'epochsToCorrect', []);
 addParameter(p, 'correctionType', []);
-addParameter(p, 'saveTo', []);
 parse(p, varargin{:});
 
 if isempty(p.Results.epochDescriptions)
@@ -69,4 +67,4 @@ if ~strcmp(correctionType, 'none')
     EYE = baselinecorrection(EYE, baselineDescriptions, correctionType);
 end
 
-saveeyedata(EYE, p.Results.saveTo, 'epoched');
+end

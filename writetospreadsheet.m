@@ -1,14 +1,11 @@
 function writetospreadsheet(EYE, varargin)
 
-%  Inputs
+%   Inputs
 % EYE--struct array
 % bins--cell array of bin names to write to csv
 % saveTo--directory to save csvs to
-%  Description
-% writes spreadsheets with columns:
-%   Participant ID
-%   Bin name
-%   Trials
+%   Description
+% writes a separate spreadsheet for each bin, for each file
 
 p = inputParser;
 addParameter(p, 'bins', []);
