@@ -28,12 +28,6 @@ else
     bins = p.Results.bins;
 end
 
-if isempty(p.Results.saveTo)
-    saveDirectory = uigetdir('Select a folder to write spreadsheet to');
-else
-    saveDirectory = p.Results.saveTo;
-end
-
 for dataIdx = 1:numel(EYE)
     binsToWrite = find(ismember({EYE(dataIdx).bin.name}, bins));
     for binIdx = binsToWrite
@@ -46,11 +40,7 @@ for dataIdx = 1:numel(EYE)
             array2table(data,...
             'VariableNames', arrayfun(@(x) sprintf('trial%d',x), 1:size(data,2), 'un', 0))];
         writetable(currTable,...
-            strcat(saveDirectory,...
-                EYE(dataIdx).name,...
-                '-',...
-                EYE(dataIdx).bin(binIdx).name,...
-                '.csv'));
+            [EYE(dataIdx).name '-' EYE(dataIdx).bin(binIdx).name '.csv']);
     end
 end
 

@@ -10,18 +10,20 @@ eventLogs = formatdata('type', 'event logs');
 uiwait(msgbox('Write events from event logs to eye data'));
 EYE = attachevents(EYE, 'eventLogs', eventLogs);
 %}
-
+%{
 EYE = getfakeeyedata;
 
-EYE = eyefilter(EYE, 'saveTo', 'none');
-EYE = interpeyedata(EYE, 'saveTo', 'none');
-EYE = mergelr(EYE, 'saveTo', 'none');
+EYE = eyefilter(EYE);
+EYE = interpeyedata(EYE);
+EYE = mergelr(EYE);
 
 uiwait(msgbox('Epoch the data'));
 EYE = epoch(EYE, 'saveTo', 'none');
-%}
+
 uiwait(msgbox('Bin the epochs'));
 EYE = binepochs(EYE);
+%}
+% EYE = loadeyedata;
 
 writetospreadsheet(EYE);
 

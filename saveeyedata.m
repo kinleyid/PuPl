@@ -10,15 +10,15 @@ end
 names = {};
 
 if nargin >= 3
-    names(1) = varargin{3};
+    names(1) = varargin(3);
 else
-    names(1) = '';
+    names{1} = '';
 end
 
 if nargin >= 4
-    names(2) = varargin{4};
+    names(2) = varargin(4);
 else
-    names(2) = '';
+    names{2} = '';
 end
 
 name = sprintf('%s eye data %s', names{:});
