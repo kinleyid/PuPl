@@ -18,8 +18,8 @@ if isempty(p.Results.type)
     dataTypeOptions = {
         'eye data'
         'event logs'};
-    dataType = dataTypeOptions(listdlg('PromptString', 'Data type'),...
-        'ListString', dataTypeOptions);
+    dataType = dataTypeOptions(listdlg('PromptString', 'Data type',...
+        'ListString', dataTypeOptions));
 else
     dataType = p.Results.type;
 end
@@ -37,33 +37,30 @@ if isempty(p.Results.format)
             'E-DataAid Excel files'
         };
     end
-    dataFormat = listdlg('PromptString', 'File format',...
-        'ListString', formatOptions);
+    dataFormat = formatOptions{listdlg('PromptString', 'File format',...
+        'ListString', formatOptions)};
 else
     dataFormat = p.Results.format;
 end
 
 if isempty(p.Results.directory) || isempty(p.Results.filenames)
-    uiwait(msgbox(sprintf('Select the %s to format', dataTypes(dataTypeIdx).name)));
+    % uiwait(msgbox(sprintf('Select the %s to format', dataFormat)));
     [dataFiles, dataDirectory] = uigetfile('./*.*', ...
-        sprintf('Select the %s', dataTypes(dataTypeIdx).name),...
-        'MultiSelect','on');
+        sprintf('Select the %s', dataFormat),...
+            'MultiSelect','on');
 else
     dataFiles = p.Results.filenames;
     dataDirectory = p.Results.directory;
 end
 dataFiles = cellstr(dataFiles);
 
-if numel(dataFormat) == 1 % Potentially many different formats--is this really necessary?
-    dataFormat = repmat(dataFormat, numel(dataFiles, 1));
-end
-
 structArray = struct([]);
 for fileIdx = 1:numel(dataFiles)
-    structArray(fileIdx) = loadrawdata(dataType,...
-        dataFiles{fileIdx},...
-        dataDirectory,...
-        dataFormat{fileIdx});
+    structArray = cat(2, structArray,...
+        loadrawdata(dataType,...
+            dataFiles{fileIdx},...
+            dataDirectory,...
+            dataFormat));
 end
 
 end

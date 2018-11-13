@@ -64,12 +64,12 @@ elseif strcmpi(dataType, 'event logs')
         
         [~, ~, R] = xlsread([fileDirectory '\\' fileName]);
         eventTypes = R(2:end, strcmp(R(1, :), 'Behavior'));
-        ModifierIdx = find(~cellfun(@isempty,(regexp(R(1,:),'Modifier*'))));
-        for i = 1:length(ModifierIdx)
-            eventTypes = strcat(eventTypes,R(2:end,ModifierIdx(i)));
+        modifiers = find(~cellfun(@isempty, (regexp(R(1, :), 'Modifier*'))));
+        for modifierIdx = modifiers
+            eventTypes = strcat(eventTypes, R(2:end, modifierIdx));
         end
-        eventTypes = strcat(eventTypes,R(2:end,strcmp(R(1,:),'Event_Type')));
-        eventTimes = 1000*cell2mat(R(2:end,strcmp(R(1,:),'Time_Relative_sf')));s
+        eventTypes = strcat(eventTypes,R(2:end, strcmp(R(1, :), 'Event_Type')));
+        eventTimes = 1000*cell2mat(R(2:end, strcmp(R(1,:), 'Time_Relative_sf')));
         
     elseif strcmp(fileFormat,'E-DataAid Excel files')
         
@@ -89,7 +89,7 @@ elseif strcmpi(dataType, 'event logs')
         'name', name,...
         'event', struct(...
             'type', eventTypes,...
-            'time', nume2cell(eventTimes)));
+            'time', num2cell(eventTimes)));
     [~, I] = sort([outStruct.event.time]);
     outStruct.event = outStruct.event(I);
 
