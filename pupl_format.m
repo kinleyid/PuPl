@@ -54,13 +54,6 @@ else
 end
 dataFiles = cellstr(dataFiles);
 
-structArray = struct([]);
-for fileIdx = 1:numel(dataFiles)
-    structArray = cat(2, structArray,...
-        loadrawdata(dataType,...
-            dataFiles{fileIdx},...
-            dataDirectory,...
-            dataFormat));
-end
+structArray = cellfun(@(file) loadrawdata(dataType, file, dataDirectory, dataFormat), dataFiles);
 
 end

@@ -3,13 +3,13 @@ function bestOffsetParams = findtimelineoffset(EYE, eventLog, eyeEventSets, even
 %   Inputs
 % EYE--single struct
 % eventLog--single struct
-
-% Takes 2 structs with struct arrays "event" with fields "type" (string)
-% and "time" (in ms), returns Params, the lowest square error solution to
-% [Struct1.event.time] = Params(1)*[Struct2.event.time] + Params(2)
-% for the correspondence dictated by Struct1EventTypes and
-% Struct2EventTypes, where both are themselves struct arrays with field
-% "BinMembers" (cell array of strings).
+% eyeEventSets--cell array of char cell arrays
+% eventLogEventSets--cell array of char cell arrays
+% varargin{1}--tolerance
+% varargin{2}--min percent matches
+%   Outputs
+% bestOffsetParams--the lowest square error solution to:
+%       [Struct1.event.time] = Params(1)*[Struct2.event.time] + Params(2)
 
 if numel(varargin) < 1
     tolerance = 50;

@@ -26,7 +26,7 @@ if strcmpi(dataType, 'eye data')
         
         [~ , ~, R] = xlsread([fileDirectory '\\' fileName]);
         
-        timestamps = cell2mat(R(2:end, strcmp(R(1,:), 'RecordingTimestamp')));
+        timestamps = cell2mat(R(2:end, strcmp(R(1, :), 'RecordingTimestamp')));
         srate = round((length(timestamps))/((max(timestamps) - min(timestamps))/1000));
         
         data = struct(...

@@ -4,9 +4,7 @@ function [eyeEventSets, eventLogEventSets] = UI_geteventcorrespondence(EYE, even
 % EYE--struct array
 % eventLogs--struct array
 %   Outputs
-% 
-
-getuniquestrings(EYE, 'event', 'type');
+%
 
 eyeEvents = unique(mergefields(EYE, 'event', 'type'));
 eventLogEvents = unique(mergefields(eventLogs, 'event', 'type'));

@@ -28,14 +28,14 @@ else
 end
 
 if isempty(p.Results.eventlogeventstoalign) || isempty(p.Results.eyeeventstoalign)
-    [eyeEventsToAlign, eventLogEventsToAlign] = UI_geteventcorrespondence(EYE(1), eventLogs(1), false);
+    [eyeEventsToAlign, eventLogEventsToAlign] = UI_geteventcorrespondence(EYE, eventLogs, false);
 else
     eyeEventsToAlign = p.Results.eyeeventstoalign;
     eventLogEventsToAlign = p.Results.eventlogeventstoalign;
 end
 
 if isempty(p.Results.eventstoattach) || isempty(p.Results.namestoattach)
-    [eventsToAttach, namesToAttach] = UI_geteventstoattach(eventLogs(1));
+    [eventsToAttach, namesToAttach] = UI_geteventstoattach(eventLogs);
 else
     eventsToAttach = p.Results.eventstoattach;
     namesToAttach = p.Results.namestoattach;
