@@ -14,7 +14,15 @@ addParameter(p, 'directory', [])
 addParameter(p, 'format', [])
 parse(p, varargin{:});
 
-[~, dataType] = getextfromdatatype(p.Results.type);
+if isempty(p.Results.type)
+    dataTypeOptions = {
+        'eye data'
+        'event logs'};
+    dataType = dataTypeOptions(listdlg('PromptString', 'Data type'),...
+        'ListString', dataTypeOptions);
+else
+    dataType = p.Results.type;
+end
 
 if isempty(p.Results.format)
     if strcmpi(dataType, 'eye data')

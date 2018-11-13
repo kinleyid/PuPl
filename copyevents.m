@@ -1,20 +1,14 @@
-function Struct1 = AttachEvents(Struct1,Struct2,TimeParams,EventsToAttach,NamesToUse)
+function EYE = copyevents(EYE, eventLog, offsetParams, eventsToAttach, namesToAttach)
 
-Times = [];
-Names = [];
-for i = 1:length(EventsToAttach)    
-    Struct2Times = [Struct2.event(strcmp({Struct2.event.type},EventsToAttach(i))).time];
-    CurrTimes = num2cell([Struct2Times(:) ones(size(Struct2Times(:)))]*TimeParams);
-    Times = [Times; CurrTimes(:)];
-    CurrNames = repmat(NamesToUse(i),size(Struct2Times));
-    Names = [Names; CurrNames(:)];
+[matchIdx, namesIdx] = ismember({eventLog.event.type}, eventsToAttach);
+sz = [numel(matchIdx) 1];
+
+EYE.event = cat(2, EYE.event(:)',...
+    reshape(struct(...
+        'time', {[reshape([eventLog.event(matchIdx).time], sz) ones(sz)]*offsetParams},...
+        'type', namesToAttach(namesIdx)), sz));
+
+[~, I] = sort([EYE.event.time]);
+EYE.event = EYE.event(I);
+
 end
-
-TempEvent = [];
-[TempEvent(1:length(Times)).time] = Times{:};
-[TempEvent(1:length(Names)).type] = Names{:};
-
-Struct1.event = Struct1.event(:);
-TempEvent = TempEvent(:);
-Struct1.event = cat(1,Struct1.event,TempEvent);
-Struct1.event = ArrangeStructByField(Struct1.event,'time');

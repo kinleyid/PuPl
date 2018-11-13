@@ -1,5 +1,14 @@
 function EYE = attachevents(EYE, varargin)
 
+%   Inputs
+% eventLogs--struct array
+% eyeEventsToAlign--
+% eventLogEventsToAlign--
+% eventsToAttach--
+% namesToAttach--
+%   Output
+% EYE--struct array
+
 % EYE may be an array of eye structs
 
 % Input args: eventlogs, alignmentstruct, eventstoattach, namestoattach
@@ -10,22 +19,10 @@ addParameter(p, 'eyeeventstoalign', []);
 addParameter(p, 'eventlogeventstoalign', []);
 addParameter(p, 'eventstoattach', []);
 addParameter(p, 'namestoattach', []);
-addParameter(p, 'saveto', []);
 parse(p, varargin{:})
 
-% use UI to get missing args
-
 if isempty(p.Results.eventlogs)
-    uiwait(msgbox('Select event logs'))
-    [eventLogFiles, eventLogDirectory] = uigetfile('./*.*',...
-        'Select event logs',...
-        'MultiSelect','on');
-    eventLogFiles = cellstr(eventLogFiles);
-    eventLogs = [];
-    for fileIdx = 1:numel(eventLogFiles)
-        eventLogs(fileIdx) = load(...
-            [eventLogDirectory '\\' eventLogFiles{fileIdx}], '-mat');
-    end
+    eventLogs = pupl_load('type', 'event logs');
 else
     eventLogs = p.Results.eventlogs;
 end
@@ -38,11 +35,12 @@ else
 end
 
 if isempty(p.Results.eventstoattach) || isempty(p.Results.namestoattach)
-    [eventsToAttach,namesToAttach] = UI_geteventstoattach(eventLogs(1));
+    [eventsToAttach, namesToAttach] = UI_geteventstoattach(eventLogs(1));
 else
     eventsToAttach = p.Results.eventstoattach;
     namesToAttach = p.Results.namestoattach;
 end 
+
 if p.Results.namestoattach == 0
     namesToAttach = eventsToAttach;
 end
@@ -50,7 +48,7 @@ end
 % Find offset and attach events
 
 for dataIdx = 1:numel(EYE)
-    offsetParams = findoffset(EYE(dataIdx),...
+    offsetParams = findtimelineoffset(EYE(dataIdx),...
         eventLogs(dataIdx),...
         eyeEventsToAlign,...
         eventLogEventsToAlign);
@@ -61,4 +59,4 @@ for dataIdx = 1:numel(EYE)
         namesToAttach);
 end
 
-saveeyedata(EYE, p.Results.saveto, '', 'with events attached');
+end

@@ -5,7 +5,7 @@ function pupl_save(varargin)
 % type--data type: see getextfromdatatype for more info
 % data--struct array of eye dats to be saved
 % directory--directory to save to
-% name--char description of data being saved
+% name--char description of data being saved; not necessary
 
 p = inputParser;
 addParameter(p, 'type', [])
@@ -14,7 +14,20 @@ addParameter(p, 'directory', [])
 addParameter(p, 'name', [])
 parse(p, varargin{:});
 
-fileExt = getextfromdatatype(p.Results.type);
+if isempty(p.Results.type)
+    dataTypeOptions = {
+        'eye data'
+        'event logs'};
+    dataType = dataTypeOptions(listdlg('PromptString', 'Data type'),...
+        'ListString', dataTypeOptions);
+else
+    dataType = p.Results.type;
+end
+if strcmp(dataType, 'eye data')
+    fileExt = '.eyedata';
+elseif strcmp(dataType, 'event logs')
+    fileExt = '.eventlog';
+end
 
 if isempty(p.Results.data)
     vars = who;

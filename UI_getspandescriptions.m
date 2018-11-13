@@ -1,42 +1,37 @@
-function spans = UI_getspandescriptions(EYE)
+function spans = UI_getspandescriptions(EYE, spanName)
 
-% Add name of span as arg
-
-spans = [];
-
-LimPrompts = {'Start of epoch (s relative to %s)'
-              'End of epoch (s relative to %s)'};
-
-% Get unique events
-allEvents = {};
-for dataIdx = 1:numel(EYE)
-    allEvents = cat(2, allEvents, {EYE(dataIdx).event.type});
-end
-eventTypes = unique(allEvents);
+spans = struct([]);
+eventTypes = unique(mergeevents(EYE, 'event', 'type'));
 
 while true
-    fprintf('%d spans currently defined\n', numel(spans))
-    q = 'Add spans?';
-    a = questdlg(q, q, 'Yes', 'No', 'Yes');
-    if strcmp(a,'No') || isempty(a)
-        fprintf('Created %d epochs\n\n', numel(spans))
-        return
+    currSpan = struct('name', char(inputdlg(sprintf('name of %s?', spanName))),...
+        'lims', struct([]));
+    currSpan.lims(1).event = char(eventTypes(listdlg(...
+        'PromptString', sprintf('%s begins relative to which event?', spanName),...
+        'ListString', eventTypes)));
+    currSpan.lims(1).event = str2double(inputdlg(...
+        sprintf('relative to which instance of %s? (0 for any)', currSpan.lims(1).event)));
+    currSpan.lims(1).bookend = str2double(inputdlg(...
+        sprintf('%s begins how many seconds relative to %s?', spanName, currSpan.lims(1).event)));
+    
+    currSpan.lims(2).event = char(eventTypes(listdlg(...
+        'PromptString', sprintf('%s ends relative to which event?', spanName),...
+        'ListString', eventTypes)));
+    if currSpan.lims(1).instance == 0
+        currSpan.lims(2).instance = 0;
     else
-        currSpan = [];
-        currSpan.name = inputdlg('name of span?');
-        currSpan.name = currSpan.name{1};
-        currSpan(1).lims = struct([]);
-        for limIdx = 1:2
-            currSpan.lims(limIdx).event = eventTypes(listdlg(...
-                'PromptString', 'Select a limiting event type',...
-                'ListString', eventTypes));
-            currSpan.lims(limIdx).event = currSpan.lims(limIdx).event{1};
-            currSpan.lims(limIdx).instance = str2double(inputdlg(...
-                'Instance (0 for any)'));
-            currSpan.lims(limIdx).bookend = str2double(inputdlg(...
-                'Bookend (s)'));
-        end
-        spans = [spans currSpan];
+        currSpan.lims(2).instance = str2double(inputdlg(...
+            sprintf('relative to which instance of %s? (0 not allowed)', currSpan.lims(2).event)));
+    end
+    currSpan.lims(2).bookend = str2double(inputdlg(...
+        sprintf('%s ends how many seconds relative to %s?', spanName, currSpan.lims(2).event)));
+    
+    spans = cat(2, spans, currSpan);
+
+    q = sprintf('define more %ss?', spanName);
+    a = questdlg(q, q, 'Yes', 'No', 'Yes');
+    if strcmp(a, 'No') || isempty(a)
+        return
     end
 end
 

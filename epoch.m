@@ -23,7 +23,7 @@ addParameter(p, 'correctionType', []);
 parse(p, varargin{:});
 
 if isempty(p.Results.epochDescriptions)
-    epochDescriptions = UI_getspandescriptions(EYE);
+    epochDescriptions = UI_getspandescriptions(EYE, 'epoch');
 else
     epochDescriptions = p.Results.epochDescriptions;
 end
@@ -48,13 +48,12 @@ end
 
 if ~strcmp(correctionType, 'none')
     if isempty(p.Results.baselineDescriptions)
-        baselineDescriptions = UI_getspandescriptions(EYE);
+        baselineDescriptions = UI_getspandescriptions(EYE, 'baseline');
     else
         baselineDescriptions = p.Results.baselineDescriptions;
     end
 
     if isempty(p.Results.epochsToCorrect)
-        epochsToCorrect = {};
         for bIdx = 1:numel(baselineDescriptions)
             baselineDescriptions(bIdx).epochsToCorrect = epochDescriptions(...
                 listdlg('PromptString', sprintf('Which epochs should be corrected using baseline %s', baselineDescriptions(bIdx).name),...

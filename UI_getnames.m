@@ -11,7 +11,7 @@ for i = 1:nOptsPerScreen:length(oldNames)
         'Which names should be used?',...
         [1 100],...
         currNames);
-    newNames = cat(1, newNames, currNames);
+    newNames = cat(1, newNames(:), currNames(:));
 end
 
 end
