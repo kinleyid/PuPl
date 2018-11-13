@@ -28,12 +28,14 @@ if isempty(p.Results.format)
     if strcmpi(dataType, 'eye data')
         formatOptions = {
             'Tobii Excel files'
-            'EXF files from The Eye Tribe'};
+            % 'EXF files from The Eye Tribe'
+        };
     elseif strcmpi(dataType, 'event logs')
         formatOptions = {
             'Noldus Excel files'
-            'Presentation .log files'
-            'E-DataAid Excel files'};
+            % 'Presentation .log files'
+            'E-DataAid Excel files'
+        };
     end
     dataFormat = listdlg('PromptString', 'File format',...
         'ListString', formatOptions);
@@ -56,7 +58,7 @@ if numel(dataFormat) == 1 % Potentially many different formats--is this really n
     dataFormat = repmat(dataFormat, numel(dataFiles, 1));
 end
 
-structArray = [];
+structArray = struct([]);
 for fileIdx = 1:numel(dataFiles)
     structArray(fileIdx) = loadrawdata(dataType,...
         dataFiles{fileIdx},...

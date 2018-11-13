@@ -1,74 +1,98 @@
 function outStruct = loadrawdata(dataType, fileName, fileDirectory, fileFormat)
 
-% EYE DATA
+%   Inputs
+% dataType--'eye data' or 'event logs'
+% fileName--char
+% fileDirectory--char
+% fileFormat--char, specifies the source of the data
+%   Outputs
+% outStruct--single struct
+%   if dataType is 'eye data', outStruct has the following fields:
+%       name--the file name, usually participant ID
+%       data--a struct with fields 'left' and 'right'
+%       urData--a clone of 'data'
+%       srate--sample rate in Hz
+%       event--struct array with fields 'type', 'time', and 'latency'
+%   if dataType is 'event logs', outStruct has the following fields:
+%       name--the file name, usually participant ID
+%       event--struct array with fields 'type' and 'time'
+%
+% Missing data points should be filled in with NaN
+
+[~, name] = fileparts(fileName);
+
 if strcmpi(dataType, 'eye data')
     if strcmpi(fileFormat,'Tobii Excel files')
-        fprintf(['Loading eye data from ' fileName ':\n'])
-        fprintf('Reading excel file...')
-        [~ , ~, R] = xlsread([fileDirectory '\' fileName]);
-        fprintf('converting to usable table...')
-        fprintf('creating EYE struct...')
-        outStruct = [];
-        [~, Name] = fileparts(fileName);
-        outStruct.name = Name;
-        RecordingTimestamps = cell2mat(R(2:end, strcmp(R(1,:), 'RecordingTimestamp')));
-        outStruct.srate = round((length(RecordingTimestamps))/((max(RecordingTimestamps) - min(RecordingTimestamps))/1000));
-        outStruct.data.left = cellfun(@ProcessBadCells, R(2:end,strcmp(R(1,:),'PupilLeft')));
-        outStruct.data.right = cellfun(@ProcessBadCells, R(2:end,strcmp(R(1,:),'PupilRight')));
-        outStruct.urData = outStruct.data;
-        Events = [];
-        Times = {};
-        for EventType = {'KeyPressEvent' 'MouseEvent' 'StudioEvent' 'ExternalEvent'}
-            CurrEvents = R(2:end, strcmp(R(1, :), EventType{:}));
-            Events = [Events; CurrEvents(~cellfun(@isempty, CurrEvents))];
-            Times = [Times; num2cell(RecordingTimestamps(~cellfun(@isempty,CurrEvents)))];
+        
+        [~ , ~, R] = xlsread([fileDirectory '\\' fileName]);
+        
+        timestamps = cell2mat(R(2:end, strcmp(R(1,:), 'RecordingTimestamp')));
+        srate = round((length(timestamps))/((max(timestamps) - min(timestamps))/1000));
+        
+        data = struct(...
+            'left', R(2:end, strcmp(R(1, :), 'PupilLeft')),...
+            'right', R(2:end, strcmp(R(1, :), 'PupilRight')));
+        for field = reshape(fieldnames(data), 1, [])
+            data.(field{:})(cellfun(@isempty, data.(field{:}))) = {NaN};
+            data.(field{:}) = reshape(cell2mat(data.(field{:})), 1, []);
         end
-        outStruct.event.type = [];
-        outStruct.event.time = [];
-        [outStruct.event(1:length(Events)).type] = Events{:};
-        [outStruct.event(1:length(Times)).time] = Times{:};
-        outStruct.event = ArrangeStructByField(outStruct.event,'time');
-        fprintf('done.\n');
+        
+        [events, times] = deal({});
+        for eventType = {'KeyPressEvent' 'MouseEvent' 'StudioEvent' 'ExternalEvent'}
+            currEvents = R(2:end, strcmp(R(1, :), eventType{:}));
+            events = cat(1, events, currEvents(~cellfun(@isempty, currEvents)));
+            times = cat(1, times, timestamps(~cellfun(@isempty, currEvents)));
+        end
+        event = struct(...
+            'type', events,...
+            'time', times,...
+            'latency', times/srate + 1);
+        [~, I] = sort([event.time]);
+        event = event(I);
+
     end
+    
+    outStruct = struct(...
+        'name', name,...
+        'data', data,...
+        'srate', srate,...
+        'urData', data,...
+        'event', event);
+    
 elseif strcmpi(dataType, 'event logs')
-    if strcmp(EventLogFormat,'Noldus Excel files')
-        [~,~,R] = xlsread([EventLogPath '\' EventLogFile]);
-        EventNames = R(2:end,strcmp(R(1,:),'Behavior'));
+    if strcmp(fileFormat,'Noldus Excel files')
+        
+        [~, ~, R] = xlsread([fileDirectory '\\' fileName]);
+        eventTypes = R(2:end, strcmp(R(1, :), 'Behavior'));
         ModifierIdx = find(~cellfun(@isempty,(regexp(R(1,:),'Modifier*'))));
         for i = 1:length(ModifierIdx)
-            EventNames = strcat(EventNames,R(2:end,ModifierIdx(i)));
+            eventTypes = strcat(eventTypes,R(2:end,ModifierIdx(i)));
         end
-        EventNames = strcat(EventNames,R(2:end,strcmp(R(1,:),'Event_Type')));
-        OutTimes = 1000*cell2mat(R(2:end,strcmp(R(1,:),'Time_Relative_sf')));
-        OutTypes = EventNames;
-    elseif strcmp(EventLogFormat,'E-DataAid Excel files')
-        [~,~,EventLog] = xlsread([EventLogPath '\' EventLogFile]);
-        Times = cell2mat(EventLog(3:end,:));
-        EventTypes = EventLog(2,:);
-        Size = size(Times);
-        [Times,Idx] = sort(Times(:));
-        OutTimes = zeros(length(Times),1);
-        OutTypes = cell(length(Times),1);
-        for i = 1:length(Times)
-            OutTimes(i) = Times(i);
-            [~,Sub] = ind2sub(Size,Idx(i));
-            OutTypes(i) = EventTypes(Sub);
+        eventTypes = strcat(eventTypes,R(2:end,strcmp(R(1,:),'Event_Type')));
+        eventTimes = 1000*cell2mat(R(2:end,strcmp(R(1,:),'Time_Relative_sf')));s
+        
+    elseif strcmp(fileFormat,'E-DataAid Excel files')
+        
+        [~, ~, R] = xlsread([fileDirectory '\\' fileName]);
+        nTrials = size(R, 1) - 2;
+        eventTimes = reshape(cell2mat(R(3:end, :)), [], 1);
+        eventTypes = {};
+        for i = 1:size(R, 2)
+            eventTypes = cat(1, eventTypes, repmat(R(2, i), nTrials, 1));
         end
-        OutTypes(isnan(OutTimes)) = [];
-        OutTimes(isnan(OutTimes)) = [];
+        eventTypes(isnan(eventTimes)) = [];
+        eventTimes(isnan(eventTimes)) = [];
+        
     end
-    outStruct = [];
-    outStruct.event(length(OutTypes)).type = [];
-    outStruct.event(length(OutTimes)).time = [];
-    [outStruct.event(1:length(OutTypes)).type] = OutTypes{:};
-    [outStruct.event(1:length(OutTimes)).time] = OutTimes{:};
-    outStruct.event = ArrangeStructByField(outStruct.event,'time');
+
+    outStruct = struct(...
+        'name', name,...
+        'event', struct(...
+            'type', eventTypes,...
+            'time', nume2cell(eventTimes)));
+    [~, I] = sort([outStruct.event.time]);
+    outStruct.event = outStruct.event(I);
+
 end
 
-function Out = ProcessBadCells(In)
-
-if isempty(In)
-    Out = NaN;
-else
-    Out = In;
 end
