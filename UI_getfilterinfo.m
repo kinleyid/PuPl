@@ -12,28 +12,34 @@ while true
     dataIdx = randi(numel(EYE));
     permData = deal(EYE(dataIdx).data);
     tempData = applyeyefilter(EYE(dataIdx), filterType, smoothN);
-    
-    nSecondsToPlot = 5; % Number of seconds of data to plot
-    start = randi(length(tempData.left) - nSecondsToPlot*EYE(1).srate);
-    latencies = start:(start + nSecondsToPlot*EYE.srate);
-    
-    clf; hold on
-    plot(tempData.right(latencies), 'r')
-    plot(permData.right(latencies), 'r:')
-    plot(tempData.left(latencies), 'b')
-    plot(permData.left(latencies), 'b:')
-    legend({'Right eye smoothed' 'Right eye original' 'Left eye smoothed' 'Left eye original'})
-    title(sprintf('Moving %s of %d points on either side (%d seconds of data)', filterType, smoothN, nSecondsToPlot));
-    xlim([1 numel(latencies)]);
-    
-    Accepted = questdlg('Is this smoothing acceptable?',...
-        'Accept this smoothing?',...
-        'Yes', 'See a different epoch', 'Try different smoothing', 'See a different epoch');
-    if strcmp(Accepted,'Yes')
-        close
-        return
-    elseif strcmp(Accepted,'Try different smoothing')
-        [filterType, smoothN] = filterquery(filterType, smoothN);
+
+    while true
+        nSecondsToPlot = 5; % Number of seconds of data to plot
+        start = randi(length(tempData.left) - nSecondsToPlot*EYE(dataIdx).srate);
+        latencies = start:(start + nSecondsToPlot*EYE(dataIdx).srate);
+        times = (latencies - 1) / EYE(dataIdx).srate;
+
+        clf; hold on
+        plot(tempData.right(latencies), 'r')
+        plot(permData.right(latencies), 'r:')
+        plot(tempData.left(latencies), 'b')
+        plot(permData.left(latencies), 'b:')
+        legend({'Right eye smoothed' 'Right eye original' 'Left eye smoothed' 'Left eye original'})
+        title(sprintf('Moving %s of %d points on either side (%d seconds of data)', filterType, smoothN, nSecondsToPlot));
+        xlim([1 numel(latencies)]);
+        xticklabels(times);
+        xlabel('Time (s)');
+
+        q = 'Is this smoothing acceptable?';
+        Accepted = questdlg(q, q,...
+            'Yes', 'See a different epoch', 'Try different smoothing', 'See a different epoch');
+        if strcmp(Accepted,'Yes')
+            close
+            return
+        elseif strcmp(Accepted,'Try different smoothing')
+            [filterType, smoothN] = filterquery(filterType, smoothN);
+            break
+        end
     end
 end
 
