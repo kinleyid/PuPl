@@ -21,8 +21,6 @@ EYE = eyefilter(EYE);
 EYE = interpeyedata(EYE);
 EYE = mergelr(EYE);
 
-pupl_save('data', EYE);
-
 % Organize the data into trials
 uiwait(msgbox('Epoch the data'));
 EYE = epoch(EYE);
