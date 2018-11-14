@@ -12,7 +12,6 @@ if strcmp(a, 'Yes')
     eventLogs = pupl_format('type', 'event logs');
     uiwait(msgbox('Save the formatted event logs'));
     pupl_save('data', eventLogs, 'type', 'event logs');
-    % Write event log events to eye data
     uiwait(msgbox('Write events from event logs to eye data'));
     EYE = attachevents(EYE, 'eventLogs', eventLogs);
 end
