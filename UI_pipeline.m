@@ -3,12 +3,14 @@ function UI_pipeline
 % Format data
 uiwait(msgbox('Format the eye data'));
 EYE = pupl_format('type', 'eye data');
+uiwait(msgbox('Save the formatted eye data'));
 pupl_save('data', EYE, 'type', 'eye data');
-q = 'Attach event info from external log?';
+q = 'Attach event info from external logs?';
 a = questdlg(q, q, 'Yes', 'No', 'Yes');
 if strcmp(a, 'Yes')
     uiwait(msgbox('Format the event logs'));
     eventLogs = pupl_format('type', 'event logs');
+    uiwait(msgbox('Save the formatted event logs'));
     pupl_save('data', eventLogs, 'type', 'event logs');
     % Write event log events to eye data
     uiwait(msgbox('Write events from event logs to eye data'));
