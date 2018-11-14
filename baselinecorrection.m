@@ -8,7 +8,7 @@ for dataIdx = 1:numel(EYE)
         epochsToCorrect = find(ismember({EYE(dataIdx).epoch.name},...
             baselineDescriptions(bIdx).epochsToCorrect));
         if numel(latencies) > 1 && numel(latencies) ~= numel(epochsToCorrect)
-            error('different numbers of baselines and epochs');
+            error('epochs and baselines are not lining up');
         else
             baselineCount = 0;
             epochCount = 0;

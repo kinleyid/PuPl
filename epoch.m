@@ -23,7 +23,7 @@ addParameter(p, 'correctionType', []);
 parse(p, varargin{:});
 
 if isempty(p.Results.epochDescriptions)
-    q = 'Simple epoching?';
+    q = sprintf('Simple epoching?\n(All epochs of same length and\ndefined using single events)');
     if strcmp(questdlg(q, q, 'Yes', 'No', 'No'), 'Yes')
         eventTypes = unique(mergefields(EYE, 'event', 'type'));
         eventTypes = eventTypes(listdlg('PromptString', 'Epoch which events?',...
