@@ -114,8 +114,11 @@ if strcmpi(dataType, 'eye data')
         
         streams = load_xdf([fileDirectory '\\' fileName]);
         
-        srate = str2double(streams{1}.info.nominal_srate);
-        
+        streamNames = cellfun(@(x) x.name, streams, 'un', 0);
+        if any(strcmpi('EyeTribe', streamNames)
+            dataStruct = streams{strcmpi('EyeTribe', streamNames)}
+            srate = dataStruct.info.nominal_srate;
+        end
         if strcmp(streams{1,1}.info.name,'EyeTribe') && strcmp(streams{1,2}.info.name,'Presentation')
             tempsw_c1 = struct2cell(streams{1,1});
             tempsw_c2 = struct2cell(streams{1,2});
