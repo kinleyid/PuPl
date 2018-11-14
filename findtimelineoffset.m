@@ -1,4 +1,4 @@
-function bestOffsetParams = findtimelineoffset(EYE, eventLog, eyeEventSets, eventLogEventSets, varargin)
+function bestParams = findtimelineoffset(EYE, eventLog, eyeEventSets, eventLogEventSets, varargin)
 
 %   Inputs
 % EYE--single struct
@@ -23,7 +23,20 @@ else
     pct = varargin{2};
 end
 
-allPossibleOffsets = reshape(mergefields(EYE, 'event', 'time') - mergefields(eventLog, 'event', 'time'), 1, []);
+allPossibleOffsets = [];
+correspondences = struct('eyeTimes', [], 'eventLogTimes', []); % Pre-generate times for speed
+for cIdx = 1:numel(eyeEventSets) % correspondence idx
+    eyeTimes = reshape(...
+        mergefields(EYE.event(ismember({EYE.event.type}, eyeEventSets{cIdx})), 'time'),...
+        [], 1);
+    eventLogTimes = reshape(...
+        mergefields(eventLog.event(ismember({eventLog.event.type}, eventLogEventSets{cIdx})), 'time'),...
+        1, []);
+    correspondences(cIdx).eyeTimes = eyeTimes;
+    correspondences(cIdx).eventLogTimes = eventLogTimes;
+    allPossibleOffsets = cat(2, allPossibleOffsets,...
+        reshape(eyeTimes - eventLogTimes, 1, []));
+end
 
 while true
     lowestErr = inf;
@@ -31,22 +44,25 @@ while true
     for candidateOffset = allPossibleOffsets
         eyeTimes = [];
         eventLogTimes = [];
-        for cIdx = 1:numel(eyeEventSets) % correspondence idx
-            currEyeTimes = mergefields(EYE.event(ismember({EYE.event.name}, eyeEventSets{cIdx})), 'time');
-            currEventLogTimes = mergefields(eventLog.event(ismember({eventLog.event.name}, eventLogEventSets{cIdx})), 'time');
-            matches = abs(currEyeTimes(:) - currEventLogTimes - candidateOffset) < tolerance;
+        flag = false;
+        for cIdx = 1:numel(eyeEventSets)
+            matches = abs(correspondences(cIdx).eyeTimes - correspondences(cIdx).eventLogTimes - candidateOffset) < tolerance;
             if nnz(matches) < pct*min(size(matches))
-                continue
+                flag = true;
+                break
             else
-                eyeTimes = cat(1, eyeTimes, reshape(currEyeTimes(any(matches, 2)), [], 1));
-                eventLogTimes = cat(1, eventLogTimes, reshape(currEventLogTimes(any(matches, 1)), [], 1));
+                eyeTimes = cat(1, eyeTimes, correspondences(cIdx).eyeTimes(any(matches, 2)));
+                eventLogTimes = cat(1, eventLogTimes, reshape(correspondences(cIdx).eventLogTimes(any(matches, 1)), [], 1));
             end
+        end
+        if flag
+            continue
         end
         currOffsetParams = [eventLogTimes ones(size(eventLogTimes))] \ eyeTimes;
         currErr = sum((eyeTimes - [eventLogTimes ones(size(eventLogTimes))]*currOffsetParams).^2);
         if currErr < lowestErr
             lowestErr = currErr;
-            bestOffsetParams = currOffsetParams;
+            bestParams = currOffsetParams;
         end
     end
     
@@ -59,6 +75,8 @@ while true
             [eyeEventSets, eventLogEventSets] = UI_geteventcorrespondence(EYE, eventLog);
         end
     else
+        fprintf('Offset estimate: %.3f minutes.\n', bestParams(2)/60);
+        fprintf('Events aligned with MS error %.2f\n', lowestErr);
         return
     end
 end

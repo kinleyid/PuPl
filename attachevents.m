@@ -28,7 +28,7 @@ else
 end
 
 if isempty(p.Results.eventlogeventstoalign) || isempty(p.Results.eyeeventstoalign)
-    [eyeEventsToAlign, eventLogEventsToAlign] = UI_geteventcorrespondence(EYE, eventLogs, false);
+    [eyeEventsToAlign, eventLogEventsToAlign] = UI_geteventcorrespondence(EYE, eventLogs);
 else
     eyeEventsToAlign = p.Results.eyeeventstoalign;
     eventLogEventsToAlign = p.Results.eventlogeventstoalign;

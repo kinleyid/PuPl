@@ -34,6 +34,7 @@ if isempty(p.Results.format)
         formatOptions = {
             'Noldus Excel files'
             % 'Presentation .log files'
+            'XDF files'
             'E-DataAid Excel files'
         };
     end
@@ -112,63 +113,47 @@ if strcmpi(dataType, 'eye data')
 
     elseif strcmpi(fileFormat,'XDF files')
         
+        % Ensure that the recording starts at time 0, latency 1
+        
         streams = load_xdf([fileDirectory '\\' fileName]);
+        streamNames = cellfun(@(x) x.info.name, streams, 'un', 0);
         
-        streamNames = cellfun(@(x) x.name, streams, 'un', 0);
-        if any(strcmpi('EyeTribe', streamNames)
-            dataStruct = streams{strcmpi('EyeTribe', streamNames)}
-            srate = dataStruct.info.nominal_srate;
-        end
-        if strcmp(streams{1,1}.info.name,'EyeTribe') && strcmp(streams{1,2}.info.name,'Presentation')
-            tempsw_c1 = struct2cell(streams{1,1});
-            tempsw_c2 = struct2cell(streams{1,2});
-        elseif strcmp(streams{1,1}.info.name,'Presentation') && strcmp(streams{1,2}.info.name,'EyeTribe')
-            tempsw_c1 = struct2cell(streams{1,2});
-            tempsw_c2 = struct2cell(streams{1,1});
+        eyeTypes = {'EyeTribe' 'Other possible sources go here'};
+        if ~any(ismember(streamNames, eyeTypes))
+            error('No eye data to be found in this xdf file');
         else
-            disp('ERROR!!! --> Missing EyeTribe or Presentation Data Streams in XDF file!!!');
-            return;
+            eyeDataStruct = streams{ismember(streamNames, eyeTypes)};
+
+            srate = str2double(eyeDataStruct.info.nominal_srate);
+            
+            eyeDataStruct.time_series(eyeDataStruct.time_series == 0) = NaN;
+            data = struct(...
+                'left', double(eyeDataStruct.time_series(5, :)),...
+                'right', double(eyeDataStruct.time_series(8, :)));
+            
+            t0 = eyeDataStruct.time_stamps(1)*1000;
+            
         end
 
-        % NOTE that LSL load_xdf coordinates sample timing between these streams on import above!!!...
-
-        tempsw_c1_3 = tempsw_c1{3,1}; % eyetribe tracker data, 8 columns
-        tempsw_c1_4 = tempsw_c1{4,1}; % eyetribe time stamps (tracker samples)
-        tempsw_c2_2 = tempsw_c2{2,1}; % Presentation marker info
-        tempsw_c2_3 = tempsw_c2{3,1}; % Presentation time stamps for markers
-
-        % put pupil data & timestamps in a single cell array, with a spare final row...
-        tempsw_pupil_data_v1 = [tempsw_c1_3 ; tempsw_c1_4];
-        tempsw_filler2 = ones(1, length(tempsw_pupil_data_v1) ) * 0; 
-        tempsw_pupil_data_v2 = [ tempsw_pupil_data_v1 ; tempsw_filler2 ];
-        pupil_data_v3 = num2cell(tempsw_pupil_data_v2);
-
-        % make arrays (not cells) of pupil data (so have numbers only)...
-        % --> EXCEPT for markers - THOSE need to be cells, to have ASCII data etc in there
-        % we will use these to operate on as we do various filtering etc...
-        pupil_data_Left_v1 = cell2mat( pupil_data_v3(5,1:end) );
-        pupil_data_Right_v1 = cell2mat( pupil_data_v3(8,1:end) );
+        eventLogTypes = {'Presentation' 'Other possible sources go here'};
         
-        puplLeft = pupil_data_Left_v1;
-        puplRight = pupil_data_Right_v1;
-        puplLeft(puplLeft == 0) = NaN;
-        puplRight(puplRight == 0) = NaN;
-        
-        data = struct(...
-            'left', double(puplLeft),...
-            'right', double(puplRight));
+        if any(ismember(streamNames, eventLogTypes))
+            
+            eventDataStruct = streams{ismember(streamNames, eventLogTypes)};
 
-        % get event markers & timestamps in a single cell array...
-        tempsw_marker_values = tempsw_c2_2;
-        tempsw_marker_times = tempsw_c2_3 - str2double(streams{1}.info.first_timestamp);
-        
-        times = num2cell(tempsw_marker_times*1000);
-        latencies = num2cell(round(tempsw_marker_times*1000/srate + 1));
-        
-        event = struct(...
-            'type', tempsw_marker_values,...
-            'time', times,...
-            'latency', latencies);
+            emptyIdx = cellfun(@isempty, eventDataStruct.time_series);            
+            eventDataStruct.time_series(emptyIdx) = [];
+            eventDataStruct.time_stamps(emptyIdx) = [];
+            
+            events = eventDataStruct.time_series;
+            times = double(eventDataStruct.time_stamps*1000 - t0);
+            latencies = round(times/srate + 1);
+            
+            event = struct(...
+                'type', events,...
+                'time', num2cell(times),...
+                'latency', num2cell(latencies));
+        end
         
     end
     
@@ -203,6 +188,23 @@ elseif strcmpi(dataType, 'event logs')
         eventTypes(isnan(eventTimes)) = [];
         eventTimes(isnan(eventTimes)) = [];
         
+    elseif strcmp(fileFormat, 'XDF files')
+        
+        streams = load_xdf([fileDirectory '\\' fileName]);
+        
+        streamNames = cellfun(@(x) x.info.name, streams, 'un', 0);
+        eventLogTypes = {'Presentation' 'Other possible sources go here'};
+        
+        if any(ismember(streamNames, eventLogTypes))    
+            eventDataStruct = streams{ismember(streamNames, eventLogTypes)};
+
+            emptyIdx = cellfun(@isempty, eventDataStruct.time_series);            
+            eventDataStruct.time_series(emptyIdx) = [];
+            eventDataStruct.time_stamps(emptyIdx) = [];
+            
+            eventTypes = eventDataStruct.time_series;
+            eventTimes = double(eventDataStruct.time_stamps*1000); 
+        end
     end
 
     outStruct = struct(...
