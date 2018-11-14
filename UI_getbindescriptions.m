@@ -1,25 +1,19 @@
 function binDescriptions = UI_getbindescriptions(EYE)
 
-% Get unique event names
-allEpochNames = {};
-for dataIdx = 1:numel(EYE)
-    allEpochNames = [allEpochNames unique({EYE(dataIdx).epoch.name})];
-end
-uniqueEpochNames = unique(allEpochNames);
+uniqueEpochNames = unique(mergefields(EYE, 'epoch', 'name'));
 
-binDescriptions = [];
+binDescriptions = struct([]);
 
 while true
-    q = 'Add a bin?';
+    name = inputdlg('Name of bin?');
+    epochIdx = listdlg('PromptString', 'Which epochs?',...
+        'ListString', uniqueEpochNames);
+    binDescriptions = [binDescriptions...
+        struct('name', name,...
+            'epochs', {uniqueEpochNames(epochIdx)})];
+    q = 'Add another bin?';
     a = questdlg(q, q, 'Yes', 'No', 'Yes');
     if strcmp(a, 'No')
         break
-    else
-        name = inputdlg('Name of bin?');
-        epochIdx = listdlg('PromptString', 'Which epochs?',...
-            'ListString', uniqueEpochNames);
-        binDescriptions = [binDescriptions...
-            struct('name', name,...
-                'epochs', uniqueEpochNames(epochIdx))];
     end
 end

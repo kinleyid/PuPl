@@ -18,8 +18,8 @@ if isempty(p.Results.type)
     dataTypeOptions = {
         'eye data'
         'event logs'};
-    dataType = dataTypeOptions(listdlg('PromptString', 'Data type'),...
-        'ListString', dataTypeOptions);
+    dataType = dataTypeOptions(listdlg('PromptString', 'Data type',...
+        'ListString', dataTypeOptions));
 else
     dataType = p.Results.type;
 end

@@ -9,7 +9,7 @@ function bestOffsetParams = findtimelineoffset(EYE, eventLog, eyeEventSets, even
 % varargin{2}--min percent matches
 %   Outputs
 % bestOffsetParams--the lowest square error solution to:
-%       [Struct1.event.time] = Params(1)*[Struct2.event.time] + Params(2)
+%   [EYE.event.time] = Params(1)*[eventLog.event.time] + Params(2)
 
 if numel(varargin) < 1
     tolerance = 50;
@@ -31,10 +31,10 @@ while true
     for candidateOffset = allPossibleOffsets
         eyeTimes = [];
         eventLogTimes = [];
-        for i = 1:numel(eyeEventSets)
-            currEyeTimes = mergefields(EYE.event(ismember({EYE.event.name}, eyeEventSets)), 'time');
-            currEventLogTimes = mergefields(eventLog.event(ismember({eventLog.event.name}, eventLogEventSets)), 'time');
-            matches = abs(currEyeTimes(:) - currEventLogTimes(:)' - candidateOffset) < tolerance;
+        for cIdx = 1:numel(eyeEventSets) % correspondence idx
+            currEyeTimes = mergefields(EYE.event(ismember({EYE.event.name}, eyeEventSets{cIdx})), 'time');
+            currEventLogTimes = mergefields(eventLog.event(ismember({eventLog.event.name}, eventLogEventSets{cIdx})), 'time');
+            matches = abs(currEyeTimes(:) - currEventLogTimes - candidateOffset) < tolerance;
             if nnz(matches) < pct*min(size(matches))
                 continue
             else

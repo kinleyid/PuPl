@@ -4,13 +4,13 @@ function [eyeEventSets, eventLogEventSets] = UI_geteventcorrespondence(EYE, even
 % EYE--struct array
 % eventLogs--struct array
 %   Outputs
-%
+% eyeEventSets--cell array of char cell arrays
+% eventLogEventSets--cell array of char cell arrays
 
 eyeEvents = unique(mergefields(EYE, 'event', 'type'));
 eventLogEvents = unique(mergefields(eventLogs, 'event', 'type'));
 
-eyeEventSets = {};
-eventLogEventSets = {};
+[eyeEventSets, eventLogEventSets] = deal({});
 
 while true
     eyeEventSets{numel(eyeEventSets) + 1} = ...

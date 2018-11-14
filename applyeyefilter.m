@@ -15,9 +15,8 @@ elseif strcmpi(filterType, 'Gaussian kernel')
 end
 
 [permData, tempData] = deal(EYE.data);
-dataStreams = fieldnames(tempData);
 
-for stream = dataStreams(:)'
+for stream = reshape(fieldnames(tempData), 1, [])
     for latIdx = 1:length(permData.left)
         if ~isnan(tempData.(stream{:})(latIdx))
             sLat = max(latIdx-smoothN,1);

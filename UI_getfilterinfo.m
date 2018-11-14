@@ -7,7 +7,6 @@ function [filterType, smoothN] = UI_getfilterinfo(EYE)
 [filterType, smoothN] = filterquery;
 
 figure('units', 'normalized', 'outerposition', [0 0 1 1])
-hold on
 
 while true
     dataIdx = randi(numel(EYE));
@@ -18,7 +17,7 @@ while true
     start = randi(length(tempData.left) - nSecondsToPlot*EYE(1).srate);
     latencies = start:(start + nSecondsToPlot*EYE.srate);
     
-    clf
+    clf; hold on
     plot(tempData.right(latencies), 'r')
     plot(permData.right(latencies), 'r:')
     plot(tempData.left(latencies), 'b')

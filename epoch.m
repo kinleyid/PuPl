@@ -23,7 +23,36 @@ addParameter(p, 'correctionType', []);
 parse(p, varargin{:});
 
 if isempty(p.Results.epochDescriptions)
-    epochDescriptions = UI_getspandescriptions(EYE, 'epoch');
+    q = 'Simple epoching?';
+    if strcmp(questdlg(q, q, 'Yes', 'No', 'No'), 'Yes')
+        eventTypes = unique(mergefields(EYE, 'event', 'type'));
+        eventTypes = eventTypes(listdlg('PromptString', 'Epoch which events?',...
+            'ListString', eventTypes));
+        epochLims = str2double(inputdlg(...
+            {'Epochs defined from this many seconds before events:'
+            'To this many seconds after:'}));
+        baselineLims = str2double(inputdlg(...
+            {'Baselines defined from this many seconds before events:'
+            'To this many seconds after:'}));
+        [epochDescriptions, baselineDescriptions] = deal(struct([]));
+        for eventTypeIdx = 1:numel(eventTypes)
+            epochDescriptions = cat(2, epochDescriptions,...
+                struct('name', eventTypes{eventTypeIdx},...
+                    'lims', struct(...
+                        'event', eventTypes{eventTypeIdx},...
+                        'instance', 0,...
+                        'bookend', {epochLims(1) epochLims(2)})));
+            baselineDescriptions = cat(2, baselineDescriptions,...
+                struct('name', eventTypes{eventTypeIdx},...
+                    'lims', struct(...
+                        'event', eventTypes{eventTypeIdx},...
+                        'instance', 0,...
+                        'bookend', {baselineLims(1) baselineLims(2)})));
+        end
+        [baselineDescriptions.epochsToCorrect] = epochDescriptions.name;
+    else
+        epochDescriptions = UI_getspandescriptions(EYE, 'epoch');
+    end
 else
     epochDescriptions = p.Results.epochDescriptions;
 end
@@ -47,20 +76,22 @@ end
 [EYE.correctionType] = deal(correctionType);
 
 if ~strcmp(correctionType, 'none')
-    if isempty(p.Results.baselineDescriptions)
-        baselineDescriptions = UI_getspandescriptions(EYE, 'baseline');
-    else
-        baselineDescriptions = p.Results.baselineDescriptions;
-    end
-
-    if isempty(p.Results.epochsToCorrect)
-        for bIdx = 1:numel(baselineDescriptions)
-            baselineDescriptions(bIdx).epochsToCorrect = epochDescriptions(...
-                listdlg('PromptString', sprintf('Which epochs should be corrected using baseline %s', baselineDescriptions(bIdx).name),...
-                    'ListString', {epochDescriptions.name})).name;
+    if ~exist('baselineDescriptions', 'var')
+        if isempty(p.Results.baselineDescriptions)
+            baselineDescriptions = UI_getspandescriptions(EYE, 'baseline');
+        else
+            baselineDescriptions = p.Results.baselineDescriptions;
         end
-    elseif ~strcmp(p.Results.epochsToCorrect, 'default')
-        [baselineDescriptions.epochsToCorrect] = p.Results.epochsToCorrect{:};
+        
+        if isempty(p.Results.epochsToCorrect)
+            for bIdx = 1:numel(baselineDescriptions)
+                baselineDescriptions(bIdx).epochsToCorrect = epochDescriptions(...
+                    listdlg('PromptString', sprintf('Which epochs should be corrected using baseline %s', baselineDescriptions(bIdx).name),...
+                        'ListString', {epochDescriptions.name})).name;
+            end
+        elseif ~strcmp(p.Results.epochsToCorrect, 'default')
+            [baselineDescriptions.epochsToCorrect] = p.Results.epochsToCorrect{:};
+        end
     end
     [EYE.baselineDescriptions] = deal(baselineDescriptions);
     EYE = baselinecorrection(EYE, baselineDescriptions, correctionType);
