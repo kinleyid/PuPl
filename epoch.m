@@ -104,7 +104,7 @@ if ~isempty(p.Results.UI)
     p.Results.UI.Visible = 'on';
     writetopanel(p.Results.UI,...
         'processinghistory',...
-        'Separation into epochs');
+        'Separation into trials');
 end
 
 end
