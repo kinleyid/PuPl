@@ -12,6 +12,7 @@ addParameter(p, 'type', [])
 addParameter(p, 'data', [])
 addParameter(p, 'directory', [])
 addParameter(p, 'name', [])
+addParameter(p, 'UI', [])
 parse(p, varargin{:});
 
 if isempty(p.Results.type)
@@ -58,6 +59,11 @@ end
 
 for data = structArray(:)'
     save(strcat(saveDirectory, '\\', data.name, fileExt), 'data');
+end
+
+if ~isempty(p.Results.UI)
+    p.Results.UI.Visible = 'off';
+    p.Results.UI.Visible = 'on';
 end
 
 end

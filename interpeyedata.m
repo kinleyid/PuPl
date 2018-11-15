@@ -1,8 +1,19 @@
-function EYE = interpeyedata(EYE)
+function EYE = interpeyedata(EYE, varargin)
+
+p = inputParser;
+addParameter(p, 'UI', []);
+parse(p, varargin{:});
 
 for dataIdx = 1:numel(EYE)
-    EYE.data.left = applyinterpolation(EYE.data.left);
-    EYE.data.right = applyinterpolation(EYE.data.right);
+    EYE(dataIdx).data.left = applyinterpolation(EYE(dataIdx).data.left);
+    EYE(dataIdx).data.right = applyinterpolation(EYE(dataIdx).data.right);
+end
+
+if ~isempty(p.Results.UI)
+    p.Results.UI.UserData.EYE = EYE;
+    writetopanel(p.Results.UI,...
+        'processinghistory',...
+        'Interpolation');
 end
 
 end

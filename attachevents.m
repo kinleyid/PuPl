@@ -19,6 +19,7 @@ addParameter(p, 'eyeeventstoalign', []);
 addParameter(p, 'eventlogeventstoalign', []);
 addParameter(p, 'eventstoattach', []);
 addParameter(p, 'namestoattach', []);
+addParameter(p, 'UI', []);
 parse(p, varargin{:})
 
 if isempty(p.Results.eventlogs)
@@ -57,6 +58,12 @@ for dataIdx = 1:numel(EYE)
         offsetParams,...
         eventsToAttach,...
         namesToAttach);
+end
+
+if ~isempty(p.Results.UI)
+    p.Results.UI.UserData.EYE = EYE;
+    p.Results.UI.Visible = 'off';
+    p.Results.UI.Visible = 'on';
 end
 
 end

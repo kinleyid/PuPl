@@ -12,6 +12,7 @@ addParameter(p, 'type', [])
 addParameter(p, 'filenames', [])
 addParameter(p, 'directory', [])
 addParameter(p, 'format', [])
+addParameter(p, 'UI', []);
 parse(p, varargin{:});
 
 if isempty(p.Results.type)
@@ -56,6 +57,18 @@ end
 dataFiles = cellstr(dataFiles);
 
 structArray = cellfun(@(file) readraw(dataType, file, dataDirectory, dataFormat), dataFiles);
+
+if ~isempty(p.Results.UI)
+    if strcmp(dataType, 'eye data')
+        if ~isfield(p.Results.UI.UserData, 'EYE')
+            p.Results.UI.UserData.EYE = [];
+        end
+        p.Results.UI.UserData.EYE = cat(2, p.Results.UI.UserData.EYE, structArray);
+        writetopanel(p.Results.UI, 'datasetinfo', {structArray.name})
+    end
+    p.Results.UI.Visible = 'off';
+    p.Results.UI.Visible = 'on';
+end
 
 end
 
