@@ -23,6 +23,11 @@ addParameter(p, 'correctionType', []);
 addParameter(p, 'UI', []);
 parse(p, varargin{:});
 
+if isempty(EYE)
+    uiwait(msgbox('No eye data'));
+    return
+end
+
 if isempty(p.Results.epochDescriptions)
     q = sprintf('Simple epoching?\n(All epochs of same length and\ndefined using single events)');
     if strcmp(questdlg(q, q, 'Yes', 'No', 'No'), 'Yes')

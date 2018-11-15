@@ -11,6 +11,17 @@ addParameter(p, 'binDescriptions', []);
 addParameter(p, 'UI', []);
 parse(p, varargin{:});
 
+if isempty(EYE)
+    uiwait(msgbox('No eye data'));
+    return
+end
+
+try arrayfun(@(x) x.epoch, EYE, 'un', 0);
+catch
+    uiwait(msgbox('At least one dataset does not have trials'));
+    return
+end
+
 if isempty(p.Results.binDescriptions)
     binDescriptions = UI_getbindescriptions(EYE);
 else

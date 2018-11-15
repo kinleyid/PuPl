@@ -11,7 +11,6 @@ p = inputParser;
 addParameter(p, 'type', [])
 addParameter(p, 'data', [])
 addParameter(p, 'directory', [])
-addParameter(p, 'name', [])
 addParameter(p, 'UI', [])
 parse(p, varargin{:});
 
@@ -19,8 +18,8 @@ if isempty(p.Results.type)
     dataTypeOptions = {
         'eye data'
         'event logs'};
-    dataType = dataTypeOptions(listdlg('PromptString', 'Data type',...
-        'ListString', dataTypeOptions));
+    dataType = dataTypeOptions{listdlg('PromptString', 'Data type',...
+        'ListString', dataTypeOptions)};
 else
     dataType = p.Results.type;
 end
@@ -31,26 +30,17 @@ elseif strcmp(dataType, 'event logs')
 end
 
 if isempty(p.Results.data)
-    vars = who;
-    cmd = sprintf('structArray = %s',...
-        vars{listdlg('PromptString', 'Save which variables from the workspace?',...
-            'ListString', vars)});
-    eval(cmd);
+    uiwait(msgbox('No data to save'));
+    return
 else
     structArray = p.Results.data;
 end
 
-if isempty(p.Results.name)
-    name = 'data';
-else
-    name = p.Results.name;
-end
-
 if isempty(p.Results.directory)
     saveDirectory = uigetdir('.',...
-        sprintf('Save %s', name));
+        sprintf('Save %s', dataType));
     if saveDirectory == 0
-        fprintf('Not saving %s\n', name);
+        fprintf('Not saving %s\n', dataType);
         return
     end
 else

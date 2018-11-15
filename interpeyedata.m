@@ -4,6 +4,11 @@ p = inputParser;
 addParameter(p, 'UI', []);
 parse(p, varargin{:});
 
+if isempty(EYE)
+    uiwait(msgbox('No eye data'));
+    return
+end
+
 for dataIdx = 1:numel(EYE)
     EYE(dataIdx).data.left = applyinterpolation(EYE(dataIdx).data.left);
     EYE(dataIdx).data.right = applyinterpolation(EYE(dataIdx).data.right);

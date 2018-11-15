@@ -4,6 +4,11 @@ p = inputParser;
 addParameter(p, 'UI', []);
 parse(p, varargin{:});
 
+if isempty(EYE)
+    uiwait(msgbox('No eye data'));
+    return
+end
+
 if ~isempty(p.Results.UI)
     fprintf('Merging left and right streams...');
 end

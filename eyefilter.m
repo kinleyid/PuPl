@@ -6,6 +6,11 @@ addParameter(p, 'n', []);
 addParameter(p, 'UI', []);
 parse(p, varargin{:})
 
+if isempty(EYE)
+    uiwait(msgbox('No eye data'));
+    return
+end
+
 if isempty(p.Results.filterType) || isempty(p.Results.n)
     [filterType, n] = UI_getfilterinfo(EYE);
 else

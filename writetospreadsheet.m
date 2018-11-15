@@ -12,6 +12,21 @@ addParameter(p, 'bins', []);
 addParameter(p, 'saveTo', []);
 parse(p, varargin{:})
 
+if isempty(EYE)
+    uiwait(msgbox('No eye data'));
+    return
+end
+
+try arrayfun(@(x) x.data.both, EYE, 'un', 0);
+catch
+    uiwait(msgbox('Merge left and right streams before writing to spreadsheet'));
+    return
+end
+
+if ~isfield(EYE, 'bin')
+    uiwait(msgbox('Merge trials before writing to spreadsheet'));
+end
+
 if isempty(p.Results.bins)
     uniqueBinNames = {};
     for dataIdx = 1:numel(EYE)
@@ -19,7 +34,7 @@ if isempty(p.Results.bins)
             unique({EYE(dataIdx).bin.name}));
     end
     bins = uniqueBinNames(listdlg(...
-        'PromptString', 'Which bins should be written to csv?',...
+        'PromptString', 'Write which trial sets?',...
         'ListString', uniqueBinNames));
 else
     bins = p.Results.bins;
