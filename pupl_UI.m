@@ -8,6 +8,7 @@ userInterface = figure('Name', 'Pupillometry',...
         'dataCount', 0,...
         'eventLogCount', 0),...
     'SizeChangedFcn', @preservelayout,...
+    'DeleteFcn', @savewarning,...
     'MenuBar', 'none',...
     'ToolBar', 'none',...
     'Visible', 'off');
@@ -262,6 +263,24 @@ for idx = 1:numel(allData)
             'Value', value,...
             'FontSize', 10,...
             'Callback', @(h, e) update_UI);
+    end
+end
+
+end
+
+function savewarning(varargin)
+
+global eyeData eventLogs
+q = 'Save data from workspace?';
+a = questdlg(q, q, 'Yes', 'No', 'Yes');
+
+if strcmp(a, 'Yes')
+    data = {eyeData eventLogs};
+    types = {'eye data' 'event logs'};
+    for i = 1:numel(data)
+        if ~isempty(data{i})
+            pupl_save('data', data{i}, 'type', types{i});
+        end
     end
 end
 
