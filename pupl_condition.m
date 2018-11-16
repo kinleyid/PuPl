@@ -39,12 +39,10 @@ else
 end
 
 if isempty(p.Results.condIdx)
-    remainingData = {EYE.name};
     for i = 1:length(conditions)
         currIdx = listdlg('PromptString', sprintf('Which datasets are in %s?', conditions{i}),...
-            'ListString', remainingData);
-        [EYE(ismember(remainingData(currIdx), {EYE.name})).cond] = deal(conditions{i});
-        remainingData(currIdx) = [];
+            'ListString', {EYE.name});
+        [EYE(currIdx).condition] = deal(conditions{i});
     end
 else
     [EYE.condition] = conditions(p.Results.condIdx);

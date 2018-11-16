@@ -71,10 +71,8 @@ structArray = cellfun(@(file) readraw(dataType, file, dataDirectory, dataFormat)
 if ~isempty(p.Results.UI)
     if strcmp(dataType, 'eye data')
         p.Results.UI.UserData.EYE = cat(2, p.Results.UI.UserData.EYE, structArray);
-        writetopanel(p.Results.UI, 'datasetinfo', {structArray.name})
     elseif strcmp(dataType, 'event logs')
         p.Results.UI.UserData.eventLogs = cat(2, p.Results.UI.UserData.eventLogs, structArray);
-        writetopanel(p.Results.UI, 'eventlogsinfo', {structArray.name})
     end
     p.Results.UI.Visible = 'off';
     p.Results.UI.Visible = 'on';

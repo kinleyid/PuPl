@@ -3,6 +3,7 @@ function pupl_plot(EYE, varargin)
 p = inputParser;
 addParameter(p, 'dataIdx', []);
 addParameter(p, 'bin', []);
+addParameter(p, 'errorBars', []);
 parse(p, varargin{:});
 
 if isempty(EYE)
@@ -10,24 +11,48 @@ if isempty(EYE)
     return
 end
 
-if isempty(p.Resuslts.dataIdx)
-    if isfield(EYE, cond)
-        q = 'Epoch by condition?';
-        a = questdlg(q, q, 'Yes', 'No', 'Yes');
-        if strcmp(a, 'Yes')
-            
-        end
-    else
-        
-    end
-else
-    dataIdx = p.Results.dataIdx;
+if ~isfield(EYE, 'bin')
+    uiwait(msgbox('Organize trials into sets first'));
+    return
 end
 
-if isempty(p.Results.bin)
+if ~isfield(mergefields(EYE, 'bin', 'data'), 'both')
+    uiwait(msgbox('Merge the left and right streams before plotting'));
+    return
+end
+
+figure; hold on
+
+while true
+    if isempty(p.Results.dataIdx)
+        dataIdx = listdlg('PromptString', 'Plot from which dataset?',...
+            'ListString', {EYE.name},...
+            'SelectionMode', 'single');
+    else
+        dataIdx = p.Results.dataIdx;
+    end
+
+    if isempty(p.Results.bin)
+        binNames = unique(mergefields(EYE, 'bin', 'name'));
+        bin = binNames{listdlg('PromptString', 'Plot from which trial set?',...
+            'ListString', binNames,...
+            'SelectionMode', 'single')};
+    else
+        bin = p.Results.bin;
+    end
     
-else
-    bin = p.Results.bin;
+    data = EYE(dataIdx).bin(strcmp({EYE(dataIdx).bin.name}, bin)).data.both;
+    
+    plot(data')
+    plot(mean(data))
+    plot(mean(data) + std(data) / size(data,2), '--k');
+    plot(mean(data) - std(data) / size(data,2), '--k');
+    
+    q = 'Plot more data?';
+    a = questdlg(q, q, 'Yes', 'No', 'Yes');
+    if strcmp(a, 'No')
+        return
+    end
 end
 
 end

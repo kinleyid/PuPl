@@ -17,6 +17,7 @@ for dataIdx = 1:numel(EYE)
             'data', []);
         binMembers = find(ismember({EYE(dataIdx).epoch.name},...
             binDescriptions(binIdx).epochs));
+        [EYE(dataIdx).epoch(binMembers).description]
         dataStreams = fieldnames(EYE(dataIdx).epoch(1).data);
         for stream = dataStreams(:)'
             currBin.data.(stream{:}) = [];
