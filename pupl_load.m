@@ -37,7 +37,12 @@ else
     filenames = p.Results.filenames;
     directory = p.Results.directory;
 end
-filenames = cellstr(filenames);
+
+if isnumeric(filenames)
+    return
+else
+    filenames = cellstr(filenames);
+end
 
 structArray = [];
 for fileIdx = 1:numel(filenames)

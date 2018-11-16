@@ -21,9 +21,12 @@ if isempty(p.Results.type)
         'event logs'};
     dataType = dataTypeOptions(listdlg('PromptString', 'Data type',...
         'ListString', dataTypeOptions));
+    
 else
     dataType = p.Results.type;
 end
+
+
 
 if isempty(p.Results.format)
     if strcmpi(dataType, 'eye data')
@@ -39,17 +42,24 @@ if isempty(p.Results.format)
             'E-DataAid Excel files'
         };
     end
-    dataFormat = formatOptions{listdlg('PromptString', 'File format',...
-        'ListString', formatOptions)};
+    dataFormat = formatOptions(listdlg('PromptString', 'File format',...
+        'ListString', formatOptions));
+    if isempty(dataFormat)
+        return
+    end
 else
     dataFormat = p.Results.format;
 end
+dataFormat = char(dataFormat);
 
 if isempty(p.Results.directory) || isempty(p.Results.filenames)
     % uiwait(msgbox(sprintf('Select the %s to format', dataFormat)));
     [dataFiles, dataDirectory] = uigetfile('./*.*', ...
         sprintf('Select the %s', dataFormat),...
             'MultiSelect','on');
+    if dataFiles == 0
+        return
+    end
 else
     dataFiles = p.Results.filenames;
     dataDirectory = p.Results.directory;

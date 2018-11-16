@@ -40,7 +40,6 @@ if isempty(p.Results.directory)
     saveDirectory = uigetdir('.',...
         sprintf('Save %s', dataType));
     if saveDirectory == 0
-        fprintf('Not saving %s\n', dataType);
         return
     end
 else
