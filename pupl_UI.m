@@ -5,9 +5,12 @@ global userInterface activeEyeDataPanel activeEventLogsPanel
 userInterface = figure('Name', 'Pupillometry',...
     'NumberTitle', 'off',...
     'UserData', struct(...
-        'n', 0),...
+        'dataCount', 0,...
+        'eventLogCount', 0),...
+    'SizeChangedFcn', @preservelayout,...
     'MenuBar', 'none',...
-    'ToolBar', 'none');
+    'ToolBar', 'none',...
+    'Visible', 'off');
 
 % Active datasets
 activeEyeDataPanel = uibuttongroup('Title', 'Active datasets',...
@@ -83,16 +86,20 @@ uimenu(eventLogsMenu,...
     'Text', '&Import',...
     'Interruptible', 'off',...
     'MenuSelectedFcn', @(src, event)...
-        globalHelper(pupl_format('type', 'event logs')));
+        globalHelper(pupl_format('type', 'event logs'), 'append'));
 uimenu(eventLogsMenu,...
     'Text', '&Load',...
     'MenuSelectedFcn', @(src, event)...
-        globalHelper(pupl_load('type', 'event logs')));
+        globalHelper(pupl_load('type', 'event logs'), 'append'));
 uimenu(eventLogsMenu,...
     'Text', '&Save',...
     'MenuSelectedFcn', @(src, event)...
         globalHelper(pupl_save('type', 'eye data', 'data', geteventlogs)));
-
+uimenu(eventLogsMenu,...
+    'Text', '&Remove active event logs',...
+    'MenuSelectedFcn', @(src, event)...
+        globalHelper(deleteactive('event logs')));
+    
 % Experiment menu
 experimentMenu = uimenu(userInterface,...
     'Text', '&Experiment');
@@ -125,6 +132,8 @@ uimenu(spreadSheetMenu,...
     'MenuSelectedFcn', @(src, event)...
         writetospreadsheet(getactiveeyedata));
 
+userInterface.Visible = 'on';
+    
 end
 
 function globalHelper(in, varargin)
@@ -133,7 +142,6 @@ global eyeData activeEyeDataIdx eventLogs activeEventLogsIdx
 
 if ~isempty(in)
     dataType = in(1).type;
-
     if ~isempty(in)
         if strcmp(dataType, 'eye data')
             currStruct = eyeData;
@@ -171,31 +179,15 @@ function update_UI
 
 % For when new data is loaded or the active datasets change
 
-global userInterface activeEyeDataPanel activeEyeDataIdx eyeData 
+global userInterface 
+global activeEyeDataPanel activeEyeDataIdx eyeData 
+global activeEventLogsPanel activeEventLogsIdx eventLogs
 
-if userInterface.UserData.n ~= numel(eyeData)
-    userInterface.UserData.n = numel(eyeData);
-    delete(activeEyeDataPanel.Children)
-    activeEyeDataIdx(numel(activeEyeDataIdx)+1:numel(eyeData)) = true;
-    sep = 2;
-    buttonHeight = 20;
-    bgPos = getpixelposition(activeEyeDataPanel);
-    top = bgPos(4) - buttonHeight;
-    buttonWidth = bgPos(3) - sep;
-    for i = 1:numel(eyeData)
-        if activeEyeDataIdx(i)
-            value = 1;
-        else
-            value = 0;
-        end
-        uicontrol(activeEyeDataPanel,...
-            'Style', 'checkbox',...
-            'Position', [sep, top - (buttonHeight+sep)*i, buttonWidth, buttonHeight],...
-            'String', eyeData(i).name,...
-            'Value', value,...
-            'FontSize', 10,...
-            'Callback', @(h, e) update_UI);
-    end
+if userInterface.UserData.dataCount ~= numel(eyeData) || userInterface.UserData.eventLogCount ~= numel(eventLogs)
+    % Data added or deleted
+    userInterface.UserData.dataCount = numel(eyeData);
+    userInterface.UserData.eventLogCount = numel(eventLogs);
+    preservelayout
 end
 
 for i = 1:numel(activeEyeDataPanel.Children)
@@ -205,8 +197,15 @@ for i = 1:numel(activeEyeDataPanel.Children)
         activeEyeDataIdx(i) = false;
     end
 end
-
 activeEyeDataIdx = logical(activeEyeDataIdx);
+for i = 1:numel(activeEventLogsPanel.Children)
+    if activeEventLogsPanel.Children(i).Value == 1
+        activeEventLogsIdx(i) = true;
+    else
+        activeEventLogsIdx(i) = false;
+    end
+end
+activeEventLogsIdx = logical(activeEventLogsIdx);
 
 userInterface.Visible = 'off';
 userInterface.Visible = 'on';
@@ -224,5 +223,46 @@ function out = geteventlogs
 
 global eventLogs activeEventLogsIdx
 out = eventLogs(activeEventLogsIdx);
+
+end
+
+function preservelayout(varargin)
+
+sep = 2;
+buttonHeight = 20;
+
+global eyeData activeEyeDataPanel activeEyeDataIdx
+global eventLogs activeEventLogsPanel activeEventLogsIdx
+
+allData = {eyeData eventLogs};
+allPanels = {activeEyeDataPanel activeEventLogsPanel};
+allActiveIdx = {activeEyeDataIdx activeEventLogsIdx};
+
+for idx = 1:numel(allData)
+    currData = allData{idx};
+    currPanel = allPanels{idx};
+    currActiveIdx = allActiveIdx{idx};
+    if ~isempty(currPanel.Children)
+        delete(currPanel.Children)
+    end
+    currActiveIdx(numel(currActiveIdx)+1:numel(currData)) = true;
+    bgPos = getpixelposition(currPanel);
+    top = bgPos(4) - buttonHeight;
+    buttonWidth = bgPos(3) - sep;
+    for i = 1:numel(currData)
+        if currActiveIdx(i)
+            value = 1;
+        else
+            value = 0;
+        end
+        uicontrol(currPanel,...
+            'Style', 'checkbox',...
+            'Position', [sep, top - (buttonHeight+sep)*i, buttonWidth, buttonHeight],...
+            'String', currData(i).name,...
+            'Value', value,...
+            'FontSize', 10,...
+            'Callback', @(h, e) update_UI);
+    end
+end
 
 end

@@ -1,4 +1,4 @@
-function void = deleteData(dataType)
+function void = deleteactive(dataType)
 
 void = [];
 
