@@ -11,7 +11,6 @@ function EYE = pupl_condition(EYE, varargin)
 p = inputParser;
 addParameter(p, 'conditions', []);
 addParameter(p, 'condIdx', []);
-addParameter(p, 'UI', []);
 parse(p, varargin{:});
 
 if isempty(EYE)
@@ -48,11 +47,4 @@ else
     [EYE.condition] = conditions(p.Results.condIdx);
 end
 
-if ~isempty(p.Results.UI)
-    p.Results.UI.UserData.EYE = EYE;
-    p.Results.UI.Visible = 'off';
-    p.Results.UI.Visible = 'on';
-    writetopanel(p.Results.UI,...
-        'processinghistory',...
-        'Assignment to condition');
 end

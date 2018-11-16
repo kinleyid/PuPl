@@ -12,7 +12,6 @@ p = inputParser;
 addParameter(p, 'type', [])
 addParameter(p, 'filenames', [])
 addParameter(p, 'directory', [])
-addParameter(p, 'UI', []);
 parse(p, varargin{:});
 
 if isempty(p.Results.type)
@@ -47,20 +46,8 @@ end
 structArray = [];
 for fileIdx = 1:numel(filenames)
     data = load([directory '\\' filenames{fileIdx}], '-mat');
-    savedStructs = fieldnames(data);
-    for sIdx = 1:numel(savedStructs)
-        structArray = [structArray data.(savedStructs{sIdx})];
-    end
-end
-
-if ~isempty(p.Results.UI)
-    if strcmp(dataType, 'eye data')
-        p.Results.UI.UserData.EYE = cat(2, p.Results.UI.UserData.EYE, structArray);
-    elseif strcmp(dataType, 'event logs')
-        p.Results.UI.UserData.eventLogs = cat(2, p.Results.UI.UserData.eventLogs, structArray);
-    end
-    p.Results.UI.Visible = 'off';
-    p.Results.UI.Visible = 'on';
+    structArray = fieldconsistency(structArray, data.data);
+    structArray = cat(2, structArray, data.data);
 end
 
 end

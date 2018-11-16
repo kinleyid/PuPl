@@ -1,8 +1,4 @@
-function structArray = pupl_merge(EYE, varargin)
-
-p = inputParser;
-addParameter(p, 'UI', []);
-parse(p, varargin{:});
+function structArray = pupl_merge(EYE)
 
 if isempty(EYE)
     uiwait(msgbox('No eye data'));
@@ -43,12 +39,6 @@ for condIdx = 1:numel(conditions)
         condStruct.bin = cat(2, condStruct.bin, mergedBin);
     end
     structArray = [structArray condStruct];
-end
-
-if ~isempty(p.Results.UI)
-    p.Results.UI.UserData.EYE = structArray;
-    writetopanel(p.Results.UI, 'datasetinfo', {structArray.name}, 'overwrite');
-    writetopanel(p.Results.UI, 'processinghistory', 'Condition merging');
 end
 
 end

@@ -20,7 +20,6 @@ addParameter(p, 'rejectionThreshold', []);
 addParameter(p, 'baselineDescriptions', []);
 addParameter(p, 'epochsToCorrect', []);
 addParameter(p, 'correctionType', []);
-addParameter(p, 'UI', []);
 parse(p, varargin{:});
 
 if isempty(EYE)
@@ -101,20 +100,6 @@ if ~strcmp(correctionType, 'none')
     end
     [EYE.baselineDescriptions] = deal(baselineDescriptions);
     EYE = baselinecorrection(EYE, baselineDescriptions, correctionType);
-end
-
-if ~isempty(p.Results.UI)
-    p.Results.UI.UserData.EYE = EYE;
-    p.Results.UI.Visible = 'off';
-    p.Results.UI.Visible = 'on';
-    writetopanel(p.Results.UI,...
-        'processinghistory',...
-        'Separation into trials');
-    if ~strcmp(correctionType, 'none')
-        writetopanel(p.Results.UI,...
-            'processinghistory',...
-            sprintf('%s', correctionType{:}));
-    end
 end
 
 end

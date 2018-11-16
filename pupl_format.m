@@ -12,7 +12,6 @@ addParameter(p, 'type', [])
 addParameter(p, 'filenames', [])
 addParameter(p, 'directory', [])
 addParameter(p, 'format', [])
-addParameter(p, 'UI', []);
 parse(p, varargin{:});
 
 if isempty(p.Results.type)
@@ -67,16 +66,6 @@ end
 dataFiles = cellstr(dataFiles);
 
 structArray = cellfun(@(file) readraw(dataType, file, dataDirectory, dataFormat), dataFiles);
-
-if ~isempty(p.Results.UI)
-    if strcmp(dataType, 'eye data')
-        p.Results.UI.UserData.EYE = cat(2, p.Results.UI.UserData.EYE, structArray);
-    elseif strcmp(dataType, 'event logs')
-        p.Results.UI.UserData.eventLogs = cat(2, p.Results.UI.UserData.eventLogs, structArray);
-    end
-    p.Results.UI.Visible = 'off';
-    p.Results.UI.Visible = 'on';
-end
 
 end
 
@@ -180,6 +169,7 @@ if strcmpi(dataType, 'eye data')
     
     outStruct = struct(...
         'name', name,...
+        'type', 'eye data',...
         'data', data,...
         'srate', srate,...
         'urData', data,...
@@ -230,6 +220,7 @@ elseif strcmpi(dataType, 'event logs')
 
     outStruct = struct(...
         'name', name,...
+        'type', 'event logs',...
         'event', struct(...
             'type', eventTypes,...
             'time', num2cell(eventTimes)));
