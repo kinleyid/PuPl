@@ -5,9 +5,7 @@ if isempty(EYE)
     return
 end
 
-if ~isempty(p.Results.UI)
-    fprintf('Merging left and right streams...');
-end
+fprintf('Merging left and right streams...');
 
 for dataIdx = 1:numel(EYE)
     fprintf('dataset %d...', dataIdx)
@@ -15,5 +13,7 @@ for dataIdx = 1:numel(EYE)
         EYE(dataIdx).data.left
         EYE(dataIdx).data.right], 1);
 end
+
+fprintf('done\n');
 
 end

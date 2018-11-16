@@ -141,7 +141,7 @@ if strcmpi(dataType, 'eye data')
                 'left', double(eyeDataStruct.time_series(5, :)),...
                 'right', double(eyeDataStruct.time_series(8, :)));
             
-            t0 = eyeDataStruct.time_stamps(1)*1000;
+            t0 = eyeDataStruct.time_stamps(1)*1000; % ms
             
         end
 
@@ -156,8 +156,8 @@ if strcmpi(dataType, 'eye data')
             eventDataStruct.time_stamps(emptyIdx) = [];
             
             events = eventDataStruct.time_series;
-            times = double(eventDataStruct.time_stamps*1000 - t0);
-            latencies = round(times/srate + 1);
+            times = double(eventDataStruct.time_stamps*1000 - t0); % ms
+            latencies = round(times/1000*srate + 1);
             
             event = struct(...
                 'type', events,...

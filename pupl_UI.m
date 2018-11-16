@@ -1,18 +1,21 @@
 function pupl_UI
 
-global userInterface activePanel
+global userInterface activeEyeDataPanel activeEventLogsPanel
 
 userInterface = figure('Name', 'Pupillometry',...
     'NumberTitle', 'off',...
     'UserData', struct(...
-        'activeIdx', []),...
+        'n', 0),...
     'MenuBar', 'none',...
     'ToolBar', 'none');
 
 % Active datasets
-activePanel = uibuttongroup('Title', 'Active datasets',...
-    'Position',[0.01 0.01 .5 0.95],...
-    'FontSize', 12);
+activeEyeDataPanel = uibuttongroup('Title', 'Active datasets',...
+    'Position',[0.01 0.01 .48 0.95],...
+    'FontSize', 10);
+activeEventLogsPanel = uibuttongroup('Title', 'Active event logs',...
+    'Position',[0.51 0.01 .48 0.95],...
+    'FontSize', 10);
 
 % Info on datasets, event logs, processing history
 
@@ -35,7 +38,7 @@ uimenu(fileMenu,...
 uimenu(fileMenu,...
     'Text', '&Remove active datasets',...
     'MenuSelectedFcn', @(src, event)...
-        globalHelper(deleteData));
+        globalHelper(deleteData('eye data')));
 
 % Processing menu
 processingMenu = uimenu(userInterface, 'Text', '&Process');
@@ -106,7 +109,11 @@ uimenu(experimentMenu,...
 plottingMenu = uimenu(userInterface,...
     'Text', '&Plot');
 uimenu(plottingMenu,...
-    'Text', '&Plot',...
+    'Text', '&Plot continuous',...
+    'MenuSelectedFcn', @(src, event)...
+        plotcontinuous(getactiveeyedata));
+uimenu(plottingMenu,...
+    'Text', 'P&lot',...
     'MenuSelectedFcn', @(src, event)...
         pupl_plot(getactiveeyedata));
 
@@ -122,23 +129,37 @@ end
 
 function globalHelper(in, varargin)
 
+global eyeData activeEyeDataIdx eventLogs activeEventLogsIdx
+
 if ~isempty(in)
-    if strcmp(in.type, 'eye data')
-        global eyeData activeIdx
-        if ~isempty(eyeData)
+    dataType = in(1).type;
+
+    if ~isempty(in)
+        if strcmp(dataType, 'eye data')
+            currStruct = eyeData;
+            activeIdx = activeEyeDataIdx;
+        elseif strcmp(dataType, 'event logs')
+            currStruct = eventLogs;
+            activeIdx = activeEventLogsIdx;
+        end
+        if ~isempty(currStruct)
             % Create empty fields if necessary so that structs can still be in an array
-            eyeData = fieldconsistency(eyeData, in);
+            currStruct = fieldconsistency(currStruct, in);
             if any(strcmpi(varargin, 'append'))
-                eyeData = [eyeData in];
+                currStruct = [currStruct in];
             else
-                eyeData(activeIdx) = in;
+                currStruct(activeIdx) = in;
             end
         else
-            eyeData = in;
+            currStruct = in;
         end
-    elseif strcmp(in.type, 'event logs')
-        global eventLogs
-        eventLogs = in;
+        if strcmp(dataType, 'eye data')
+            eyeData = currStruct;
+            activeEyeDataIdx = activeIdx;
+        elseif strcmp(dataType, 'event logs')
+            eventLogs = currStruct;
+            activeEventLogsIdx = activeIdx;
+        end
     end
 end
 
@@ -150,39 +171,42 @@ function update_UI
 
 % For when new data is loaded or the active datasets change
 
-global userInterface activePanel activeIdx eyeData 
+global userInterface activeEyeDataPanel activeEyeDataIdx eyeData 
 
-if numel(eyeData) > numel(activeIdx)
-    delete(activePanel.Children)
-    activeIdx(numel(activeIdx)+1:numel(eyeData)) = true;
+if userInterface.UserData.n ~= numel(eyeData)
+    userInterface.UserData.n = numel(eyeData);
+    delete(activeEyeDataPanel.Children)
+    activeEyeDataIdx(numel(activeEyeDataIdx)+1:numel(eyeData)) = true;
     sep = 2;
     buttonHeight = 20;
-    bgPos = getpixelposition(activePanel);
+    bgPos = getpixelposition(activeEyeDataPanel);
     top = bgPos(4) - buttonHeight;
     buttonWidth = bgPos(3) - sep;
     for i = 1:numel(eyeData)
-        if activeIdx(i)
+        if activeEyeDataIdx(i)
             value = 1;
         else
             value = 0;
         end
-        uicontrol(activePanel,...
+        uicontrol(activeEyeDataPanel,...
             'Style', 'checkbox',...
             'Position', [sep, top - (buttonHeight+sep)*i, buttonWidth, buttonHeight],...
             'String', eyeData(i).name,...
             'Value', value,...
             'FontSize', 10,...
             'Callback', @(h, e) update_UI);
-    end    
-end
-
-for i = 1:numel(activePanel.Children)
-    if activePanel.Children(i).Value == 1
-        activeIdx(i) = true;
-    else
-        activeIdx(i) = false;
     end
 end
+
+for i = 1:numel(activeEyeDataPanel.Children)
+    if activeEyeDataPanel.Children(i).Value == 1
+        activeEyeDataIdx(i) = true;
+    else
+        activeEyeDataIdx(i) = false;
+    end
+end
+
+activeEyeDataIdx = logical(activeEyeDataIdx);
 
 userInterface.Visible = 'off';
 userInterface.Visible = 'on';
@@ -191,14 +215,14 @@ end
 
 function out = getactiveeyedata
 
-global eyeData activeIdx
-out = eyeData(activeIdx);
+global eyeData activeEyeDataIdx
+out = eyeData(activeEyeDataIdx);
 
 end
 
 function out = geteventlogs
 
-global eventLogs
-out = eventLogs;
+global eventLogs activeEventLogsIdx
+out = eventLogs(activeEventLogsIdx);
 
 end
