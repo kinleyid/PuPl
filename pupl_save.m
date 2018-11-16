@@ -1,4 +1,4 @@
-function pupl_save(varargin)
+function void = pupl_save(varargin)
 
 % Save eye data or event logs
 %   Inputs
@@ -6,6 +6,8 @@ function pupl_save(varargin)
 % data--struct array of eye dats to be saved
 % directory--directory to save to
 % name--char description of data being saved; not necessary
+
+void = [];
 
 p = inputParser;
 addParameter(p, 'type', [])

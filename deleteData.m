@@ -1,5 +1,8 @@
-function deleteData(data, idx)
+function void = deleteData
 
-data(idx) = [];
+void = [];
+
+global eyeData activeIdx
+eyeData(activeIdx) = [];
 
 end
