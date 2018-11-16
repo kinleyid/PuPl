@@ -43,7 +43,7 @@ if isempty(p.Results.condIdx)
     for i = 1:length(conditions)
         currIdx = listdlg('PromptString', sprintf('Which datasets are in %s?', conditions{i}),...
             'ListString', remainingData);
-        EYE(ismember(remainingData(currIdx), {EYE.name})).cond = conditions(i);
+        [EYE(ismember(remainingData(currIdx), {EYE.name})).cond] = deal(conditions{i});
         remainingData(currIdx) = [];
     end
 else

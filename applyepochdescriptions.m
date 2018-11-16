@@ -12,7 +12,7 @@ for dataIdx = 1:numel(EYE)
     if ~isfield(EYE(dataIdx), 'epoch')
         EYE(dataIdx).epoch = [];
     else
-        EYE(dataIdx).epoch = EYE.epoch(:)';
+        EYE(dataIdx).epoch = EYE(dataIdx).epoch(:)';
     end
     for epochIdx = 1:numel(epochDescriptions)
         spans = getlatenciesfromspandescription(EYE(dataIdx),...
