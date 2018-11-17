@@ -126,19 +126,20 @@ if strcmpi(dataType, 'eye data')
     elseif strcmpi(fileFormat,'XDF files')
         
         % Ensure that the recording starts at time 0, latency 1
-        
+        fprintf('Now loading %s\n', fileName);
         streams = load_xdf([fileDirectory '\\' fileName]);
-        streamNames = cellfun(@(x) x.info.name, streams, 'un', 0);
+        streamTypes = cellfun(@(x) x.info.type, streams, 'un', 0);
         
-        eyeTypes = {'EyeTribe' 'Other possible sources go here'};
-        if ~any(ismember(streamNames, eyeTypes))
+        if ~any(strcmpi(streamTypes, 'Gaze'))
             error('No eye data to be found in this xdf file');
         else
-            eyeDataStruct = streams{ismember(streamNames, eyeTypes)};
+            eyeDataStruct = streams{strcmpi(streamTypes, 'Gaze')};
 
             srate = str2double(eyeDataStruct.info.nominal_srate);
             
             eyeDataStruct.time_series(eyeDataStruct.time_series == 0) = NaN;
+            fprintf('Found %s channels\n', eyeDataStruct.info.channel_count)
+            fprintf('Assuming channel 5 is left dilation and channel 8 is right dilation\n');
             data = struct(...
                 'left', double(eyeDataStruct.time_series(5, :)),...
                 'right', double(eyeDataStruct.time_series(8, :)));
@@ -146,12 +147,11 @@ if strcmpi(dataType, 'eye data')
             t0 = eyeDataStruct.time_stamps(1)*1000; % ms
             
         end
-
-        eventLogTypes = {'Presentation' 'Other possible sources go here'};
         
-        if any(ismember(streamNames, eventLogTypes))
+        if any(strcmpi(streamTypes, 'Markers'))
             
-            eventDataStruct = streams{ismember(streamNames, eventLogTypes)};
+            fprintf('Found event data as well\n');
+            eventDataStruct = streams{strcmpi(streamTypes, 'Markers')};
 
             emptyIdx = cellfun(@isempty, eventDataStruct.time_series);            
             eventDataStruct.time_series(emptyIdx) = [];
@@ -160,6 +160,8 @@ if strcmpi(dataType, 'eye data')
             events = eventDataStruct.time_series;
             times = double(eventDataStruct.time_stamps*1000 - t0); % ms
             latencies = round(times/1000*srate + 1);
+            
+            fprintf('%d events found\n', numel(events));
             
             event = struct(...
                 'type', events,...
@@ -208,11 +210,11 @@ elseif strcmpi(dataType, 'event logs')
         
         streams = load_xdf([fileDirectory '\\' fileName]);
         
-        streamNames = cellfun(@(x) x.info.name, streams, 'un', 0);
+        streamTypes = cellfun(@(x) x.info.name, streams, 'un', 0);
         eventLogTypes = {'Presentation' 'Other possible sources go here'};
         
-        if any(ismember(streamNames, eventLogTypes))    
-            eventDataStruct = streams{ismember(streamNames, eventLogTypes)};
+        if any(ismember(streamTypes, eventLogTypes))    
+            eventDataStruct = streams{ismember(streamTypes, eventLogTypes)};
 
             emptyIdx = cellfun(@isempty, eventDataStruct.time_series);            
             eventDataStruct.time_series(emptyIdx) = [];

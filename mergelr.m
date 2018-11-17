@@ -5,10 +5,10 @@ if isempty(EYE)
     return
 end
 
-fprintf('Merging left and right streams...');
+fprintf('Merging left and right streams\n');
 
 for dataIdx = 1:numel(EYE)
-    fprintf('dataset %d...', dataIdx)
+    fprintf('%s...', EYE(dataIdx).name)
     EYE(dataIdx).data.both = mean(...
         cat(1, EYE(dataIdx).data.left,...
         EYE(dataIdx).data.right), 1);
@@ -22,8 +22,7 @@ for dataIdx = 1:numel(EYE)
             cat(3, EYE(dataIdx).bin(binIdx).data.left,...
                 EYE(dataIdx).bin(binIdx).data.right), 3);
     end
+    fprintf('done\n')
 end
-
-fprintf('done\n');
 
 end

@@ -45,5 +45,6 @@ figure;
 image(times, 1:size(data, 1), data,'CDataMapping','scaled')
 ylabel('Trial')
 xlabel('Time (s)')
+colorbar;
 
 end

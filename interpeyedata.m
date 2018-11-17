@@ -5,9 +5,12 @@ if isempty(EYE)
     return
 end
 
+fprintf('Interpolating\n')
 for dataIdx = 1:numel(EYE)
+    fprintf('%s...', EYE(dataIdx).name)
     EYE(dataIdx).data.left = applyinterpolation(EYE(dataIdx).data.left);
     EYE(dataIdx).data.right = applyinterpolation(EYE(dataIdx).data.right);
+    fprintf('done\n')
 end
 
 end

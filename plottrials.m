@@ -21,7 +21,8 @@ if ~isfield(mergefields(EYE, 'bin', 'data'), 'both')
     return
 end
 
-figure; hold on
+f = figure('Visible', 'off'); hold on
+xlabel('Time (s)');
 
 while true
     if isempty(p.Results.dataIdx)
@@ -43,11 +44,14 @@ while true
     
     data = EYE(dataIdx).bin(strcmp({EYE(dataIdx).bin.name}, bin)).data.both;
     
-    plot(mean(data))
-    plot(mean(data) + std(data) / size(data,2), '--k');
-    plot(mean(data) - std(data) / size(data,2), '--k');
-    
-    q = 'Plot more data?';
+    x = 1:size(data, 2);
+    t = (x - 1)/EYE(dataIdx).srate;
+    f.Visible = 'on';
+    figure(f);
+    plot(t, mean(data))
+    plot(t, mean(data) + std(data) / size(data,2), '--k');
+    plot(t, mean(data) - std(data) / size(data,2), '--k');
+    q = 'Add more data to this plot?';
     a = questdlg(q, q, 'Yes', 'No', 'Yes');
     if strcmp(a, 'No')
         return
