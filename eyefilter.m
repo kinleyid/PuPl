@@ -11,7 +11,7 @@ if isempty(EYE)
 end
 
 if isempty(p.Results.filterType) || isempty(p.Results.n)
-    [filterType, n] = UI_getfilterinfo(EYE);
+    [filterType, n] = UI_getfilterinfo;
 else
     filterType = p.Results.filterType;
     n = p.Results.n;
@@ -22,6 +22,71 @@ for dataIdx = 1:numel(EYE)
     fprintf('%s...', EYE(dataIdx).name); 
     EYE(dataIdx).data = applyeyefilter(EYE(dataIdx), filterType, n);
     fprintf('done\n');
+end
+
+end
+
+function [filterType, smoothN] = UI_getfilterinfo
+
+filterOptions = {'Median' 'Mean' 'Gaussian kernel'};
+
+q = 'Which type of moving average?';
+filterType = questdlg(q, q, filterOptions{:}, 'Median');
+q = 'Average of how many points on either side?';
+smoothN = str2double(inputdlg(q, q, 1, {'8'}));
+
+end
+
+function tempData = applyeyefilter(EYE, filterType, smoothN)
+
+%  Inputs
+% EYE--single struct, not array
+% filterType
+% smoothN
+
+if strcmpi(filterType, 'Median')
+    filtfunc = @eyemedian;
+elseif strcmpi(filterType, 'Mean')
+    filtfunc = @eyemean;
+elseif strcmpi(filterType, 'Gaussian kernel')
+    filtfunc = @gaussiankernel;
+end
+
+[permData, tempData] = deal(EYE.data);
+
+for stream = reshape(fieldnames(tempData), 1, [])
+    for latIdx = 1:length(permData.left)
+        if ~isnan(tempData.(stream{:})(latIdx))
+            sLat = max(latIdx-smoothN,1);
+            eLat = min(latIdx+smoothN,length(tempData.(stream{:})));
+            tempData.(stream{:})(latIdx) = filtfunc(permData.(stream{:})(sLat:eLat),...
+                sLat, eLat, latIdx);
+        end
+    end
+end
+
+end
+
+function y = eyemean(v, varargin)
+
+y = mean(v, 'omitnan');
+
+end
+
+function y = eyemedian(v, varargin)
+
+y = median(v, 'omitnan');
+
+end
+
+function y = gaussiankernel(v, sLat, eLat, latIdx)
+
+if numel(v) > 1
+    x = (sLat:eLat) - latIdx;
+    s = max(eLat - latIdx, latIdx - sLat);
+    g = exp(-((((x)/(s/3)).^2)));
+    y = sum(g(:) .* v(:), 'omitnan');
+    y = y / sum(g(~isnan(v)));
 end
 
 end
