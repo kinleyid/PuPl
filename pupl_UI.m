@@ -21,9 +21,7 @@ activeEventLogsPanel = uibuttongroup('Title', 'Active event logs',...
     'Position',[0.51 0.01 .48 0.95],...
     'FontSize', 10);
 
-% Info on datasets, event logs, processing history
-
-% Data menu
+% File menu
 fileMenu = uimenu(userInterface,...
     'Tag', 'fileMenu',...
     'Text', '&File');
@@ -162,7 +160,7 @@ if ~isempty(in)
         end
         if ~isempty(currStruct)
             % Create empty fields if necessary so that structs can still be in an array
-            currStruct = fieldconsistency(currStruct, in);
+            [currStruct, in] = fieldconsistency(currStruct, in);
             if any(strcmpi(varargin, 'append'))
                 currStruct = [currStruct in];
             else

@@ -8,8 +8,9 @@ end
 fprintf('Interpolating\n')
 for dataIdx = 1:numel(EYE)
     fprintf('%s...', EYE(dataIdx).name)
-    EYE(dataIdx).data.left = applyinterpolation(EYE(dataIdx).data.left);
-    EYE(dataIdx).data.right = applyinterpolation(EYE(dataIdx).data.right);
+    for field = reshape(fieldnames(EYE(dataIdx)), 1, [])
+        EYE(dataIdx).data.(field{:}) = applyinterpolation(EYE(dataIdx).data.(field{:}));
+    end
     fprintf('done\n')
 end
 
