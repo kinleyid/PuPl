@@ -202,17 +202,20 @@ end
 
 for i = 1:numel(activeEyeDataPanel.Children)
     if activeEyeDataPanel.Children(i).Value == 1
-        activeEyeDataIdx(i) = true;
+        activeEyeDataIdx(numel(activeEyeDataPanel.Children) + 1 - i) = true;
     else
-        activeEyeDataIdx(i) = false;
+        activeEyeDataIdx(numel(activeEyeDataPanel.Children) + 1 - i) = false;
     end
 end
 activeEyeDataIdx = logical(activeEyeDataIdx);
+
+
+
 for i = 1:numel(activeEventLogsPanel.Children)
     if activeEventLogsPanel.Children(i).Value == 1
-        activeEventLogsIdx(i) = true;
+        activeEventLogsIdx(numel(activeEventLogsPanel.Children) + 1 - i) = true;
     else
-        activeEventLogsIdx(i) = false;
+        activeEventLogsIdx(numel(activeEventLogsPanel.Children) + 1 - i) = false;
     end
 end
 activeEventLogsIdx = logical(activeEventLogsIdx);
@@ -260,7 +263,7 @@ for idx = 1:numel(allData)
     top = bgPos(4) - buttonHeight;
     buttonWidth = bgPos(3) - sep;
     for i = 1:numel(currData)
-        if currActiveIdx(i)
+        if currActiveIdx(numel(currData) + 1 - i)
             value = 1;
         else
             value = 0;
