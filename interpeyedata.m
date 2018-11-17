@@ -8,7 +8,7 @@ end
 fprintf('Interpolating\n')
 for dataIdx = 1:numel(EYE)
     fprintf('%s...', EYE(dataIdx).name)
-    for field = reshape(fieldnames(EYE(dataIdx)), 1, [])
+    for field = reshape(fieldnames(EYE(dataIdx).data), 1, [])
         EYE(dataIdx).data.(field{:}) = applyinterpolation(EYE(dataIdx).data.(field{:}));
     end
     fprintf('done\n')

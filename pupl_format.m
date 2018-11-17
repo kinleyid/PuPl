@@ -139,10 +139,20 @@ if strcmpi(dataType, 'eye data')
             
             eyeDataStruct.time_series(eyeDataStruct.time_series == 0) = NaN;
             fprintf('Found %s channels\n', eyeDataStruct.info.channel_count)
-            fprintf('Assuming channel 5 is left dilation and channel 8 is right dilation\n');
+            channelNames = cellfun(@(x) lower(x.label), eyeDataStruct.info.desc.channels.channel, 'un', 0);
+            
+            pupilIdx = (cellfun(@(x) ~isempty(strfind(x, 'diameter')), channelNames)...
+                    | cellfun(@(x) ~isempty(strfind(x, 'pupil')), channelNames)...
+                    | cellfun(@(x) ~isempty(strfind(x, 'dilation')), channelNames))...
+                & cellfun(@(x) isempty(strfind(x, 'x')), channelNames)...
+                & cellfun(@(x) isempty(strfind(x, 'y')), channelNames);
+            leftIdx = pupilIdx & cellfun(@(x) ~isempty(strfind(x, 'left')), channelNames);
+            rightIdx = pupilIdx & cellfun(@(x) ~isempty(strfind(x, 'right')), channelNames);
+            fprintf('Assuming channel %d (labelled %s) is left dilation\n', find(leftIdx), channelNames{leftIdx});
+            fprintf('Assuming channel %d (labelled %s) is right dilation\n', find(rightIdx), channelNames{rightIdx});
             data = struct(...
-                'left', double(eyeDataStruct.time_series(5, :)),...
-                'right', double(eyeDataStruct.time_series(8, :)));
+                'left', double(eyeDataStruct.time_series(leftIdx, :)),...
+                'right', double(eyeDataStruct.time_series(rightIdx, :)));
             
             t0 = eyeDataStruct.time_stamps(1)*1000; % ms
             

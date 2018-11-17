@@ -52,6 +52,7 @@ else
 end
 
 for fileIdx = 1:numel(filenames)
+    fprintf('Loading %s\n', filenames{fileIdx});
     data = load([directory '\\' filenames{fileIdx}], '-mat');
     structArray = fieldconsistency(structArray, data.data);
     structArray = cat(2, structArray, data.data);

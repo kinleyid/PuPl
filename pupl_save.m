@@ -48,6 +48,7 @@ else
 end
 
 for data = structArray(:)'
+    fprintf('Saving %s\n', data.name);
     save(strcat(saveDirectory, '\\', data.name, fileExt), 'data');
 end
 

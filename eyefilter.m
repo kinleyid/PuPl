@@ -17,8 +17,11 @@ else
     n = p.Results.n;
 end
 
+fprintf('Applying %s filter\n', filterType);
 for dataIdx = 1:numel(EYE)
+    fprintf('%s...', EYE(dataIdx).name); 
     EYE(dataIdx).data = applyeyefilter(EYE(dataIdx), filterType, n);
+    fprintf('done\n');
 end
 
 end

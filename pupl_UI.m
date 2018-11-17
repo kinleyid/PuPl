@@ -297,3 +297,25 @@ if ~isempty(eyeData) || ~isempty(eventLogs)
 end
 
 end
+
+function void = deleteactive(dataType)
+
+void = [];
+
+global eyeData activeEyeDataIdx eventLogs activeEventLogsIdx
+
+if strcmpi(dataType, 'eye data')
+    for currData = reshape(eyeData(activeEyeDataIdx), 1, [])
+        fprintf('Removing %s\n', currData.name);
+    end
+    eyeData(activeEyeDataIdx) = [];
+    activeEyeDataIdx(activeEyeDataIdx) = [];
+elseif strcmpi(dataType, 'event logs')
+    for currData = reshape(eventLogs(activeEventLogsIdx), 1, [])
+        fprintf('Removing %s\n', currData.name);
+    end
+    eventLogs(activeEventLogsIdx) = [];
+    activeEventLogsIdx(activeEventLogsIdx) = [];
+end
+
+end
