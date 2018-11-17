@@ -14,18 +14,20 @@ addParameter(p, 'directory', [])
 addParameter(p, 'format', [])
 parse(p, varargin{:});
 
+structArray = [];
+
 if isempty(p.Results.type)
     dataTypeOptions = {
         'eye data'
         'event logs'};
     dataType = dataTypeOptions(listdlg('PromptString', 'Data type',...
         'ListString', dataTypeOptions));
-    
+    if isempty(dataType)
+        return
+    end
 else
     dataType = p.Results.type;
 end
-
-
 
 if isempty(p.Results.format)
     if strcmpi(dataType, 'eye data')
@@ -173,7 +175,10 @@ if strcmpi(dataType, 'eye data')
         'data', data,...
         'srate', srate,...
         'urData', data,...
-        'event', event);
+        'event', event,...
+        'epoch', [],...
+        'bin', [],...
+        'cond', []);
     
 elseif strcmpi(dataType, 'event logs')
     if strcmp(fileFormat,'Noldus Excel files')

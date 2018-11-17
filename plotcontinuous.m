@@ -9,7 +9,9 @@ end
 nSeconds = 5;
 x = 1:(nSeconds*srate);
 
-f = figure('KeyPressFcn', @moveData,...
+f = figure('Name', 'Use H J K L keys to scroll',...
+    'NumberTitle', 'off',...
+    'KeyPressFcn', @moveData,...
     'UserData', struct(...
         'x', x,...
         'data', EYE,...
@@ -55,14 +57,12 @@ for dataIdx = 1:numel(EYE)
     end
 end
 for dataIdx = 1:numel(EYE)
-    
     cla(subplot(numel(EYE), 1, dataIdx)); hold on
     plot(xtimes, EYE(dataIdx).data.right(x), 'r');
     plot(xtimes, EYE(dataIdx).data.left(x), 'b');
     if isfield(EYE(dataIdx).data, 'both')
         plot(xtimes, EYE(dataIdx).data.both(x), 'k');
     end
-    
     xlim([xtimes(1) xtimes(end)]);
     ylimits = [min(structfun(@min, EYE(dataIdx).data)) max(structfun(@max, EYE(dataIdx).data))];
     for eventIdx = find(ismember([EYE(dataIdx).event.latency], x))
@@ -76,4 +76,3 @@ for dataIdx = 1:numel(EYE)
 end
 
 end
-

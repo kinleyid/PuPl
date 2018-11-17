@@ -1,4 +1,4 @@
-function pupl_plot(EYE, varargin)
+function plottrials(EYE, varargin)
 
 p = inputParser;
 addParameter(p, 'dataIdx', []);
@@ -10,8 +10,8 @@ if isempty(EYE)
     uiwait(msgbox('No eye data'));
     return
 end
-
-if ~isfield(EYE, 'bin')
+    
+if isempty(EYE.bin)
     uiwait(msgbox('Organize trials into sets first'));
     return
 end
@@ -43,7 +43,6 @@ while true
     
     data = EYE(dataIdx).bin(strcmp({EYE(dataIdx).bin.name}, bin)).data.both;
     
-    plot(data')
     plot(mean(data))
     plot(mean(data) + std(data) / size(data,2), '--k');
     plot(mean(data) - std(data) / size(data,2), '--k');

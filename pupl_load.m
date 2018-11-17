@@ -14,12 +14,17 @@ addParameter(p, 'filenames', [])
 addParameter(p, 'directory', [])
 parse(p, varargin{:});
 
+structArray = [];
+
 if isempty(p.Results.type)
     dataTypeOptions = {
         'eye data'
         'event logs'};
     dataType = dataTypeOptions(listdlg('PromptString', 'Data type',...
         'ListString', dataTypeOptions));
+    if isempty(dataType)
+        return
+    end
 else
     dataType = p.Results.type;
 end
@@ -32,6 +37,9 @@ end
 if isempty(p.Results.filenames) || isempty(p.Results.filenames)
     [filenames, directory] = uigetfile(extFilter,...
         'MultiSelect', 'on');
+    if filenames == 0
+        return
+    end
 else
     filenames = p.Results.filenames;
     directory = p.Results.directory;
@@ -43,7 +51,6 @@ else
     filenames = cellstr(filenames);
 end
 
-structArray = [];
 for fileIdx = 1:numel(filenames)
     data = load([directory '\\' filenames{fileIdx}], '-mat');
     structArray = fieldconsistency(structArray, data.data);
