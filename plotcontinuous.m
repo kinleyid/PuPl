@@ -63,6 +63,16 @@ for dataIdx = 1:numel(EYE)
     if isfield(EYE(dataIdx).data, 'both')
         plot(xtimes, EYE(dataIdx).data.both(x), 'k');
     end
+    if isfield(EYE(dataIdx), 'isBlink')
+        blinkIdx = EYE(dataIdx).isBlink(x);
+        for field = reshape(fieldnames(EYE(dataIdx).data), 1, [])
+            currDat = EYE(dataIdx).data.(field{:})(x);
+            currDat(~blinkIdx) = nan;
+            plot(xtimes, currDat,...
+                'color', [0.5 0.5 0.5],...
+                'linewidth', 2);
+        end
+    end
     xlim([xtimes(1) xtimes(end)]);
     ylimits = [min(structfun(@min, EYE(dataIdx).data)) max(structfun(@max, EYE(dataIdx).data))];
     for eventIdx = find(ismember([EYE(dataIdx).event.latency], x))
