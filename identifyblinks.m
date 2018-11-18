@@ -37,18 +37,18 @@ fprintf('Identifying blinks...\n');
 for dataIdx = 1:numel(EYE)
     fprintf('%s...', EYE(dataIdx).name);
     
-    isBlink = false(size(EYE(dataIdx).data.left));
+    isBlink = false(size(EYE(dataIdx).urData.left));
     
     paddingLen = round(paddingTime/1000*EYE(dataIdx).srate);
     urWindow = 0:round(windowTime/1000*EYE(dataIdx).srate);
     currWindow = urWindow;
-    for step = 1:(numel(EYE(dataIdx).data.left)-numel(currWindow) + 1)
+    for step = 1:(numel(EYE(dataIdx).urData.left)-numel(currWindow) + 1)
         currWindow = urWindow + step;
-        if (nnz(isnan(EYE(dataIdx).data.left(currWindow)))...
-                +nnz(isnan(EYE(dataIdx).data.right(currWindow))))...
+        if (nnz(isnan(EYE(dataIdx).urData.left(currWindow)))...
+                +nnz(isnan(EYE(dataIdx).urData.right(currWindow))))...
                 /(2*numel(currWindow)) >= missingPpn
             pad1 = max(1, currWindow(1)-paddingLen);
-            pad2 = min(numel(EYE(dataIdx).data.left), currWindow(end)+paddingLen);
+            pad2 = min(numel(EYE(dataIdx).urData.left), currWindow(end)+paddingLen);
             isBlink(pad1:pad2) = true;
         end
     end
