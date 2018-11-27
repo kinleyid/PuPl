@@ -97,6 +97,8 @@ function outStruct = readraw(dataType, fileName, fileDirectory, fileFormat)
 if strcmpi(dataType, 'eye data')
     if strcmpi(fileFormat,'Tobii Excel files')
         
+        % GET GAZE COORDINATES
+        
         [~ , ~, R] = xlsread([fileDirectory '\\' fileName]);
         
         timestamps = cell2mat(R(2:end, strcmp(R(1, :), 'RecordingTimestamp')));
@@ -148,8 +150,8 @@ if strcmpi(dataType, 'eye data')
                 & cellfun(@(x) isempty(strfind(x, 'y')), channelNames);
             leftIdx = pupilIdx & cellfun(@(x) ~isempty(strfind(x, 'left')), channelNames);
             rightIdx = pupilIdx & cellfun(@(x) ~isempty(strfind(x, 'right')), channelNames);
-            fprintf('Assuming channel %d (labelled %s) is left dilation\n', find(leftIdx), channelNames{leftIdx});
-            fprintf('Assuming channel %d (labelled %s) is right dilation\n', find(rightIdx), channelNames{rightIdx});
+            fprintf('Assuming channel %d (labelled %s) is left pupil diameter\n', find(leftIdx), channelNames{leftIdx});
+            fprintf('Assuming channel %d (labelled %s) is right diameter\n', find(rightIdx), channelNames{rightIdx});
             data = struct(...
                 'left', double(eyeDataStruct.time_series(leftIdx, :)),...
                 'right', double(eyeDataStruct.time_series(rightIdx, :)));
@@ -159,6 +161,9 @@ if strcmpi(dataType, 'eye data')
             
             xIdx = gazeIdx & cellfun(@(x) ~isempty(strfind(x, 'x')), channelNames);
             yIdx = gazeIdx & cellfun(@(x) ~isempty(strfind(x, 'y')), channelNames);
+            
+            fprintf('Assuming channel %d (labelled %s) is gaze x coordinate\n', find(xIdx), channelNames{xIdx});
+            fprintf('Assuming channel %d (labelled %s) is gaze y coordinate\n', find(yIdx), channelNames{yIdx});
             
             gaze = struct(...
                 'x', double(eyeDataStruct.time_series(xIdx, :)),...

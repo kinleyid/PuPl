@@ -1,5 +1,6 @@
 function EYE = applyepochdescriptions(EYE, epochDescriptions, rejectionThreshold)
 
+% Adds 
 %  Inputs
 % EYE--struct array
 % epochDescriptions--struct array
@@ -9,6 +10,7 @@ function EYE = applyepochdescriptions(EYE, epochDescriptions, rejectionThreshold
 % EYE--struct array
 
 for dataIdx = 1:numel(EYE)
+    fprintf('Epoching %s...\n', EYE(dataIdx).name)
     if ~isfield(EYE(dataIdx), 'epoch')
         EYE(dataIdx).epoch = [];
     else
@@ -37,6 +39,7 @@ for dataIdx = 1:numel(EYE)
             EYE(dataIdx).epoch = [EYE(dataIdx).epoch currEpoch];
         end
     end
+    fprintf('%d discrete trials created\n', numel(EYE(dataIdx).epoch))
 end
-
+fprintf('Finished epoching\n');
 end
