@@ -78,7 +78,7 @@ uicontrol(binControlPanel,...
 uicontrol(binControlPanel,...
     'Style', 'pushbutton',...
     'String', 'Done',...
-    'Callback', @alldone,...
+    'Callback', @(h,e)uiresume(f),...
     'FontSize', 10,...
     'Units', 'normalized',...
     'Position', [0.01 0.01 0.98 0.08])
@@ -86,18 +86,18 @@ uicontrol(binControlPanel,...
 uiwait(f);
 if isvalid(f)
     binDescriptions = f.UserData.binDescriptions;
+    close(f);
 else
     binDescriptions = [];
 end
-close(f);
 
 end
 
 function regexpsel(varargin)
 
 f = gcbf;
-re = rectagname(f, 'createBinsPanel', 'regExpEditBox');
-eps = rectagname(f, 'createBinsPanel', 'epochsBox');
+re = getcomponentbytagname(f, 'createBinsPanel', 'regExpEditBox');
+eps = getcomponentbytagname(f, 'createBinsPanel', 'epochsBox');
 eps.Value = find(~cellfun(@isempty, regexp(eps.String, re.String)));
 
 end
@@ -105,10 +105,10 @@ end
 function createbin(varargin)
 
 f = gcbf;
-eps = rectagname(f, 'createBinsPanel', 'epochsBox');
-bins = rectagname(f, 'binControlPanel', 'binsBox');
+eps = getcomponentbytagname(f, 'createBinsPanel', 'epochsBox');
+bins = getcomponentbytagname(f, 'binControlPanel', 'binsBox');
 priorBinsValue = bins.Value;
-binName = rectagname(f, 'createBinsPanel', 'binName');
+binName = getcomponentbytagname(f, 'createBinsPanel', 'binName');
 bins.String = [bins.String; cellstr(binName.String)];
 
 f.UserData.binDescriptions = cat(2, f.UserData.binDescriptions,...
@@ -124,24 +124,9 @@ end
 function deletebins(varargin)
 
 f = gcbf;
-bins = rectagname(f, 'binControlPanel', 'binsBox');
+bins = getcomponentbytagname(f, 'binControlPanel', 'binsBox');
 f.UserData.binDescriptions(bins.Value) = [];
 bins.String(bins.Value) = [];
 bins.Value = [];
-
-end
-
-function alldone(varargin)
-
-uiresume(gcbf);
-
-end
-
-function currComponent = rectagname(currComponent, varargin)
-
-for i = 1:numel(varargin)
-    currTags = arrayfun(@(x) x.Tag, currComponent.Children, 'un', 0);
-    currComponent = currComponent.Children(strcmpi(currTags, varargin{i}));
-end
 
 end

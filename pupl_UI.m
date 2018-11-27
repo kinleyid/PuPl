@@ -1,5 +1,7 @@
 function pupl_UI
 
+fprintf('Initilizing user interface...\n')
+
 global userInterface activeEyeDataPanel activeEventLogsPanel
 
 userInterface = figure('Name', 'Pupillometry',...

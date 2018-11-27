@@ -11,7 +11,12 @@ function EYE = applybindescriptions(EYE, binDescriptions)
 % length)--I.e., each row 
 
 for dataIdx = 1:numel(EYE)
-    EYE(dataIdx).bin = [];
+    fprintf('Merging trials from %s...\n', EYE(dataIdx).name);
+    if ~isfield(EYE(dataIdx), 'bin')
+        EYE(dataIdx).bin = [];
+    else
+        EYE(dataIdx).bin = EYE(dataIdx).bin(:)';
+    end
     for binIdx = 1:numel(binDescriptions)
         currBin = struct('name', binDescriptions(binIdx).name,...
             'data', []);
@@ -28,6 +33,7 @@ for dataIdx = 1:numel(EYE)
                 end
             end
         end
+        fprintf('Trial set ''%s'' contains data from %d trials\n', binDescriptions(binIdx).name, nnz(binMembers))
         EYE(dataIdx).bin = [EYE(dataIdx).bin currBin];
     end
 end

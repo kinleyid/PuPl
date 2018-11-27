@@ -128,7 +128,7 @@ if strcmpi(dataType, 'eye data')
     elseif strcmpi(fileFormat,'XDF files')
         
         % Ensure that the recording starts at time 0, latency 1
-        fprintf('Now loading %s\n', fileName);
+        fprintf('Loading %s...\n', fileName);
         streams = load_xdf([fileDirectory '\\' fileName]);
         streamTypes = cellfun(@(x) x.info.type, streams, 'un', 0);
         
@@ -175,7 +175,6 @@ if strcmpi(dataType, 'eye data')
         
         if any(strcmpi(streamTypes, 'Markers'))
             
-            fprintf('Found event data as well\n');
             eventDataStruct = streams{strcmpi(streamTypes, 'Markers')};
 
             emptyIdx = cellfun(@isempty, eventDataStruct.time_series);            

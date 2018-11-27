@@ -1,6 +1,6 @@
 function EYE = applyepochdescriptions(EYE, epochDescriptions, rejectionThreshold)
 
-% Adds 
+% Adds 'epoch' field to EYE structs
 %  Inputs
 % EYE--struct array
 % epochDescriptions--struct array
