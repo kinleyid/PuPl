@@ -26,7 +26,7 @@ if ~any(strcmpi(varargin, 'noGlobals'))
         'logical([])'};
     for i = 1:numel(globalVariables)
         evalin('base',...
-            sprintf('global %s; %s = %s', globalVariables{i}, globalVariables{i}, globalValues{i}));
+            sprintf('global %s; %s = %s;', globalVariables{i}, globalVariables{i}, globalValues{i}));
     end
 end
 
