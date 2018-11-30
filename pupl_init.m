@@ -1,16 +1,47 @@
+function pupl_init(varargin)
 
-fprintf('Version 0.00.00.1\n');
+%   Command line arguments
+% 'noUI': don't initialize the user interface
+% 'noGlobals': don't initialize global variables
+%   Example
+% >> pupl_init noui
 
-global userInterface
+fprintf('Version 1.0\n');
 
-if isgraphics(userInterface)
-    close(userInterface)
+% Navigate to directory containing this very function
+previousDir = pwd;
+cd(fileparts(which('pupl_init.m')));
+
+if ~any(strcmpi(varargin, 'noGlobals'))
+    fprintf('Initializing global variables...\n')
+    globalVariables = {
+        'eyeData'
+        'eventLogs'
+        'activeEyeDataIdx'
+        'activeEventLogsIdx'};
+    globalValues = {
+        '[]'
+        '[]'
+        'logical([])'
+        'logical([])'};
+    for i = 1:numel(globalVariables)
+        evalin('base',...
+            sprintf('global %s; %s = %s', globalVariables{i}, globalVariables{i}, globalValues{i}));
+    end
 end
 
-fprintf('Initializing global variables...\n')
-global eyeData eventLogs activeEyeDataIdx activeEventLogsIdx
-[eyeData, eventLogs, activeEyeDataIdx, activeEventLogsIdx] = deal([]);
-activeEyeDataIdx = logical(activeEyeDataIdx);
-activeEventLogsIdx = logical(activeEventLogsIdx);
+if ~any(strcmpi(varargin, 'noUI'))
+    global userInterface
+    if isgraphics(userInterface)
+        fprintf('Closing previous user interface...\n')
+        close(userInterface)
+    end
+    fprintf('Initilizing user interface...\n')
+    addpath('UI')
+    pupl_UI
+end
 
-pupl_UI
+% Navigate back to the user's directory
+cd(previousDir);
+
+end

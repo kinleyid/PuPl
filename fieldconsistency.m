@@ -1,17 +1,15 @@
-function [structArray, structIn] = fieldconsistency(structArray, structIn)
+function varargout = fieldconsistency(varargin)
 
+% Ensures all input struct arrays have the same fields
 
-if ~isempty(structArray)
-    newFields = unique(([reshape(fieldnames(structArray), 1, []) reshape(fieldnames(structIn), 1, [])]));
-    % Ensure structArray has all the fields structIn has
-    for idx = 1:numel(structArray)
-        for field = reshape(newFields(~ismember(newFields, fieldnames(structArray(idx)))), 1, [])
-            structArray(idx).(field{:}) = [];
-        end
-    end
-    % Vice versa
-    for field = reshape(newFields(~ismember(newFields, fieldnames(structIn))), 1, [])
-        structIn.(field{:}) = [];
+varargout = varargin;
+
+allFields = cellfun(@(x) reshape(fieldnames(x), 1, []), varargin, 'un', 0);
+allFields = unique([allFields{:}]);
+
+for idx = 1:numel(varargin)
+    for newField = reshape(allFields(~ismember(allFields, fieldnames(varargin{idx}))), 1, [])
+        [varargout{idx}.(newField{:})] = deal([]);
     end
 end
 

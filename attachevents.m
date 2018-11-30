@@ -1,5 +1,7 @@
 function EYE = attachevents(EYE, varargin)
 
+% Finds an offset between the EYE event timeline and an event log timeline,
+% the uses it to attach events from the event log to EYE.event
 %   Inputs
 % eventLogs--struct array
 % eyeEventsToAlign--
@@ -8,10 +10,6 @@ function EYE = attachevents(EYE, varargin)
 % namesToAttach--
 %   Output
 % EYE--struct array
-
-% EYE may be an array of eye structs
-
-% Input args: eventlogs, alignmentstruct, eventstoattach, namestoattach
 
 p = inputParser;
 addParameter(p, 'eventlogs', []);

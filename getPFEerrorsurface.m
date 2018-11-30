@@ -3,7 +3,10 @@ function errorSurf = getPFEerrorsurface(EYE)
 %   Inputs
 % EYE--single struct, not array
 %   Outputs
-% errSurf--numerical matrix
+% errSurf--struct with fields:
+%   surface--numerical matrix
+%   x--gaze x values
+%   y--gaze y values
 
 f = figure(...
     'ToolBar', 'none',...
@@ -115,14 +118,14 @@ end
 
 function plotErrorSurf(EYE, varargin)
 
-fprintf('Plotting...')
+fprintf('Plotting error surface...')
 
 f = varargin{1};
 
-gridN = str2num(get(getcomponentbytagname(f, 'controlPanel', 'gridN'), 'String'));
-trimPpn = str2num(get(getcomponentbytagname(f, 'controlPanel', 'trimPpn'), 'String'));
-inputRange = str2num(get(getcomponentbytagname(f, 'controlPanel', 'inputRange'), 'String'));
-boxcar = str2num(get(getcomponentbytagname(f, 'controlPanel', 'boxcar'), 'String'));
+gridN = str2num(get(getcomponentbytag(f, 'controlPanel', 'gridN'), 'String'));
+trimPpn = str2num(get(getcomponentbytag(f, 'controlPanel', 'trimPpn'), 'String'));
+inputRange = str2num(get(getcomponentbytag(f, 'controlPanel', 'inputRange'), 'String'));
+boxcar = str2num(get(getcomponentbytag(f, 'controlPanel', 'boxcar'), 'String'));
 
 if isempty(inputRange)
     sorteds = structfun(@(v) sort(v(~isnan(v))), EYE.gaze, 'un', 0);
@@ -161,7 +164,7 @@ f.UserData.errorSurf = struct(...
     'x', ranges.x,...
     'y', ranges.y);
 
-axes(getcomponentbytagname(f, 'errorSurface'));
+axes(getcomponentbytag(f, 'errorSurface'));
 if any(strcmpi(varargin, 'density'))
     title('Measured dilation by gaze coordinates')
     image(ranges.x, ranges.y, flipud(densities/sum(densities(:))), 'CDataMapping', 'scaled');
