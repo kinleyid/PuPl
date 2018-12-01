@@ -89,6 +89,8 @@ for dataIdx = 1:numel(EYE)
             'Rotation', 20);
     end
     ylim(ylimits);
+    xlabel('Time (s)');
+    title(EYE(dataIdx).name, 'Interpreter', 'none');
 end
 
 end

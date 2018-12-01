@@ -194,9 +194,9 @@ switch dataType
                             find(strcmpi(currLine, 'Stim Type'))];
                         continue
                     end
-                    if length(currLine) == nCols
+                    if length(currLine) ~= 1
                         eventTimes = cat(2, eventTimes, str2double(currLine{timeIdx})/10/1000); % Presentation records time in 10ths of milliseconds
-                        eventTypes = cat(2, eventTypes, {strcat(currLine{typeIdx})});
+                        eventTypes = cat(2, eventTypes, {strcat(currLine{typeIdx(typeIdx <= length(currLine))})});
                     end
                 end
         end
