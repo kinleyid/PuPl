@@ -27,16 +27,17 @@ end
 
 function moveData(h, e)
 
-if e.Key == 'h'
-    change = -5;
-elseif e.Key == 'l'
-    change = 5;
-elseif e.Key == 'k'
-    change = 1;
-elseif e.Key == 'j'
-    change = -1;
-else
-    change = 0;
+switch e.Key
+    case {'h', 'pageup'}
+        change = -5;
+    case {'l', 'pagedown'}
+        change = 5;
+    case {'k', 'rightarrow'}
+        change = 1;
+    case {'j', 'leftarrow'}
+        change = -1;
+    otherwise
+        return
 end
 h.UserData.x = h.UserData.x + change*h.UserData.srate;
 if any(h.UserData.x < 1)
