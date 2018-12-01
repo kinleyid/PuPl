@@ -13,7 +13,7 @@ allPanels = {
     getcomponentbytag(userInterface, 'activeEventLogsPanel')};
 allActiveIdx = {
     userInterface.UserData.activeEyeDataIdx
-    userInterface.UserData.activeEyeDataIdx};
+    userInterface.UserData.activeEventLogsIdx};
 
 for idx = 1:numel(allData)
     currData = allData{idx};
@@ -27,7 +27,7 @@ for idx = 1:numel(allData)
     top = bgPos(4) - buttonHeight;
     buttonWidth = bgPos(3) - sep;
     for i = 1:numel(currData)
-        if currActiveIdx(numel(currData) + 1 - i)
+        if currActiveIdx(i)
             value = 1;
         else
             value = 0;
