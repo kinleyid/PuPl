@@ -1,6 +1,6 @@
 function out = geteventlogs
 
-global eventLogs activeEventLogsIdx
-out = eventLogs(activeEventLogsIdx);
+global eventLogs userInterface
+out = eventLogs(userInterface.UserData.activeEyeDataIdx);
 
 end

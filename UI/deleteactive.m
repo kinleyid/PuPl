@@ -1,6 +1,4 @@
-function void = deleteactive(dataType)
-
-void = [];
+function deleteactive(dataType)
 
 global userInterface
 

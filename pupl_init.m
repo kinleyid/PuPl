@@ -16,14 +16,10 @@ if ~any(strcmpi(varargin, 'noGlobals'))
     fprintf('Initializing global variables...\n')
     globalVariables = {
         'eyeData'
-        'eventLogs'
-        'activeEyeDataIdx'
-        'activeEventLogsIdx'};
+        'eventLogs'};
     globalValues = {
-        '[]'
-        '[]'
-        'logical([])'
-        'logical([])'};
+        'struct([])'
+        'struct([])'};
     for i = 1:numel(globalVariables)
         evalin('base',...
             sprintf('global %s; %s = %s;', globalVariables{i}, globalVariables{i}, globalValues{i}));

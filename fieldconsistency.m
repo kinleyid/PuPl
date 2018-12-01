@@ -4,12 +4,15 @@ function varargout = fieldconsistency(varargin)
 
 varargout = varargin;
 
-allFields = cellfun(@(x) reshape(fieldnames(x), 1, []), varargin, 'un', 0);
+allFields = cellfun(@(x) reshape(fieldnames(x), 1, []),...
+    varargin(~cellfun(@isempty, varargin)), 'un', 0);
 allFields = unique([allFields{:}]);
 
 for idx = 1:numel(varargin)
-    for newField = reshape(allFields(~ismember(allFields, fieldnames(varargin{idx}))), 1, [])
-        [varargout{idx}.(newField{:})] = deal([]);
+    if ~isempty(varargin{idx})
+        for newField = reshape(allFields(~ismember(allFields, fieldnames(varargin{idx}))), 1, [])
+            [varargout{idx}.(newField{:})] = deal([]);
+        end 
     end
 end
 

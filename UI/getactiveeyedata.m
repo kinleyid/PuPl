@@ -1,6 +1,6 @@
 function out = getactiveeyedata
 
-global eyeData activeEyeDataIdx
-out = eyeData(activeEyeDataIdx);
+global eyeData userInterface
+out = eyeData(userInterface.UserData.activeEyeDataIdx);
 
 end
