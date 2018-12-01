@@ -1,5 +1,6 @@
 function bestParams = findtimelineoffset(EYE, eventLog, eyeEventSets, eventLogEventSets, varargin)
 
+% Find an offset between the events in EYE and the events in eventLog
 %   Inputs
 % EYE--single struct
 % eventLog--single struct
@@ -10,9 +11,14 @@ function bestParams = findtimelineoffset(EYE, eventLog, eyeEventSets, eventLogEv
 %   Outputs
 % bestOffsetParams--the lowest square error solution to:
 %   [EYE.event.time] = Params(1)*[eventLog.event.time] + Params(2)
+%
+%   NB
+% Timestamps are asusmed to be in seconds
+
+fprintf('Searching for an offset between %s and %s...\n', EYE.name, eventLog.name)
 
 if numel(varargin) < 1
-    tolerance = 50;
+    tolerance = 0.05; % 50 ms
 else
     tolerance = varargin{1};
 end
@@ -59,7 +65,7 @@ while true
             continue
         end
         currOffsetParams = [eventLogTimes ones(size(eventLogTimes))] \ eyeTimes;
-        currErr = sum((eyeTimes - [eventLogTimes ones(size(eventLogTimes))]*currOffsetParams).^2);
+        currErr = mean((eyeTimes - [eventLogTimes ones(size(eventLogTimes))]*currOffsetParams).^2);
         if currErr < lowestErr
             lowestErr = currErr;
             bestParams = currOffsetParams;
@@ -76,7 +82,7 @@ while true
         end
     else
         fprintf('Offset estimate: %.3f minutes.\n', bestParams(2)/60);
-        fprintf('Events aligned with MS error %.2f\n', lowestErr);
+        fprintf('Events aligned with MS error %.2f ms^2\n', lowestErr);
         return
     end
 end

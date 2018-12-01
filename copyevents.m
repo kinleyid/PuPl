@@ -1,4 +1,21 @@
-function EYE = copyevents(EYE, eventLog, offsetParams, eventsToAttach, namesToAttach)
+function EYE = copyevents(EYE, eventLog, offsetParams, eventsToAttach, namesToAttach, overwrite)
+
+% Copies events from eventLog to EYE
+%   Inputs
+% EYE--single struct
+% eventLog--single struct
+% offsetParams--numeric array with 2 elements
+% eventsToAttach--
+% namesToAttach--cell array of chars
+
+if overwrite
+    fprintf('Deleting pre-existing event data from %s...\n', EYE.name)
+    EYE.event = [];
+end
+
+initEventCount = numel(EYE.event);
+
+fprintf('Writing events from %s to %s...', eventLog.name, EYE.name);
 
 for typeIdx = 1:numel(eventsToAttach)
     matchIdx = strcmpi({eventLog.event.type}, eventsToAttach(typeIdx));
@@ -9,9 +26,11 @@ for typeIdx = 1:numel(eventsToAttach)
         reshape(struct(...
             'type', namesToAttach(typeIdx),...
             'time', num2cell(times),...
-            'latency', num2cell(round(times/EYE.srate + 1))),...
+            'latency', num2cell(round(times*EYE.srate + 1))),...
         1, []));
 end
+
+fprintf('%d events written\n', numel(EYE.event) - initEventCount);
 
 [~, I] = sort([EYE.event.time]);
 EYE.event = EYE.event(I);

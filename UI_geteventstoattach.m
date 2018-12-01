@@ -8,6 +8,13 @@ Idx = listdlg('PromptString', 'Which events from the event log should be attache
     'ListString', eventTypes);
 eventsToAttach = eventTypes(Idx);
 
-namesToUse = UI_getnames(eventsToAttach);
+q = 'Attach the events under different names?';
+a = questdlg(q, q, 'Yes', 'No', 'No');
+switch a
+    case 'Yes'
+        namesToUse = UI_getnames(eventsToAttach);
+    otherwise
+        namesToUse = eventsToAttach;
+end
 
 end

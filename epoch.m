@@ -17,6 +17,7 @@ correctionOptions = {'none'
 p = inputParser;
 addParameter(p, 'epochDescriptions', []);
 addParameter(p, 'rejectionThreshold', []);
+addParameter(p, 'blinkLimsMs', []);
 addParameter(p, 'baselineDescriptions', []);
 addParameter(p, 'epochsToCorrect', []);
 addParameter(p, 'correctionType', []);
@@ -68,7 +69,18 @@ else
     rejectionThreshold = p.Results.rejectionThreshold;
 end
 
-EYE = applyepochdescriptions(EYE, epochDescriptions, rejectionThreshold);
+if isempty(p.Results.blinkLimsMs)
+    blinkLimsMs = cellfun(@str2double, inputdlg({
+        'Reject epochs occurring fewer than this many ms after a blink:'
+        'Reject epochs occurring fewer than this many ms before a blink:'},...
+        'blinkLimsMs',...
+        [1 100],...
+        {'1000' '0'}));
+else
+    blinkLimsMs = p.Results.blinkLimsMs;
+end
+
+EYE = applyepochdescriptions(EYE, epochDescriptions, rejectionThreshold, blinkLimsMs);
 
 if isempty(p.Results.correctionType)
     correctionType = correctionOptions(...

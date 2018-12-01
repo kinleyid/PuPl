@@ -30,7 +30,7 @@ if ~any(strcmpi(varargin, 'noUI'))
     global userInterface
     if isgraphics(userInterface)
         fprintf('Closing previous user interface...\n')
-        close(userInterface)
+        delete(userInterface)
     end
     fprintf('Initilizing user interface...\n')
     addpath('UI')
