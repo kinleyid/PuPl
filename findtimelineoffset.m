@@ -75,10 +75,11 @@ while true
     if isempty(bestParams)
         q = 'No offset could be found';
         a = questdlg(q, q, 'Quit', 'Try different events', 'Try different events');
-        if strcmp(a, 'Quit')
-            return
-        elseif strcmp(a, 'Try difference events')
-            [eyeEventSets, eventLogEventSets] = UI_geteventcorrespondence(EYE, eventLog);
+        switch a
+            case 'Try different events'
+                [eyeEventSets, eventLogEventSets] = UI_geteventcorrespondence(EYE, eventLog);
+            otherwise
+                return
         end
     else
         fprintf('Offset estimate: %.3f minutes.\n', bestParams(2)/60);

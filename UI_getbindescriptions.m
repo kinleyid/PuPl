@@ -96,8 +96,8 @@ end
 function regexpsel(varargin)
 
 f = gcbf;
-re = getcomponentbytagname(f, 'createBinsPanel', 'regExpEditBox');
-eps = getcomponentbytagname(f, 'createBinsPanel', 'epochsBox');
+re = getcomponentbytag(f, 'createBinsPanel', 'regExpEditBox');
+eps = getcomponentbytag(f, 'createBinsPanel', 'epochsBox');
 eps.Value = find(~cellfun(@isempty, regexp(eps.String, re.String)));
 
 end
@@ -105,10 +105,10 @@ end
 function createbin(varargin)
 
 f = gcbf;
-eps = getcomponentbytagname(f, 'createBinsPanel', 'epochsBox');
-bins = getcomponentbytagname(f, 'binControlPanel', 'binsBox');
+eps = getcomponentbytag(f, 'createBinsPanel', 'epochsBox');
+bins = getcomponentbytag(f, 'binControlPanel', 'binsBox');
 priorBinsValue = bins.Value;
-binName = getcomponentbytagname(f, 'createBinsPanel', 'binName');
+binName = getcomponentbytag(f, 'createBinsPanel', 'binName');
 bins.String = [bins.String; cellstr(binName.String)];
 
 f.UserData.binDescriptions = cat(2, f.UserData.binDescriptions,...
@@ -124,7 +124,7 @@ end
 function deletebins(varargin)
 
 f = gcbf;
-bins = getcomponentbytagname(f, 'binControlPanel', 'binsBox');
+bins = getcomponentbytag(f, 'binControlPanel', 'binsBox');
 f.UserData.binDescriptions(bins.Value) = [];
 bins.String(bins.Value) = [];
 bins.Value = [];
