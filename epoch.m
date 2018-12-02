@@ -34,12 +34,21 @@ if isempty(p.Results.epochDescriptions)
         eventTypes = unique(mergefields(EYE, 'event', 'type'));
         eventTypes = eventTypes(listdlgregexp('PromptString', 'Epoch relative to which events?',...
             'ListString', eventTypes));
+        if isempty(eventTypes)
+            return
+        end
         epochLims = (inputdlg(...
             {'Epochs defined from this many seconds relative to events:'
             'To this many: (''s'' for one sample''s worth)'}));
+        if isempty(epochLims)
+            return
+        end
         baselineLims = (inputdlg(...
             {'Baselines defined from this many seconds relative to events:'
             'To this many: (''s'' for one sample''s worth)'}));
+        if isempty(baselineLims)
+            return
+        end
         [epochDescriptions, baselineDescriptions] = deal(struct([]));
         for eventTypeIdx = 1:numel(eventTypes)
             epochDescriptions = cat(2, epochDescriptions,...

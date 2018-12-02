@@ -15,7 +15,7 @@ if any(arrayfun(@(x) isempty(x.bin), EYE))
     return
 end
 
-if ~isfield(mergefields(EYE, 'bin', 'data'), 'both')
+if ~isfield(EYE(1).bin(1).data, 'both')
     uiwait(msgbox('Merge the left and right streams before plotting'));
     return
 end

@@ -33,7 +33,7 @@ for dataIdx = 1:numel(EYE)
                 end
             end
         end
-        fprintf('Trial set ''%s'' contains data from %d trials\n', binDescriptions(binIdx).name, nnz(binMembers))
+        fprintf('Trial set ''%s'' contains data from %d trials\n', binDescriptions(binIdx).name, nnz(~[EYE(dataIdx).epoch(binMembers).reject]))
         EYE(dataIdx).bin = [EYE(dataIdx).bin currBin];
     end
 end
