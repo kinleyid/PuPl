@@ -13,9 +13,17 @@ for limIdx = 1:2
     if spanDescription.lims(limIdx).instance ~= 0
         eventIdx = eventIdx(spanDescription.lims(limIdx).instance);
     end
+    cmd = lower(spanDescription.lims(limIdx).bookend);
+    cmd = strrep(cmd,' ','');
+    [a, b] = regexp(cmd, '[0-9]s');
+    if ~isempty(b)
+        cmd = strcat(cmd(1:b-1), '*s', cmd(b+1:end));
+    end
+    cmd = strrep(cmd,'s','1/EYE.srate');
+    currBookend = eval(cmd);
     lims{limIdx} = round(...
-        [EYE.event(eventIdx).time]*EYE.srate/1000 + 1 ... % latencies of events
-        + repmat(spanDescription.lims(limIdx).bookend*EYE.srate, 1, numel(eventIdx))); % plus bookends
+        [EYE.event(eventIdx).time]*EYE.srate + 1 ... % latencies of events
+        + repmat(round(currBookend*EYE.srate), 1, numel(eventIdx))); % plus bookends
 end
 
 if numel(lims{1}) ~= numel(lims{2})

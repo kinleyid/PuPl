@@ -82,12 +82,14 @@ for dataIdx = 1:numel(EYE)
     end
     xlim([xtimes(1) xtimes(end)]);
     ylimits = [min(structfun(@min, EYE(dataIdx).data)) max(structfun(@max, EYE(dataIdx).data))];
-    for eventIdx = find(ismember([EYE(dataIdx).event.latency], x))
-        t = (EYE(dataIdx).event(eventIdx).latency - 1)/EYE(dataIdx).srate;
-        plot(repmat(t, 1, 2), ylimits, 'k');
-        text(t, mean(ylimits), EYE(dataIdx).event(eventIdx).type,...
-            'FontSize', 8,...
-            'Rotation', 20);
+    if ~isempty(EYE(dataIdx).event)
+        for eventIdx = find(ismember([EYE(dataIdx).event.latency], x))
+            t = (EYE(dataIdx).event(eventIdx).latency - 1)/EYE(dataIdx).srate;
+            plot(repmat(t, 1, 2), ylimits, 'k');
+            text(t, mean(ylimits), EYE(dataIdx).event(eventIdx).type,...
+                'FontSize', 8,...
+                'Rotation', 20);
+        end
     end
     ylim(ylimits);
     xlabel('Time (s)');

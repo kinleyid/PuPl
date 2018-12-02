@@ -3,8 +3,9 @@ function pupl_init(varargin)
 %   Command line arguments
 % 'noUI': don't initialize the user interface
 % 'noGlobals': don't initialize global variables
+% 'noAddOns': don't initialize toolboxes
 %   Example
-% >> pupl_init noui
+% >> pupl_init noui noaddons
 
 fprintf('Version 1.0\n');
 
@@ -37,7 +38,23 @@ if ~any(strcmpi(varargin, 'noUI'))
     pupl_UI
 end
 
+if ~any(strcmpi(varargin, 'noAddOns'))
+    cd add-ons
+    fprintf('Loading add-ons:\n');
+    folderContents = dir;
+    for currFolder = reshape(folderContents([folderContents.isdir]), 1, [])
+        if ~any(strcmp(currFolder.name, {'.' '..'}))
+            fprintf('\t%s...\n', currFolder.name)
+            cd(currFolder.name)
+            addpath(cd);
+            run('./init.m');
+            cd ..
+        end
+    end
+    cd ..
+end
 % Navigate back to the user's directory
 cd(previousDir);
 
+fprintf('done\n')
 end

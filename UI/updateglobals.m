@@ -16,8 +16,12 @@ if isempty(globalVarName) ||...
 else
     % Get the outputs
     codeSmell{:} = feval(functionToCall);
+    
     % Subset the outputs
     codeSmell = codeSmell{outputIndex};
+    if isempty(codeSmell)
+        return
+    end
     % Make sure the new structs are consistent with the old ones
     eval(sprintf('global %s', globalVarName));
     eval(sprintf('[%s, codeSmell] = fieldconsistency(%s, codeSmell);', globalVarName, globalVarName));
