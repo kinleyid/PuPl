@@ -38,7 +38,7 @@ uicontrol(f,...
     'String', 'Done',...
     'Units', 'normalized',...
     'Position', [0.01 0.01 0.98 0.08],...
-    'Callback', @(h,e)uiresume(f),...
+    'KeyPressFcn', @enterkeyuiresume,...
     'ButtonDownFcn', @(h,e)uiresume(f));
 
 uiwait(f);
@@ -48,6 +48,14 @@ if isvalid(f)
     close(f);
 else
     idx = [];
+end
+
+end
+
+function enterkeyuiresume(h,e)
+
+if strcmp(e.Key, 'return')
+    uiresume(gcbf)
 end
 
 end

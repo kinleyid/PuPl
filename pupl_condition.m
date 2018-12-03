@@ -42,6 +42,8 @@ if isempty(p.Results.condIdx)
         dataIdx = listdlg('PromptString', sprintf('Which datasets are in %s?', conditions{condIdx}),...
             'ListString', {EYE.name});
         [EYE(dataIdx).cond] = deal(conditions{condIdx});
+        fprintf('Condition %s includes:\n', conditions{condIdx})
+        fprintf('\t%s\n', EYE(dataIdx).name)
     end
 else
     [EYE.cond] = conditions(p.Results.condIdx);
