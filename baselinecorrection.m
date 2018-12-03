@@ -42,7 +42,7 @@ function dataVector = correctionFunc(dataVector, baselineData, corrType)
 if strcmp(corrType, 'subtract baseline mean')
     dataVector = dataVector - mean(baselineData);
 elseif strcmp(corrType, 'percent change from baseline mean')
-    dataVector = dataVector/mean(baselineData);
+    dataVector = (dataVector - mean(baselineData))/mean(baselineData);
 end
 
 end
