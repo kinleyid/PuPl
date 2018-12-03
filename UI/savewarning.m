@@ -11,6 +11,7 @@ if ~isempty(eyeData) || ~isempty(eventLogs)
             types = {'eye data' 'event logs'};
             for i = 1:numel(data)
                 if ~isempty(data{i})
+                    uiwait(msgbox(sprintf('Save the %s', types{i})));
                     pupl_save('data', data{i}, 'type', types{i});
                 end
             end

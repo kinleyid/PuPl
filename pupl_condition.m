@@ -38,13 +38,13 @@ else
 end
 
 if isempty(p.Results.condIdx)
-    for i = 1:length(conditions)
-        currIdx = listdlg('PromptString', sprintf('Which datasets are in %s?', conditions{i}),...
+    for condIdx = 1:length(conditions)
+        dataIdx = listdlg('PromptString', sprintf('Which datasets are in %s?', conditions{condIdx}),...
             'ListString', {EYE.name});
-        [EYE(currIdx).condition] = deal(conditions{i});
+        [EYE(dataIdx).cond] = deal(conditions{condIdx});
     end
 else
-    [EYE.condition] = conditions(p.Results.condIdx);
+    [EYE.cond] = conditions(p.Results.condIdx);
 end
 
 end
