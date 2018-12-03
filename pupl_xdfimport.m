@@ -86,8 +86,9 @@ for fileIdx = 1:numel(filename)
     
     if strcmpi(p.Results.as, 'eye data')
         eyeDataStruct = streams{strcmpi(streamTypes, eyeDataStreamType)};
-        srate = str2double(eyeDataStruct.info.nominal_srate);
-        fprintf('Nominal sample rate: %f Hz\n', srate);
+        fprintf('Nominal sample rate: %s Hz\n', eyeDataStruct.info.nominal_srate);
+        srate = eyeDataStruct.info.effective_srate;
+        fprintf('Effective sample rate: %f Hz\n', srate);
         if isempty(eyeDataStruct)
             fprintf('No eye data in %s\n', filename{fileIdx});
         else
@@ -155,11 +156,16 @@ for fileIdx = 1:numel(filename)
                 % Add latencies to event markers and adjust their time
                 % stamps so that time 0 is the first data sample from the
                 % eye data.
-                newTimes = [event.time] - eyeDataStruct.time_stamps(1);
-                latencies = round(newTimes*srate + 1);
-                newTimes = num2cell(newTimes);
+                times = [event.time] - eyeDataStruct.time_stamps(1);
+                [~, latencies] = min(abs(bsxfun(@minus,...
+                    reshape(eyeDataStruct.time_stamps,...
+                        [], 1),...
+                    reshape([event.time],...
+                        1, []))));
+                % latencies = round(times*srate + 1);
+                times = num2cell(times);
                 latencies = num2cell(latencies);
-                [event.time] = newTimes{:};
+                [event.time] = times{:};
                 [event.latency] = latencies{:};
             end
             currStruct.data = data;

@@ -41,18 +41,22 @@ for cIdx = 1:numel(eyeEventSets) % correspondence idx
     correspondences(cIdx).eyeTimes = eyeTimes;
     correspondences(cIdx).eventLogTimes = eventLogTimes;
     allPossibleOffsets = cat(2, allPossibleOffsets,...
-        reshape(eyeTimes - eventLogTimes, 1, []));
+        reshape(bsxfun(@minus, eyeTimes, eventLogTimes), 1, []));
 end
 
 while true
     lowestErr = inf;
     bestParams = [];
-    for candidateOffset = allPossibleOffsets
+    fprintf('Testing %d possible offsets... ', numel(allPossibleOffsets));
+    fprintf('%0.2f', 0);
+    for offsetIdx = 1:numel(allPossibleOffsets)
+        fprintf('\b\b\b\b%0.2f', offsetIdx/numel(allPossibleOffsets));
+        candidateOffset = allPossibleOffsets(offsetIdx);
         eyeTimes = [];
         eventLogTimes = [];
         flag = false;
         for cIdx = 1:numel(eyeEventSets)
-            matches = abs(correspondences(cIdx).eyeTimes - correspondences(cIdx).eventLogTimes - candidateOffset) < tolerance;
+            matches = abs(bsxfun(@minus, correspondences(cIdx).eyeTimes, correspondences(cIdx).eventLogTimes) - candidateOffset) < tolerance;
             if nnz(matches) < pct*min(size(matches))
                 flag = true;
                 break
@@ -71,7 +75,7 @@ while true
             bestParams = currOffsetParams;
         end
     end
-    
+    fprintf('\b\b\b\bdone\n')
     if isempty(bestParams)
         q = 'No offset could be found';
         a = questdlg(q, q, 'Quit', 'Try different events', 'Try different events');
