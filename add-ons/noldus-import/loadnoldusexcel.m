@@ -21,6 +21,7 @@ end
 filename = cellstr(filename);
 
 for fileIdx = 1:numel(filename)
+    fprintf('Importing %s...', filename{fileIdx});
     [~, ~, R] = xlsread([directory '\\' filename{fileIdx}]);
     eventTypes = R(2:end, strcmp(R(1, :), 'Behavior'));
     modifiers = find(~cellfun(@isempty, (regexp(R(1, :), 'Modifier*'))));
@@ -35,6 +36,7 @@ for fileIdx = 1:numel(filename)
         struct('event',...
             struct('time', num2cell(eventTimes),...
                    'type', eventTypes))];
+    fprintf('done\n')
 end
 
 end

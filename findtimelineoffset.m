@@ -47,8 +47,8 @@ end
 while true
     lowestErr = inf;
     bestParams = [];
-    fprintf('Testing %d possible offsets... ', numel(allPossibleOffsets));
-    fprintf('%0.2f', 0);
+    fprintf('Testing %d possible offsets...\n', numel(allPossibleOffsets));
+    fprintf('Proportion complete: %0.2f', 0);
     for offsetIdx = 1:numel(allPossibleOffsets)
         fprintf('\b\b\b\b%0.2f', offsetIdx/numel(allPossibleOffsets));
         candidateOffset = allPossibleOffsets(offsetIdx);
@@ -87,7 +87,7 @@ while true
         end
     else
         fprintf('Offset estimate: %.3f minutes.\n', bestParams(2)/60);
-        fprintf('Events aligned with MS error %.2f ms^2\n', lowestErr);
+        fprintf('Events aligned with MS error %.10f ms^2\n', lowestErr);
         return
     end
 end

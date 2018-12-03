@@ -34,7 +34,9 @@ if ~any(strcmpi(varargin, 'noUI'))
         delete(userInterface)
     end
     fprintf('Initilizing user interface...\n')
-    addpath('UI')
+    cd UI
+    addpath(cd)
+    cd ..
     pupl_UI
 end
 

@@ -21,6 +21,7 @@ end
 filename = cellstr(filename);
 
 for fileIdx = 1:numel(filename)
+    fprintf('Importing %s...', filename{fileIdx})
     [~, name] = fileparts(filename{fileIdx});
     fID = fopen([directory '\\' filename{fileIdx}]);
     nCols = NaN;
@@ -50,4 +51,5 @@ for fileIdx = 1:numel(filename)
         struct('name', name,...
             'event', struct('time', num2cell(eventTimes),...
                             'type', eventTypes))];
+    fprintf('done\n')
 end
