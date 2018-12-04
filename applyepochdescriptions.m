@@ -1,4 +1,4 @@
-function EYE = applyepochdescriptions(EYE, epochDescriptions, rejectionThreshold, blinkLimsMs)
+function EYE = applyepochdescriptions(EYE, epochDescriptions)
 
 % Adds 'epoch' field to EYE structs
 %   Inputs
@@ -26,7 +26,8 @@ for dataIdx = 1:numel(EYE)
             for stream = reshape(fieldnames(EYE(dataIdx).data), 1, [])
                 currEpoch.data.(stream{:}) = EYE(dataIdx).data.(stream{:})(currEpoch.latencies);
             end
-            
+            EYE(dataIdx).epoch = [EYE(dataIdx).epoch currEpoch];
+            %{
             currEpoch.reject = false;
             % Reject based on missing urData
             urData = [EYE(dataIdx).urData.left(currEpoch.latencies)...
@@ -35,15 +36,10 @@ for dataIdx = 1:numel(EYE)
                 currEpoch.reject = true;
             end
             % Reject based on blink proximity
-            if any(EYE(dataIdx).isBlink(...
-                    max(1, currEpoch.latencies(1) - ceil(blinkLimsMs(1)/1000/EYE(dataIdx).srate))...
-                    :...
-                    min(numel(EYE(dataIdx).isBlink), currEpoch.latencies(end) + ceil(blinkLimsMs(2)/1000/EYE(dataIdx).srate))))
-                currEpoch.reject = true;
-            end
-            EYE(dataIdx).epoch = [EYE(dataIdx).epoch currEpoch];
+            %}
         end
     end
-    fprintf('%d/%d trials rejected\n', nnz([EYE(dataIdx).epoch.reject]), numel(EYE(dataIdx).epoch))
+    fprintf('%d trials created\n', nnz([EYE(dataIdx).epoch.reject]), numel(EYE(dataIdx).epoch))
 end
+
 end

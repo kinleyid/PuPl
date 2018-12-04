@@ -55,6 +55,13 @@ if ~any(strcmpi(varargin, 'noAddOns'))
     end
     cd ..
 end
+
+% Add subdirectories
+for subdir = {'trials'}
+    cd(subdir{:});
+    addpath(cd);
+    cd ..
+end
 % Navigate back to the user's directory
 cd(previousDir);
 

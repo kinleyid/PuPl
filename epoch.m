@@ -16,8 +16,6 @@ correctionOptions = {'none'
 
 p = inputParser;
 addParameter(p, 'epochDescriptions', []);
-addParameter(p, 'rejectionThreshold', []);
-addParameter(p, 'blinkLimsMs', []);
 addParameter(p, 'baselineDescriptions', []);
 addParameter(p, 'epochsToCorrect', []);
 addParameter(p, 'correctionType', []);
@@ -38,14 +36,14 @@ if isempty(p.Results.epochDescriptions)
             return
         end
         epochLims = (inputdlg(...
-            {'Epochs defined from this many seconds relative to events:'
-            'To this many: (''s'' for one sample''s worth)'}));
+            {sprintf('''s'' = 1 sample\nE.g. 10 + s = 10 seconds plus one sample\n\nEpochs start this many seconds relative to events:')
+            'Epochs end at this many seconds relative to events:'}));
         if isempty(epochLims)
             return
         end
         baselineLims = (inputdlg(...
-            {'Baselines defined from this many seconds relative to events:'
-            'To this many: (''s'' for one sample''s worth)'}));
+            {sprintf('''s'' = 1 sample\nE.g. 10 + s = 10 seconds plus one sample\n\nBaselines start this many seconds relative to events:')
+            'Baselines end at this many seconds relative to events:'}));
         if isempty(baselineLims)
             return
         end
@@ -72,24 +70,7 @@ else
     epochDescriptions = p.Results.epochDescriptions;
 end
 
-if isempty(p.Results.rejectionThreshold)
-    rejectionThreshold = str2double(inputdlg('Reject epochs with at least what percent missing data?'))/100;
-else
-    rejectionThreshold = p.Results.rejectionThreshold;
-end
-
-if isempty(p.Results.blinkLimsMs)
-    blinkLimsMs = cellfun(@str2double, inputdlg({
-        'Reject epochs occurring fewer than this many ms after a blink:'
-        'Reject epochs occurring fewer than this many ms before a blink:'},...
-        'blinkLimsMs',...
-        [1 100],...
-        {'1000' '0'}));
-else
-    blinkLimsMs = p.Results.blinkLimsMs;
-end
-
-EYE = applyepochdescriptions(EYE, epochDescriptions, rejectionThreshold, blinkLimsMs);
+EYE = applyepochdescriptions(EYE, epochDescriptions);
 
 if isempty(p.Results.correctionType)
     correctionType = correctionOptions(...
