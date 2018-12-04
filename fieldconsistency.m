@@ -5,7 +5,7 @@ function varargout = fieldconsistency(varargin)
 varargout = varargin;
 
 allFields = cellfun(@(x) reshape(fieldnames(x), 1, []),...
-    varargin(~cellfun(@isempty, varargin)), 'un', 0);
+    varargin(cellfun(@isstruct, varargin)), 'un', 0);
 allFields = unique([allFields{:}]);
 
 for idx = 1:numel(varargin)

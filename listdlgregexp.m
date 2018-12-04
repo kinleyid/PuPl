@@ -41,6 +41,8 @@ uicontrol(f,...
     'KeyPressFcn', @enterkeyuiresume,...
     'Callback', @buttonpressresume);
 
+uicontrol(findobj(f, 'Style', 'edit'))
+
 uiwait(f);
 if isvalid(f)
     listBox = findobj(panel, 'Style', 'listbox');

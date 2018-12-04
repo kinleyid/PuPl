@@ -15,21 +15,26 @@ end
 
 fprintf('Rejecting trials with data values <= %0.2f or >= %0.2f...\n', lims(1), lims(2));
 
-for dataIdx = numel(EYE)
-    nRejected = 0;
+for dataIdx = 1:numel(EYE)
+    nRej = 0;
     for epochIdx = 1:numel(EYE(dataIdx).epoch)
+        isRej = false;
         for field = {'left' 'right'}
             if any(EYE(dataIdx).epoch(epochIdx).data.(field{:}) <= lims(1))...
                     || any(EYE(dataIdx).epoch(epochIdx).data.(field{:}) >= lims(2))
                 EYE(dataIdx).epoch(epochIdx).reject = true;
-                nRejected = nRejected + 1;
+                isRej = true;
             end
         end
+        if isRej
+            nRej = nRej + 1;
+        end
     end
-    fprintf('%s: %d/%d trials rejected\n',...
+    fprintf('%s:\n\t%d/%d trials rejected\n',...
         EYE(dataIdx).name,...
-        nRejected,...
+        nRej,...
         numel(EYE(dataIdx).epoch));
+    fprintf('\t%d trials total marked for rejection\n', nnz([EYE(dataIdx).epoch.reject]));
 end
 
 end

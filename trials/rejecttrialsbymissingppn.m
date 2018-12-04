@@ -23,16 +23,19 @@ fprintf('Rejecting trials with >= %0.1f%% missing data...\n', threshold*100);
 
 missingPpns = getmissingppns(EYE);
 
-for dataIdx = numel(EYE)
+for dataIdx = 1:numel(EYE)
+    nRej = 0;
     for epochIdx = 1:numel(EYE(dataIdx).epoch)
         if missingPpns{dataIdx}(epochIdx) >= threshold
             EYE(dataIdx).epoch(epochIdx).reject = true;
+            nRej = nRej + 1;
         end
     end
-    fprintf('%s: %d/%d trials rejected\n',...
+    fprintf('%s:\n\t%d/%d trials rejected\n',...
         EYE(dataIdx).name,...
-        nnz(missingPpns{dataIdx} >= threshold),...
+        nRej,...
         numel(EYE(dataIdx).epoch));
+    fprintf('\t%d trials total marked for rejection\n', nnz([EYE(dataIdx).epoch.reject]));
 end
 
 end

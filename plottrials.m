@@ -11,7 +11,7 @@ if isempty(EYE)
     return
 end
     
-if isempty(EYE.bin)
+if any(arrayfun(@(x) isempty(x.bin), EYE))
     uiwait(msgbox('Organize trials into sets first'));
     return
 end

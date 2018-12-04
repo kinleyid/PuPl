@@ -40,43 +40,50 @@ end
 
 if isempty(p.Results.epochDescriptions)
     q = sprintf('Simple epoching?\n(All epochs of same length and\ndefined using single events)');
-    if strcmp(questdlg(q, q, 'Yes', 'No', 'Yes'), 'Yes')
-        eventTypes = unique(mergefields(EYE, 'event', 'type'));
-        eventTypes = eventTypes(listdlgregexp('PromptString', 'Epoch relative to which events?',...
-            'ListString', eventTypes));
-        if isempty(eventTypes)
+    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
+    switch a
+        case 'Yes'
+            eventTypes = unique(mergefields(EYE, 'event', 'type'));
+            eventTypes = eventTypes(listdlgregexp('PromptString', 'Epoch relative to which events?',...
+                'ListString', eventTypes));
+            if isempty(eventTypes)
+                return
+            end
+            epochLims = (inputdlg(...
+                {sprintf('''s'' = 1 sample\nE.g. 10 + s = 10 seconds plus one sample\n\nEpochs start this many seconds relative to events:')
+                'Epochs end at this many seconds relative to events:'}));
+            if isempty(epochLims)
+                return
+            end
+            baselineLims = (inputdlg(...
+                {sprintf('''s'' = 1 sample\nE.g. 10 + s = 10 seconds plus one sample\n\nBaselines start this many seconds relative to events:')
+                'Baselines end at this many seconds relative to events:'}));
+            if isempty(baselineLims)
+                return
+            end
+            [epochDescriptions, baselineDescriptions] = deal(struct([]));
+            for eventTypeIdx = 1:numel(eventTypes)
+                epochDescriptions = cat(2, epochDescriptions,...
+                    struct('name', eventTypes{eventTypeIdx},...
+                        'lims', struct(...
+                            'event', eventTypes{eventTypeIdx},...
+                            'instance', 0,...
+                            'bookend', {epochLims{1} epochLims{2}})));
+                baselineDescriptions = cat(2, baselineDescriptions,...
+                    struct('name', eventTypes{eventTypeIdx},...
+                        'lims', struct(...
+                            'event', eventTypes{eventTypeIdx},...
+                            'instance', 0,...
+                            'bookend', {baselineLims{1} baselineLims{2}})));
+            end
+            [baselineDescriptions.epochsToCorrect] = epochDescriptions.name;
+        case 'No'
+            epochDescriptions = UI_getspandescriptions(EYE, 'epoch');
+            if isempty(epochDescriptions)
+                return
+            end
+        otherwise
             return
-        end
-        epochLims = (inputdlg(...
-            {sprintf('''s'' = 1 sample\nE.g. 10 + s = 10 seconds plus one sample\n\nEpochs start this many seconds relative to events:')
-            'Epochs end at this many seconds relative to events:'}));
-        if isempty(epochLims)
-            return
-        end
-        baselineLims = (inputdlg(...
-            {sprintf('''s'' = 1 sample\nE.g. 10 + s = 10 seconds plus one sample\n\nBaselines start this many seconds relative to events:')
-            'Baselines end at this many seconds relative to events:'}));
-        if isempty(baselineLims)
-            return
-        end
-        [epochDescriptions, baselineDescriptions] = deal(struct([]));
-        for eventTypeIdx = 1:numel(eventTypes)
-            epochDescriptions = cat(2, epochDescriptions,...
-                struct('name', eventTypes{eventTypeIdx},...
-                    'lims', struct(...
-                        'event', eventTypes{eventTypeIdx},...
-                        'instance', 0,...
-                        'bookend', {epochLims{1} epochLims{2}})));
-            baselineDescriptions = cat(2, baselineDescriptions,...
-                struct('name', eventTypes{eventTypeIdx},...
-                    'lims', struct(...
-                        'event', eventTypes{eventTypeIdx},...
-                        'instance', 0,...
-                        'bookend', {baselineLims{1} baselineLims{2}})));
-        end
-        [baselineDescriptions.epochsToCorrect] = epochDescriptions.name;
-    else
-        epochDescriptions = UI_getspandescriptions(EYE, 'epoch');
     end
 else
     epochDescriptions = p.Results.epochDescriptions;

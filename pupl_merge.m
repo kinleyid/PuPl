@@ -16,11 +16,12 @@ end
 structArray = [];
 
 for condIdx = 1:numel(conditions)
+    fprintf('Creating combined dataset %s...', conditions{condIdx})
     condStruct = struct(...
         'name', conditions{condIdx},...
         'srate', srate,...
         'bin', []);
-    currBins = mergefields(EYE(strcmpi({EYE.condition}, conditions{condIdx})), 'bin');
+    currBins = mergefields(EYE(strcmpi({EYE.cond}, conditions{condIdx})), 'bin');
     binNames = unique({currBins.name});
     for binIdx = 1:numel(binNames)
         mergedBin = struct('name', binNames{binIdx},...
@@ -31,7 +32,7 @@ for condIdx = 1:numel(conditions)
         currData = [currBins(strcmp({currBins.name}, binNames{binIdx})).data];
         for field = reshape(fieldnames(currData), 1, [])
             for dataIdx = 1:numel(currData)
-                mergedBin.(field{:}) = cat(1,...
+                mergedBin.data.(field{:}) = cat(1,...
                     mergedBin.data.(field{:}),...
                     currData(dataIdx).(field{:}));
             end
@@ -39,6 +40,7 @@ for condIdx = 1:numel(conditions)
         condStruct.bin = cat(2, condStruct.bin, mergedBin);
     end
     structArray = [structArray condStruct];
+    fprintf('done\n');
 end
 
 end
