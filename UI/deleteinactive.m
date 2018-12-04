@@ -1,4 +1,4 @@
-function deletineactive(dataType)
+function deleteinactive(dataType)
 
 global userInterface
 
@@ -13,7 +13,7 @@ switch dataType
         userInterface.UserData.activeEyeDataIdx(currIdx) = [];
     case 'event logs'
         global eventLogs
-        currIdx = ~userInterface.UserData.activeEventLogsIdx
+        currIdx = ~userInterface.UserData.activeEventLogsIdx;
         for currData = reshape(eventLogs(currIdx), 1, [])
             fprintf('Removing %s\n', currData.name);
         end

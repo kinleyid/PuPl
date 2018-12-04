@@ -29,6 +29,9 @@ while true
         dataIdx = listdlg('PromptString', 'Plot from which dataset?',...
             'ListString', {EYE.name},...
             'SelectionMode', 'single');
+        if isempty(dataIdx)
+            return
+        end
     else
         dataIdx = p.Results.dataIdx;
     end
@@ -38,6 +41,9 @@ while true
         bin = binNames{listdlg('PromptString', 'Plot from which trial set?',...
             'ListString', binNames,...
             'SelectionMode', 'single')};
+        if isempty(bin)
+            return
+        end
     else
         bin = p.Results.bin;
     end
@@ -58,4 +64,4 @@ while true
     end
 end
 
-end
+    end

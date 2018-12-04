@@ -24,6 +24,9 @@ if isempty(p.Results.dataIdx)
     dataIdx = listdlg('PromptString', 'Plot from which dataset?',...
         'ListString', {EYE.name},...
         'SelectionMode', 'single');
+    if isempty(dataIdx)
+        return
+    end
 else
     dataIdx = p.Results.dataIdx;
 end
@@ -33,6 +36,9 @@ if isempty(p.Results.bin)
     bin = binNames{listdlg('PromptString', 'Plot from which trial set?',...
         'ListString', binNames,...
         'SelectionMode', 'single')};
+    if isempty(bin)
+        return
+    end
 else
     bin = p.Results.bin;
 end
