@@ -21,8 +21,23 @@ catch
     return
 end
 
+if any(arrayfun(@(x) ~isempty(x.bin), EYE))
+    q = 'Overwrite existing trial sets?';
+    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
+    switch a
+        case 'Yes'
+            [EYE.bin] = deal([]);
+        case 'No'
+        otherwise
+            return
+    end
+end
+
 if isempty(p.Results.binDescriptions)
     binDescriptions = UI_getbindescriptions(EYE);
+    if isempty(binDescriptions)
+        return
+    end
 else
     binDescriptions = p.Results.binDescriptions;
 end

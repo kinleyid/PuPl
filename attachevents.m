@@ -40,6 +40,9 @@ end
 
 if isempty(p.Results.eventstoattach) || isempty(p.Results.namestoattach)
     [eventsToAttach, namesToAttach] = UI_geteventstoattach(eventLogs);
+    if isempty(eventsToAttach)
+        return
+    end
 else
     eventsToAttach = p.Results.eventstoattach;
     namesToAttach = p.Results.namestoattach;

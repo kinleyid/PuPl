@@ -7,14 +7,20 @@ Idx = listdlgregexp('PromptString', 'Which events from the event log should be a
     'ListSize', [500,300],...
     'ListString', eventTypes);
 eventsToAttach = eventTypes(Idx);
+if isempty(eventsToAttach)
+    namesToUse = [];
+    return
+end
 
 q = 'Attach the events under different names?';
-a = questdlg(q, q, 'Yes', 'No', 'No');
+a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'No');
 switch a
     case 'Yes'
         namesToUse = UI_getnames(eventsToAttach);
-    otherwise
+    case 'No'
         namesToUse = eventsToAttach;
+    otherwise
+        [eventsToAttach, namesToUse] = deal([]);
 end
 
 end

@@ -26,6 +26,18 @@ if isempty(EYE)
     return
 end
 
+if any(arrayfun(@(x) ~isempty(x.epoch), EYE))
+    q = 'Overwrite existing trials?';
+    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
+    switch a
+        case 'Yes'
+            [EYE.epoch] = deal([]);
+        case 'No'
+        otherwise
+            return
+    end
+end
+
 if isempty(p.Results.epochDescriptions)
     q = sprintf('Simple epoching?\n(All epochs of same length and\ndefined using single events)');
     if strcmp(questdlg(q, q, 'Yes', 'No', 'Yes'), 'Yes')
