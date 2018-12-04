@@ -37,7 +37,7 @@ end
 if isempty(p.Results.filenames) || isempty(p.Results.filenames)
     [filenames, directory] = uigetfile(extFilter,...
         'MultiSelect', 'on');
-    if filenames == 0
+    if isnumeric(filenames)
         return
     end
 else
