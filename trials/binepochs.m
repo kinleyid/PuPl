@@ -23,10 +23,6 @@ end
 
 if isempty(p.Results.binDescriptions)
     binDescriptions = UI_getbindescriptions(EYE);
-    if isempty(binDescriptions)
-        EYE = [];
-        return
-    end
 else
     binDescriptions = p.Results.binDescriptions;
 end

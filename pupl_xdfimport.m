@@ -75,7 +75,7 @@ for fileIdx = 1:numel(filename)
             eventDataStruct.time_stamps(emptyIdx) = [];
             events = eventDataStruct.time_series;
             times = double(eventDataStruct.time_stamps);
-            fprintf('%d events found\n', numel(events));
+            fprintf('\t%d events found\n', numel(events));
             event = struct(...
                 'type', events,...
                 'time', num2cell(times));
@@ -86,16 +86,16 @@ for fileIdx = 1:numel(filename)
     
     if strcmpi(p.Results.as, 'eye data')
         eyeDataStruct = streams{strcmpi(streamTypes, eyeDataStreamType)};
-        fprintf('Nominal sample rate: %s Hz\n', eyeDataStruct.info.nominal_srate);
+        fprintf('\tNominal sample rate: %s Hz\n', eyeDataStruct.info.nominal_srate);
         srate = eyeDataStruct.info.effective_srate;
-        fprintf('Effective sample rate: %f Hz\n', srate);
+        fprintf('\tEffective sample rate: %f Hz\n', srate);
         if isempty(eyeDataStruct)
             fprintf('No eye data in %s\n', filename{fileIdx});
         else
             srate = str2double(eyeDataStruct.info.nominal_srate);
-            fprintf('Replacing 0s with NaNs\n')
+            fprintf('\tReplacing 0s with NaNs\n')
             eyeDataStruct.time_series(eyeDataStruct.time_series == 0) = NaN;
-            fprintf('Found %s channels\n', eyeDataStruct.info.channel_count)
+            fprintf('\tFound %s channels\n', eyeDataStruct.info.channel_count)
             channelNames = cellfun(@(x) lower(x.label), eyeDataStruct.info.desc.channels.channel, 'un', 0);
             if isManual
                 if ~exist('leftIdx', 'var')
@@ -141,10 +141,10 @@ for fileIdx = 1:numel(filename)
                 yIdx = gazeIdx & cellfun(@(x) ~isempty(strfind(x, 'y')), channelNames);
             end
             
-            fprintf('Treating channel %s as left pupil diameter\n', channelNames{leftIdx});
-            fprintf('Treating channel %s as right diameter\n', channelNames{rightIdx});
-            fprintf('Treating channel %s as gaze x coordinate\n', channelNames{xIdx});
-            fprintf('Treating channel %s as gaze y coordinate\n', channelNames{yIdx});
+            fprintf('\tTreating channel %s as left pupil diameter\n', channelNames{leftIdx});
+            fprintf('\tTreating channel %s as right diameter\n', channelNames{rightIdx});
+            fprintf('\tTreating channel %s as gaze x coordinate\n', channelNames{xIdx});
+            fprintf('\tTreating channel %s as gaze y coordinate\n', channelNames{yIdx});
             
             data = struct(...
                 'left', double(eyeDataStruct.time_series(leftIdx, :)),...

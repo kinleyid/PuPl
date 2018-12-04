@@ -15,6 +15,7 @@ if ~isempty(eyeData) || ~isempty(eventLogs)
                     pupl_save('data', data{i}, 'type', types{i});
                 end
             end
+            delete(gcbf)
         case 'No'
             delete(gcbf)
     end

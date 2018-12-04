@@ -39,7 +39,7 @@ uicontrol(f,...
     'Units', 'normalized',...
     'Position', [0.01 0.01 0.98 0.08],...
     'KeyPressFcn', @enterkeyuiresume,...
-    'ButtonDownFcn', @(h,e)uiresume(f));
+    'Callback', @buttonpressresume);
 
 uiwait(f);
 if isvalid(f)
@@ -49,6 +49,12 @@ if isvalid(f)
 else
     idx = [];
 end
+
+end
+
+function buttonpressresume(h,e)
+
+uiresume(gcbf)
 
 end
 

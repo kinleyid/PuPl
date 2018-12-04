@@ -9,7 +9,7 @@ function EYE = copyevents(EYE, eventLog, offsetParams, eventsToAttach, namesToAt
 % namesToAttach--cell array of chars
 
 if overwrite
-    fprintf('Deleting pre-existing event data from %s...\n', EYE.name)
+    fprintf('Deleting %d pre-existing event data from %s...\n', numel(EYE.event), EYE.name)
     EYE.event = [];
 end
 

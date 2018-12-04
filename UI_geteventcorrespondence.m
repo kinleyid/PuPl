@@ -34,7 +34,8 @@ uicontrol(f,...
     'String', 'Done',...
     'Units', 'normalized',...
     'Position', [0.26 0.01 0.48 0.08],...
-    'Callback', @(h,e) uiresume(f));
+    'KeyPressFcn', @returnresume,...
+    'Callback', @(h,e)uiresume(f));
 
 uiwait(f);
 if isvalid(f)
@@ -45,6 +46,14 @@ if isvalid(f)
     close(f);
 else
     [eyeEventSets, eventLogEventSets] = deal([]);
+end
+
+end
+
+function returnresume(h,e)
+
+if strcmp(e.Key, 'resume')
+    uiresume(gcbf)
 end
 
 end
