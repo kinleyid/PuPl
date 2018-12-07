@@ -15,7 +15,8 @@ if isempty(globalVarName) ||...
     feval(functionToCall)
 else
     % Get the outputs
-    codeSmell{:} = feval(functionToCall);
+    codeSmell = cell(1, nargout(functionToCall));
+    [codeSmell{:}] = feval(functionToCall);
     
     % Subset the outputs
     codeSmell = codeSmell{outputIndex};

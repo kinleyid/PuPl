@@ -54,9 +54,9 @@ while true
     t = (x - 1)/EYE(dataIdx).srate;
     f.Visible = 'on';
     figure(f);
-    plot(t, mean(data))
-    plot(t, mean(data) + std(data) / size(data,2), '--k');
-    plot(t, mean(data) - std(data) / size(data,2), '--k');
+    plot(t, mean(data, 'omitnan'))
+    plot(t, mean(data, 'omitnan') + std(data, 'omitnan') / size(data,2), '--k');
+    plot(t, mean(data, 'omitnan') - std(data, 'omitnan') / size(data,2), '--k');
     q = 'Add more data to this plot?';
     a = questdlg(q, q, 'Yes', 'No', 'Yes');
     if strcmp(a, 'No')

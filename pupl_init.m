@@ -57,7 +57,7 @@ if ~any(strcmpi(varargin, 'noAddOns'))
 end
 
 % Add subdirectories
-for subdir = {'trials'}
+for subdir = {'trials' 'PFEcorrection'}
     cd(subdir{:});
     addpath(cd);
     cd ..
