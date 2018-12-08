@@ -167,7 +167,7 @@ f.UserData.inputRange = inputRange;
 f.UserData.boxcar = boxcar;
 
 fprintf('Computing error surface...\n')
-[surface, density, x, y] = getPFEsurfaceidx(EYE, gridN, trimPpn, inputRange, boxcar);
+[surface, density, x, y] = computePFEsurface(EYE, gridN, trimPpn, inputRange, boxcar);
 
 fprintf('Plotting...\n')
 axes(getcomponentbytag(f, 'errorSurface'));
