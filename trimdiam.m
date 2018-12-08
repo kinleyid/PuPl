@@ -20,8 +20,8 @@ fprintf('Trimming extreme pupil diameter values...\n')
 fprintf('Trimming points where\n')
 fprintf('Left < %0.1f\n', leftLims(1));
 fprintf('Left > %0.1f\n', leftLims(2));
-fprintf('Left < %0.1f\n', rightLims(1));
-fprintf('Left > %0.1f\n', rightLims(2));
+fprintf('Right  < %0.1f\n', rightLims(1));
+fprintf('Right > %0.1f\n', rightLims(2));
 
 for dataIdx = 1:numel(EYE)
     badIdx = EYE(dataIdx).data.left < leftLims(1) |...
