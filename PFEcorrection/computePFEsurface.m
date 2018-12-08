@@ -1,4 +1,4 @@
-function [surface, x, y] = computePFEsurface(EYE, gridN, trimPpn, inputRange, boxcar, varargin)
+function [surface, density, x, y] = computePFEsurface(EYE, gridN, trimPpn, inputRange, boxcar)
 
 if isempty(inputRange)
     sorteds = structfun(@(v) sort(v(~isnan(v))), EYE.gaze, 'un', 0);
@@ -14,27 +14,16 @@ else
 end
 widths = structfun(@(x) (x(2) - x(1))*boxcar, ranges, 'un', 0);
 
-surface = nan(gridN);
-dataVector = EYE.data.left;
+idx = false(numel(ranges.x), numel(ranges.y), numel(EYE.data.left));
 
-if any(strcmpi(varargin, 'density'))
-    for xi = 1:numel(ranges.x)
-        for yi = 1:numel(ranges.y)
-            currIdx = abs(EYE.gaze.x - ranges.x(xi)) <= widths.x...
-                & abs(EYE.gaze.y - ranges.y(yi)) <= widths.y...
-                & ~EYE.isBlink;
-            surface(yi, xi) = numel(~isnan(dataVector(currIdx)));
-        end
-    end 
-else
-    for xi = 1:numel(ranges.x)
-        for yi = 1:numel(ranges.y)
-            currIdx = abs(EYE.gaze.x - ranges.x(xi)) <= widths.x...
-                & abs(EYE.gaze.y - ranges.y(yi)) <= widths.y...
-                & ~EYE.isBlink;
-            surface(yi, xi) = mean(dataVector(currIdx), 'omitnan');
-        end
-    end 
+[surface, density] = deal(nan(size(idx,1), size(idx,2)));for xi = 1:numel(ranges.x)
+    for yi = 1:numel(ranges.y)
+        currIdx =  abs(EYE.gaze.x - ranges.x(xi)) <= widths.x...
+            & abs(EYE.gaze.y - ranges.y(yi)) <= widths.y...
+            & ~EYE.isBlink;
+        surface(yi, xi) = mean(EYE.data.left(currIdx), 'omitnan');
+        density(yi, xi) = nnz(~isnan(EYE.data.left(currIdx)));
+    end
 end
 
 x = ranges.x;

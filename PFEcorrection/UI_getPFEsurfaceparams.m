@@ -133,10 +133,10 @@ plotErrorSurf(f, f.UserData.currPlotType);
 
 uiwait(f);
 if isvalid(f)
-    gridN = f.UserData.gridN;
-    trimPpn = f.UserData.trimPpn;
-    inputRange = f.UserData.inputRange;
-    boxcar = f.UserData.boxcar;
+    gridN = str2num(get(getcomponentbytag(f, 'controlPanel', 'gridN'), 'String'));
+    trimPpn = str2num(get(getcomponentbytag(f, 'controlPanel', 'trimPpn'), 'String'));
+    inputRange = str2num(get(getcomponentbytag(f, 'controlPanel', 'inputRange'), 'String'));
+    boxcar = str2num(get(getcomponentbytag(f, 'controlPanel', 'boxcar'), 'String'));
     flip = f.UserData.flip;
     close(f);
 else
@@ -167,17 +167,13 @@ f.UserData.inputRange = inputRange;
 f.UserData.boxcar = boxcar;
 
 fprintf('Computing error surface...\n')
-if any(strcmpi(varargin, 'density'))
-    [surface, x, y] = computePFEsurface(EYE, gridN, trimPpn, inputRange, boxcar, 'density');
-else
-    [surface, x, y] = computePFEsurface(EYE, gridN, trimPpn, inputRange, boxcar);
-end
+[surface, density, x, y] = getPFEsurfaceidx(EYE, gridN, trimPpn, inputRange, boxcar);
 
 fprintf('Plotting...\n')
 axes(getcomponentbytag(f, 'errorSurface'));
 if any(strcmpi(varargin, 'density'))
     title('Measured dilation by gaze coordinates')
-    image(x, y, surface,...
+    image(x, y, density,...
         'CDataMapping', 'scaled');
     cbarLabel = 'N. data points';
 elseif any(strcmpi(varargin, 'error'))

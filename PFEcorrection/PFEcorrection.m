@@ -32,7 +32,6 @@ for dataIdx = 1:numel(EYE)
     options = optimset('PlotFcns',@optimplotfval);
     optimFunc = @(v) pfe(v(1), v(2), v(3), v(4), v(5), v(6), EYE, params{:});
     c = fminsearch(optimFunc, initialValues, options);
-    % c = initialValues;
     coords = struct(...
         'Cx', c(1),...
         'Cy', c(2),...
@@ -40,9 +39,8 @@ for dataIdx = 1:numel(EYE)
         'Tx0', c(4),...
         'Ty0', c(5),...
         'Tz', c(6));
-    
     tmpEYE = applyPFEcorrection(EYE,coords);
-    [d, x, y] = computePFEsurface(EYE, params{:});
+    [d, ~, x, y] = computePFEsurface(EYE, params{:});
     d0 = computePFEsurface(tmpEYE, params{:});
     figure;
     subplot(1,2,1)
@@ -56,6 +54,8 @@ for dataIdx = 1:numel(EYE)
         return
     end
     EYE(dataIdx) = tmpEYE;
+    EYE(dataIdx).PFEcoords = coords;
+    fprintf('%s is now corrected for PFE\n', EYE(dataIdx).name);
 end
 
 end
@@ -72,8 +72,9 @@ coords = struct(...
 
 EYE = applyPFEcorrection(EYE, coords);
 
-d0 = computePFEsurface(EYE, varargin{:});
-err = mean(((d0(:) - mean(d0(:), 'omitnan'))/mean(d0(:), 'omitnan')).^2, 'omitnan');
-% err = mean(abs((d0(:) - mean(d0(:), 'omitnan'))), 'omitnan');
+[d0, density] = computePFEsurface(EYE, varargin{:});
+
+err = (((d0 - mean(d0(:), 'omitnan'))/mean(d0(:), 'omitnan')).^2).*density;
+err = median(err(:), 'omitnan');
 
 end
