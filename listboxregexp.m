@@ -19,16 +19,14 @@ uicontrol(parent,...
     'FontSize', 10,...
     'Units', 'normalized',...
     'Position', [0.01 0.01 0.98 0.08],...
-    'Callback', @selectbyregexp,...
-    'KeyReleaseFcn', @selectbyregexp)
+    'Callback', @(h,e) selectbyregexp(h),...
+    'KeyReleaseFcn', @(h,e) enterdo(e, @() selectbyregexp(h)))
 
 end
 
-function selectbyregexp(src, e)
+function selectbyregexp(src)
 
-if strcmpi(e.Key, 'return')
-    listBox = findobj(src.Parent, 'Style', 'listbox');
-    listBox.Value = find(~cellfun(@isempty, regexp(listBox.String, src.String)));
-end
+listBox = findobj(src.Parent, 'Style', 'listbox');
+listBox.Value = find(~cellfun(@isempty, regexp(listBox.String, src.String)));
 
 end

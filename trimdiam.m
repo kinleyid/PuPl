@@ -156,10 +156,10 @@ axes(findobj(f, 'Type', 'axes', 'Tag', 'hist'));
 cla;
 bins = linspace(min([left right]), max([left right]), 200);
 for side = {'left' 'right'}
-    histogram(f.UserData.(side{:})(~badIdx.(side{:})), bins)
+    histogram(f.UserData.(side{:}), bins);
 end
 for side = {'left' 'right'}
-    histogram(f.UserData.(side{:})(badIdx.(side{:})), bins, 'FaceColor', 'k')
+    histogram(f.UserData.(side{:})(badIdx.(side{:})), bins, 'FaceColor', 'k');
 end
 legend({'Left' 'Right' 'Trimmed'})
 xlabel('Diameter')
