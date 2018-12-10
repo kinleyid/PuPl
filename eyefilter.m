@@ -2,7 +2,7 @@ function EYE = eyefilter(EYE, varargin)
 
 p = inputParser;
 addParameter(p, 'filterType', []);
-addParameter(p, 'n', []);
+addParameter(p, 'hwidth', []);
 parse(p, varargin{:})
 
 if isempty(EYE)
@@ -11,21 +11,23 @@ if isempty(EYE)
 end
 
 if isempty(p.Results.filterType) || isempty(p.Results.n)
-    [filterType, n] = UI_getfilterinfo;
+    [filterType, hwidth] = UI_getfilterinfo;
     if isempty(filterType)
         return
     end
+    hwidth = hwidth{:};
 else
     filterType = p.Results.filterType;
-    n = p.Results.n;
+    hwidth = p.Results.hwidth;
 end
 
-fprintf('Applying %s filter of %d points on either side\n', filterType, n);
-for dataIdx = 1:numel(EYE)
-    fprintf('\t%s...', EYE(dataIdx).name); 
-    EYE(dataIdx).diam = applyeyefilter(EYE(dataIdx), filterType, n);
-    fprintf('done\n');
+fprintf('Applying %s filter of %s on either side\n', filterType, hwidth);
+for dataidx = 1:numel(EYE)
+    currN = round(parsetimestr(hwidth, EYE(dataidx).srate)*EYE(dataidx).srate);
+    fprintf('\t%s: filter width is %d data points\n', EYE(dataidx).name, currN*2 + 1); 
+    EYE(dataidx).diam = applyeyefilter(EYE(dataidx), filterType, currN);
 end
+fprintf('done\n');
 
 end
 
@@ -39,8 +41,8 @@ if isempty(filterType)
     smoothN = [];
     return
 end
-q = 'Average of how many points on either side?';
-smoothN = str2double(inputdlg(q, q, 1, {'8'}));
+q = 'Average of how long on either side?';
+smoothN = inputdlg(q, q, 1, {'100ms'});
 
 end
 

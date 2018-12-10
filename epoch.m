@@ -50,16 +50,21 @@ if isempty(p.Results.epochDescriptions)
                 return
             end
             epochLims = (inputdlg(...
-                {sprintf('''s'' = 1 sample\nE.g. 10 + s = 10 seconds plus one sample\n\nEpochs start this many seconds relative to events:')
-                'Epochs end at this many seconds relative to events:'}));
+                {sprintf('Trials start at this time relative to events:')
+                'Trials end at this time relative to events:'}));
             if isempty(epochLims)
                 return
+            else
+                fprintf('Trials defined from [event] + %s to [event] + %s\n', epochLims{:})
             end
             baselineLims = (inputdlg(...
-                {sprintf('''s'' = 1 sample\nE.g. 10 + s = 10 seconds plus one sample\n\nBaselines start this many seconds relative to events:')
-                'Baselines end at this many seconds relative to events:'}));
+                {sprintf('Baselines start at this time relative to events:')
+                'Baselines end at this time relative to events:'}));
             if isempty(baselineLims)
+                fprintf('Cancelling\n')
                 return
+            else
+                fprintf('Trials defined from [event] + %s to [event] + %s\n', baselineLims{:})
             end
             [epochDescriptions, baselineDescriptions] = deal(struct([]));
             for eventTypeIdx = 1:numel(eventTypes)

@@ -17,14 +17,8 @@ for limIdx = 1:2
     end
     
     % Parse string
-    cmd = lower(spanDescription.lims(limIdx).bookend);
-    cmd = strrep(cmd,' ','');
-    [a, b] = regexp(cmd, '[0-9]s');
-    if ~isempty(b)
-        cmd = strcat(cmd(1:b-1), '*s', cmd(b+1:end));
-    end
-    cmd = strrep(cmd,'s','1/EYE.srate');
-    currBookend = eval(cmd);
+    
+    currBookend = parsetimestr(spanDescription.lims(limIdx).bookend, EYE.srate);
     
     lims{limIdx} = round(...
         [EYE.event(eventIdx).time]*EYE.srate + 1 ... % latencies of events
