@@ -7,6 +7,12 @@ function pupl_init(varargin)
 %   Example
 % >> pupl_init noui noaddons
 
+if ~any(strcmpi(varargin, 'noLog'))
+    fprintf('Initializing processing log file...\n')
+    uiwait(msgbox('Select where to log processing history to'));
+    pupl_diary
+end
+
 fprintf('Version 1.0\n');
 
 % Navigate to directory containing this very function

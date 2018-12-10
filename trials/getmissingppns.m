@@ -11,8 +11,8 @@ for dataIdx = 1:numel(EYE)
     for epochIdx = 1:numel(currPpns)
         currLats = EYE(dataIdx).epoch(epochIdx).latencies;
         amtMissing = ...
-            nnz(isnan(EYE(dataIdx).urData.left(currLats))) +...
-            nnz(isnan(EYE(dataIdx).urData.right(currLats)));
+            nnz(isnan(EYE(dataIdx).diam.left(currLats))) +...
+            nnz(isnan(EYE(dataIdx).diam.right(currLats)));
         currPpns(epochIdx) = amtMissing/(2*numel(currLats));
     end
     ppns{dataIdx} = currPpns;

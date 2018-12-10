@@ -9,13 +9,13 @@ function EYE = copyevents(EYE, eventLog, offsetParams, eventsToAttach, namesToAt
 % namesToAttach--cell array of chars
 
 if overwrite
-    fprintf('Deleting %d pre-existing event data from %s...\n', numel(EYE.event), EYE.name)
+    fprintf('\tDeleting %d pre-existing event data from %s...\n', numel(EYE.event), EYE.name)
     EYE.event = [];
 end
 
 initEventCount = numel(EYE.event);
 
-fprintf('Writing events from %s to %s...', eventLog.name, EYE.name);
+fprintf('\tWriting events from %s to %s...', eventLog.name, EYE.name);
 
 for typeIdx = 1:numel(eventsToAttach)
     matchIdx = strcmpi({eventLog.event.type}, eventsToAttach(typeIdx));

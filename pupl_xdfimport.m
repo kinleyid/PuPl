@@ -6,7 +6,6 @@ function outStructArray = pupl_xdfimport(varargin)
 % filename--char or cell array of char
 % directory--char
 % as--'eye data' (default) or 'event logs'
-% manual--1/true (default) or 0/false. If 1, user gets to decide which stream is which
 %   Outputs
 % outStructArray--struct array
 
@@ -16,10 +15,7 @@ p = inputParser;
 addParameter(p, 'filename', [])
 addParameter(p, 'directory', '.')
 addParameter(p, 'as', 'eye data')
-addParameter(p, 'manual', true)
 parse(p, varargin{:});
-
-isManual = logical(p.Results.manual);
 
 directory = p.Results.directory;
 
@@ -36,33 +32,38 @@ filename = cellstr(filename);
 
 listSize = [500 300];
 
+idx = []; idxSelected = false;
+
 for fileIdx = 1:numel(filename)
     [~, name] = fileparts(filename{fileIdx});
     currStruct = struct('name', name);
     fprintf('Loading %s...\n', filename{fileIdx});
     streams = load_xdf([directory '\\' filename{fileIdx}]);
     streamTypes = cellfun(@(x) x.info.type, streams, 'un', 0);
-    if isManual
-        if strcmpi(p.Results.as, 'eye data')
-            if ~exist('eyeDataStreamType', 'var')
-                eyeDataStreamType = streamTypes(listdlg(...
-                    'PromptString', 'Which stream contains the eye data?',...
-                    'ListString', streamTypes,...
-                    'SelectionMode', 'single',...
-                    'ListSize', listSize));
-            end
-        end
-        if ~exist('eventsStreamType', 'var')
-            eventsStreamTypeOpts = [streamTypes 'none of the above'];
-            eventsStreamType = eventsStreamTypeOpts(listdlg(...
-                'PromptString', 'Which stream contains the event markers?',...
-                'ListString', eventsStreamTypeOpts,...
+    if strcmpi(p.Results.as, 'eye data')
+        if ~exist('eyeDataStreamType', 'var')
+            eyeDataStreamType = streamTypes(listdlg(...
+                'PromptString', 'Which stream contains the eye data?',...
+                'ListString', streamTypes,...
                 'SelectionMode', 'single',...
                 'ListSize', listSize));
+            if isempty(eyeDataStreamType)
+                outStructArray = [];
+                return
+            end
         end
-    else
-        eyeDataStreamType = 'Gaze';
-        eventsStreamType = 'Markers';
+    end
+    if ~exist('eventsStreamType', 'var')
+        eventsStreamTypeOpts = [streamTypes 'none of the above'];
+        eventsStreamType = eventsStreamTypeOpts(listdlg(...
+            'PromptString', 'Which stream contains the event markers?',...
+            'ListString', eventsStreamTypeOpts,...
+            'SelectionMode', 'single',...
+            'ListSize', listSize));
+        if isempty(eventsStreamType)
+            outStructArray = [];
+            return
+        end
     end
     
     if ~strcmpi(eventsStreamType, 'none of the above')
@@ -97,61 +98,39 @@ for fileIdx = 1:numel(filename)
             eyeDataStruct.time_series(eyeDataStruct.time_series == 0) = NaN;
             fprintf('\tFound %s channels\n', eyeDataStruct.info.channel_count)
             channelNames = cellfun(@(x) lower(x.label), eyeDataStruct.info.desc.channels.channel, 'un', 0);
-            if isManual
-                if ~exist('leftIdx', 'var')
-                    leftIdx = listdlg(...
-                        'PromptString', 'Which channel is left diameter?',...
-                        'ListString', channelNames,...
-                        'SelectionMode', 'single',...
-                        'ListSize', listSize);
+            data = [];
+            for currField1 = {'diameter' 'gaze'}
+                for currField2 = {'left' 'right'}
+                    for currField3 = {'x' 'y'}
+                        if ~idxSelected
+                            currIdx = listdlg(...
+                                'PromptString', sprintf('Which channel is %s %s %s?', currField2{:}, currField3{:}, currField1{:}),...
+                                'ListString', channelNames,...
+                                'SelectionMode', 'single',...
+                                'ListSize', listSize);
+                            if isempty(currIdx)
+                                outStructArray = [];
+                                return;
+                            else
+                                idx.(currField1{:}).(currField2{:}).(currField3{:}) = currIdx; 
+                            end
+                        end
+                        fprintf('\tTreating channel %s as %s %s %s\n',...
+                            channelNames{idx.(currField1{:}).(currField2{:}).(currField3{:})},...
+                            currField2{:},...
+                            currField1{:},...
+                            currField3{:});
+                        if strcmpi(currField1{:}, 'diameter')
+                            data.(currField1{:}).(currField2{:}).(currField3{:}) =...
+                                double(eyeDataStruct.time_series(idx.(currField1{:}).(currField2{:}).(currField3{:}), :));
+                        elseif strcmpi(currField1{:}, 'gaze')
+                            data.(currField1{:}).(currField3{:}).(currField2{:}) =...
+                                double(eyeDataStruct.time_series(idx.(currField1{:}).(currField2{:}).(currField3{:}), :));
+                        end
+                    end
                 end
-                if ~exist('rightIdx', 'var')
-                    rightIdx = listdlg(...
-                        'PromptString', 'Which channel is right diameter?',...
-                        'ListString', channelNames,...
-                        'SelectionMode', 'single',...
-                        'ListSize', listSize);
-                end
-                if ~exist('xIdx', 'var')
-                    xIdx = listdlg(...
-                        'PromptString', 'Which channel is gaze x coordinates?',...
-                        'ListString', channelNames,...
-                        'SelectionMode', 'single',...
-                        'ListSize', listSize);
-                end
-                if ~exist('yIdx', 'var')
-                    yIdx = listdlg(...
-                        'PromptString', 'Which channel is gaze y coordinates?',...
-                        'ListString', channelNames,...
-                        'SelectionMode', 'single',...
-                        'ListSize', listSize);
-                end
-            else
-                pupilIdx = (cellfun(@(x) ~isempty(strfind(x, 'diameter')), channelNames)...
-                | cellfun(@(x) ~isempty(strfind(x, 'pupil')), channelNames)...
-                | cellfun(@(x) ~isempty(strfind(x, 'dilation')), channelNames))...
-                    & cellfun(@(x) isempty(strfind(x, 'x')), channelNames)...
-                    & cellfun(@(x) isempty(strfind(x, 'y')), channelNames);
-                leftIdx = pupilIdx & cellfun(@(x) ~isempty(strfind(x, 'left')), channelNames);
-                rightIdx = pupilIdx & cellfun(@(x) ~isempty(strfind(x, 'right')), channelNames);
-                
-                gazeIdx = (cellfun(@(x) ~isempty(strfind(x, 'screen')), channelNames)...
-                    | cellfun(@(x) ~isempty(strfind(x, 'gaze')), channelNames));
-                xIdx = gazeIdx & cellfun(@(x) ~isempty(strfind(x, 'x')), channelNames);
-                yIdx = gazeIdx & cellfun(@(x) ~isempty(strfind(x, 'y')), channelNames);
             end
-            
-            fprintf('\tTreating channel %s as left pupil diameter\n', channelNames{leftIdx});
-            fprintf('\tTreating channel %s as right diameter\n', channelNames{rightIdx});
-            fprintf('\tTreating channel %s as gaze x coordinate\n', channelNames{xIdx});
-            fprintf('\tTreating channel %s as gaze y coordinate\n', channelNames{yIdx});
-            
-            data = struct(...
-                'left', double(eyeDataStruct.time_series(leftIdx, :)),...
-                'right', double(eyeDataStruct.time_series(rightIdx, :)));
-            gaze = struct(...
-                'x', double(eyeDataStruct.time_series(xIdx, :)),...
-                'y', double(eyeDataStruct.time_series(yIdx, :)));
+            idxSelected = true;
             if ~isempty(event)
                 % Add latencies to event markers and adjust their time
                 % stamps so that time 0 is the first data sample from the
@@ -168,19 +147,25 @@ for fileIdx = 1:numel(filename)
                 [event.time] = times{:};
                 [event.latency] = latencies{:};
             end
-            currStruct.data = data;
-            currStruct.urData = data;
+            currStruct.diam = data.diameter;
+            currStruct.urDiam = data.diameter;
             currStruct.srate = srate;
-            currStruct.gaze = gaze;
+            currStruct.gaze = data.gaze;
+            currStruct.urGaze = data.gaze;
             currStruct.epoch = [];
             currStruct.bin = [];
             currStruct.cond = [];
-            currStruct.isBlink = false(size(data.left));
+            currStruct.isBlink = false(1, size(eyeDataStruct.time_series, 2));
         end
     end
     currStruct.event = event;
-    
+    fprintf('\tMerging left and right gaze streams\n')
+    currStruct = mergedata(currStruct, 'gazelr');
+    fprintf('\tMerging x and y diameter measurements\n')
+    currStruct = mergedata(currStruct, 'diamxy');
     outStructArray = [outStructArray currStruct];
 end
+
+fprintf('Done\n');
 
 end

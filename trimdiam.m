@@ -24,24 +24,24 @@ fprintf('Right  < %0.1f\n', rightLims(1));
 fprintf('Right > %0.1f\n', rightLims(2));
 
 for dataIdx = 1:numel(EYE)
-    badIdx = EYE(dataIdx).data.left < leftLims(1) |...
-        EYE(dataIdx).data.left > leftLims(2) |...
-        EYE(dataIdx).data.right < rightLims(1) |...
-        EYE(dataIdx).data.right > rightLims(2);
-    for field1 = {'gaze' 'data' 'urData'} 
+    badIdx = EYE(dataIdx).diam.left < leftLims(1) |...
+        EYE(dataIdx).diam.left > leftLims(2) |...
+        EYE(dataIdx).diam.right < rightLims(1) |...
+        EYE(dataIdx).diam.right > rightLims(2);
+    for field1 = {'gaze' 'diam'} 
         for field2 = reshape(fieldnames(EYE(dataIdx).(field1{:})), 1, [])
             EYE(dataIdx).(field1{:}).(field2{:})(badIdx) = nan; 
         end
     end
-    fprintf('\t%s: %0.2f%% of data removed\n', EYE(dataIdx).name, 100*nnz(badIdx)/numel(badIdx))
+    fprintf('\t%s: %0.2f%% of data removed\n', EYE(dataIdx).name, 100*nnz(badIdx)/numel(EYE(dataIdx).isBlink))
 end
 
 end
 
 function [leftLims, rightLims] = UI_getdiamlims(EYE)
 
-left = mergefields(EYE, 'data', 'left');
-right = mergefields(EYE, 'data', 'right');
+left = mergefields(EYE, 'diam', 'left');
+right = mergefields(EYE, 'diam', 'right');
 
 f = figure(...
     'ToolBar', 'none',...
@@ -94,23 +94,17 @@ p = uipanel(f,...
     'Units', 'normalized',...
     'Position', [0.51 0.01 0.48 0.08]);
 uicontrol(p,...
-    'String', 'Update',...
-    'Units', 'normalized',...
-    'Callback', @(h,e) updateplot,...
-    'KeyPressFcn', @(h,e) enterdo(e, @updateplot),...
-    'Position', [0.01 0.01 0.32 0.98]);
-uicontrol(p,...
     'String', 'Done',...
     'Units', 'normalized',...
     'Callback', @(h,e) uiresume(f),...
     'KeyPressFcn', @(h,e) enterdo(e, @() uiresume(f)),...
-    'Position', [0.34 0.01 0.32 0.98]);
+    'Position', [0.01 0.01 0.48 0.98]);
 uicontrol(p,...
     'String', 'Cancel',...
     'Units', 'normalized',...
     'Callback', @(h,e) delete(f),...
     'KeyPressFcn', @(h,e) enterdo(e, @() delete(f)),...
-    'Position', [0.67 0.01 0.32 0.98]);
+    'Position', [0.51 0.01 0.48 0.98]);
 
 updateplot(f);
 
@@ -155,13 +149,21 @@ badIdx.both = badIdx.right | badIdx.left;
 axes(findobj(f, 'Type', 'axes', 'Tag', 'hist'));
 cla;
 bins = linspace(min([left right]), max([left right]), 200);
-for side = {'left' 'right'}
-    histogram(f.UserData.(side{:}), bins);
+try
+    for side = {'left' 'right'}
+        histogram(f.UserData.(side{:}), bins);
+    end
+    for side = {'left' 'right'}
+        histogram(f.UserData.(side{:})(badIdx.(side{:})), bins, 'FaceColor', 'k');
+    end
+    legend({'Left' 'Right' 'Trimmed'})
+catch
+    for side = {'left' 'right'}
+        hist(f.UserData.(side{:}), bins);
+    end
+    h = findobj(gca,'Type','patch');
+    set(h,'FaceAlpha', 0.0, 'EdgeColor','k')
 end
-for side = {'left' 'right'}
-    histogram(f.UserData.(side{:})(badIdx.(side{:})), bins, 'FaceColor', 'k');
-end
-legend({'Left' 'Right' 'Trimmed'})
 xlabel('Diameter')
 
 title(sprintf('%0.2f%% trimmed', 100*nnz(badIdx.both)/numel(badIdx.both)));

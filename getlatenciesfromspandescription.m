@@ -9,10 +9,14 @@ function latencies = getlatenciesfromspandescription(EYE, spanDescription)
 
 lims = {}; % Get span-delimiting latencies
 for limIdx = 1:2
+    
     eventIdx = find(strcmp({EYE.event.type}, spanDescription.lims(limIdx).event));
     if spanDescription.lims(limIdx).instance ~= 0
+        % A particular serial instance, not just any
         eventIdx = eventIdx(spanDescription.lims(limIdx).instance);
     end
+    
+    % Parse string
     cmd = lower(spanDescription.lims(limIdx).bookend);
     cmd = strrep(cmd,' ','');
     [a, b] = regexp(cmd, '[0-9]s');
@@ -21,6 +25,7 @@ for limIdx = 1:2
     end
     cmd = strrep(cmd,'s','1/EYE.srate');
     currBookend = eval(cmd);
+    
     lims{limIdx} = round(...
         [EYE.event(eventIdx).time]*EYE.srate + 1 ... % latencies of events
         + repmat(round(currBookend*EYE.srate), 1, numel(eventIdx))); % plus bookends

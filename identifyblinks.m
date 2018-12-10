@@ -31,24 +31,34 @@ else
     paddingTime = p.Results.paddingTime;
 end
 
+fprintf('Identifying blink as:\n')
+fprintf('%f%% missing data\n', missingPct);
+fprintf('For at least %f milliseconds\n', windowTime);
+fprintf('Padded by %f milliseconds\n', paddingTime);
+
 missingPpn = missingPct/100;
 
-fprintf('Identifying blinks...\n');
 for dataIdx = 1:numel(EYE)
-    fprintf('%s...', EYE(dataIdx).name);
+    fprintf('\t%s...', EYE(dataIdx).name);
     
-    isBlink = false(size(EYE(dataIdx).urData.left));
+    isBlink = false(size(EYE(dataIdx).isBlink));
     
     paddingLen = round(paddingTime/1000*EYE(dataIdx).srate);
     urWindow = 0:round(windowTime/1000*EYE(dataIdx).srate);
     currWindow = urWindow;
-    for step = 1:(numel(EYE(dataIdx).urData.left)-numel(currWindow) + 1)
+    for step = 1:(numel(EYE(dataIdx).isBlink) - numel(currWindow) + 1)
         currWindow = urWindow + step;
-        if (nnz(isnan(EYE(dataIdx).urData.left(currWindow)))...
-                +nnz(isnan(EYE(dataIdx).urData.right(currWindow))))...
-                /(2*numel(currWindow)) >= missingPpn
+        [amtMissing, total] = deal(0);
+        for field1 = reshape(fieldnames(EYE(dataIdx).urDiam), 1, [])
+            for field2 = reshape(fieldnames(EYE(dataIdx).urDiam.(field1{:})), 1, [])
+                amtMissing = amtMissing + ...
+                    nnz(isnan(EYE(dataIdx).urDiam.(field1{:}).(field2{:})(currWindow)));
+                total = total + numel(currWindow);
+            end
+        end
+        if amtMissing / total >= missingPpn
             pad1 = max(1, currWindow(1)-paddingLen);
-            pad2 = min(numel(EYE(dataIdx).urData.left), currWindow(end)+paddingLen);
+            pad2 = min(numel(EYE(dataIdx).isBlink), currWindow(end)+paddingLen);
             isBlink(pad1:pad2) = true;
         end
     end
@@ -70,5 +80,7 @@ for dataIdx = 1:numel(EYE)
     
     EYE(dataIdx).isBlink = isBlink;
 end
+
+fprintf('done\n')
 
 end

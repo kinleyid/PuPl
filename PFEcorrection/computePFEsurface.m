@@ -14,9 +14,10 @@ else
 end
 widths = structfun(@(x) (x(2) - x(1))*boxcar, ranges, 'un', 0);
 
-idx = false(numel(ranges.x), numel(ranges.y), numel(EYE.data.left));
+idx = false(numel(ranges.x), numel(ranges.y), numel(EYE.diam.left));
 
-[surface, density] = deal(nan(size(idx,1), size(idx,2)));for xi = 1:numel(ranges.x)
+[surface, density] = deal(nan(size(idx,1), size(idx,2)));
+for xi = 1:numel(ranges.x)
     for yi = 1:numel(ranges.y)
         currIdx =  abs(EYE.gaze.x - ranges.x(xi)) <= widths.x...
             & abs(EYE.gaze.y - ranges.y(yi)) <= widths.y...

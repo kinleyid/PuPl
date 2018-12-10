@@ -24,13 +24,13 @@ for dataIdx = 1:numel(EYE)
                 'latencies', spans{spanIdx},...
                 'name', epochDescriptions(epochIdx).name,...
                 'reject', false);  
-            for stream = reshape(fieldnames(EYE(dataIdx).data), 1, [])
-                currEpoch.data.(stream{:}) = EYE(dataIdx).data.(stream{:})(currEpoch.latencies);
+            for stream = reshape(fieldnames(EYE(dataIdx).diam), 1, [])
+                currEpoch.diam.(stream{:}) = EYE(dataIdx).diam.(stream{:})(currEpoch.latencies);
             end
             EYE(dataIdx).epoch = [EYE(dataIdx).epoch currEpoch];
         end
     end
-    fprintf('%d trials created\n', numel(EYE(dataIdx).epoch))
+    fprintf('\t%d trials created\n', numel(EYE(dataIdx).epoch))
 end
 
 end

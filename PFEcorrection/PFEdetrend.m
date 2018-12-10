@@ -1,46 +1,55 @@
 function EYE = PFEdetrend(EYE, varargin)
 
 p = inputParser;
-addParameter(p, 'slope', []);
+addParameter(p, 'axis', 'y');
+addParameter(p, 'detrendParams', []);
 parse(p, varargin{:});
+
+axis = p.Results.axis;
 
 fprintf('Detrending...\n')
 for dataIdx = 1:numel(EYE)
     fprintf('%s\n', EYE(dataIdx).name)
-    if isfield(EYE(dataIdx), 'both')
-        currData = EYE(dataIdx).data.both(:);
+    if isfield(EYE(dataIdx).diam, 'both')
+        currData = EYE(dataIdx).diam.both(:);
     else
-        currData = mean([EYE(dataIdx).data.left(:) EYE(dataIdx).data.right(:)], 2, 'omitnan');
+        currData = mean([EYE(dataIdx).diam.left(:) EYE(dataIdx).diam.right(:)], 2, 'omitnan');
     end
-    currCoord = EYE(dataIdx).gaze.y(:);
-    if isempty(p.Results.slope)
-        slope = UI_getdetrendparams(currCoord, currData);
-        if isempty(slope)
+    currCoord = EYE(dataIdx).gaze.(axis)(:);
+    if isempty(p.Results.detrendParams)
+        detrendParams = UI_getdetrendparams(currCoord, currData, axis);
+        if isempty(detrendParams)
             EYE = [];
+            fprintf('Cancelled\n');
             return
         end
     else
-        slope = p.Results.slope;
+        detrendParams = p.Results.detrendParams;
     end
     fprintf('\tCorrecting for the following equation:\n');
-    fprintf('\tDiam = C + %f*gaze_y\n', slope)
-    est = EYE(dataIdx).gaze.y*slope;
+    if strcmp(axis, 'y')
+        fprintf('\tDiam = C + %f*gaze_y\n', detrendParams(1))
+    elseif strcmp(axis, 'x')
+        fprintf('\tDiam = C + %f*gaze_x + %f*gaze_x^2\n', detrendParams(2), detrendParams(1))
+    end
+    est = polyval(detrendParams, EYE(dataIdx).gaze.(axis));
     est = est - mean(est, 'omitnan');
-    for stream = reshape(fieldnames(EYE(dataIdx).data), 1, [])
-        EYE(dataIdx).data.(stream{:}) = EYE(dataIdx).data.(stream{:}) - est;
+    for stream = reshape(fieldnames(EYE(dataIdx).diam), 1, [])
+        EYE(dataIdx).diam.(stream{:}) = EYE(dataIdx).diam.(stream{:}) - est;
     end
 end
 
 end
 
-function slope = UI_getdetrendparams(y, d)
+function detrendParams = UI_getdetrendparams(y, d, axis)
 
 f = figure(...
     'ToolBar', 'none',...
     'MenuBar', 'none',...
     'UserData', struct(...
         'y', y,...
-        'd', d));
+        'd', d,...
+        'axis', axis));
 p1 = uipanel(f,...
     'Tag', 'plotpanel',...
     'Units', 'normalized',...
@@ -89,10 +98,10 @@ uiwait(f);
 
 if isvalid(f)
     updateplot(f);
-    slope = f.UserData.detrendParams(1);
+    detrendParams = f.UserData.detrendParams;
     close(f);
 else
-    slope = [];
+    detrendParams = [];
 end
 
 end
@@ -119,7 +128,12 @@ y = f.UserData.y(:);
 d = f.UserData.d(:);
 
 badIdx = badIdx | isnan(d) | isnan(y);
-detrendParams = [y(~badIdx) ones(size(y(~badIdx)))] \ d(~badIdx);
+if strcmp(f.UserData.axis, 'y')
+    detrendParams = polyfit(y(~badIdx), d(~badIdx), 1);
+    % detrendParams = [y(~badIdx) ones(size(y(~badIdx)))] \ d(~badIdx);
+elseif strcmp(f.UserData.axis, 'x')
+    detrendParams = polyfit(y(~badIdx), d(~badIdx), 2);
+end
 f.UserData.detrendParams = detrendParams;
 
 axes(findobj(f, 'Type', 'axes', 'Tag', 'scatter'));
@@ -127,9 +141,13 @@ cla; hold on
 scatter(y(~badIdx), d(~badIdx), 5, 'k', 'filled',...
     'MarkerFaceAlpha', 0.1,...
     'MarkerEdgeAlpha', 0.1)
-newLine = [[min(y(~badIdx)); max(y(~badIdx))] ones(2, 1)] * detrendParams;
+newLine = polyval(detrendParams, sort(y(~badIdx)));
+% newLine = [[min(y(~badIdx)); max(y(~badIdx))] ones(2, 1)] * detrendParams;
 % newLine = [y(:) ones(size(d(:)))] * detrendParams;
-plot([min(y(~badIdx)); max(y(~badIdx))], newLine, 'r');
+plot(sort(y(~badIdx)), newLine, 'r');
+% plot([min(y(~badIdx)); max(y(~badIdx))], newLine, 'r');
+xlabel(['Gaze ' f.UserData.axis]);
+ylabel('Pupil diameter');
 
 end
 

@@ -106,8 +106,8 @@ teditbox = findobj(f, 'Tag', 'lowerlim');
 lowerlim = str2double(teditbox.String);
 teditbox = findobj(f, 'Tag', 'upperlim');
 upperlim = str2double(teditbox.String);
-allEpochData = [mergefields(f.UserData.data, 'epoch', 'data', 'left')...
-                mergefields(f.UserData.data, 'epoch', 'data', 'right')];
+allEpochData = [mergefields(f.UserData.data, 'epoch', 'diam', 'left')...
+                mergefields(f.UserData.data, 'epoch', 'diam', 'right')];
 ax = findobj(f, 'Tag', 'axis');
 axes(ax); cla; hold on
 edges = linspace(min(allEpochData), max(allEpochData), 100);

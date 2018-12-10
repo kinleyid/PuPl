@@ -2,7 +2,7 @@ function EYE = baselinecorrection(EYE, baselineDescriptions, correctionType)
 
 for dataIdx = 1:numel(EYE)
     fprintf('Baseline correcting %s...', EYE(dataIdx).name);
-    dataStreams = fieldnames(EYE(dataIdx).data);
+    dataStreams = fieldnames(EYE(dataIdx).diam);
     for bIdx = 1:numel(baselineDescriptions)
         latencies = getlatenciesfromspandescription(EYE(dataIdx),...
             baselineDescriptions(bIdx));
@@ -22,10 +22,10 @@ for dataIdx = 1:numel(EYE)
                     currLats = latencies{baselineCount};
                     epochIdx = epochsToCorrect(epochCount);
                     for stream = dataStreams(:)'
-                        EYE(dataIdx).epoch(epochIdx).data.(stream{:}) = ...
+                        EYE(dataIdx).epoch(epochIdx).diam.(stream{:}) = ...
                             correctionFunc(...
-                                EYE(dataIdx).epoch(epochIdx).data.(stream{:}),...
-                                EYE(dataIdx).data.(stream{:})(currLats),...
+                                EYE(dataIdx).epoch(epochIdx).diam.(stream{:}),...
+                                EYE(dataIdx).diam.(stream{:})(currLats),...
                                 correctionType);
                     end
                 end
@@ -40,9 +40,9 @@ end
 function dataVector = correctionFunc(dataVector, baselineData, corrType)
 
 if strcmp(corrType, 'subtract baseline mean')
-    dataVector = dataVector - mean(baselineData);
+    dataVector = dataVector - mean(baselineData, 'omitnan');
 elseif strcmp(corrType, 'percent change from baseline mean')
-    dataVector = 100*(dataVector - mean(baselineData))/mean(baselineData);
+    dataVector = 100*(dataVector - mean(baselineData, 'omitnan'))/mean(baselineData, 'omitnan');
 end
 
 end
