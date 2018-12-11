@@ -23,12 +23,12 @@ for dataIdx = 1:numel(EYE)
         binMembers = find(ismember({EYE(dataIdx).epoch.name},...
             binDescriptions(binIdx).epochs));
         % [EYE(dataIdx).epoch(binMembers).description];
-        dataStreams = fieldnames(EYE(dataIdx).epoch(1).data);
+        dataStreams = fieldnames(EYE(dataIdx).epoch(1).diam);
         for stream = dataStreams(:)'
             currBin.data.(stream{:}) = [];
             for binMemberIdx = binMembers
                 if ~EYE(dataIdx).epoch(binMemberIdx).reject
-                    currData = [EYE(dataIdx).epoch(binMemberIdx).data.(stream{:})];
+                    currData = [EYE(dataIdx).epoch(binMemberIdx).diam.(stream{:})];
                     currBin.data.(stream{:}) = cat(1, currBin.data.(stream{:}), currData(:)');
                 end
             end

@@ -43,6 +43,10 @@ if isempty(filterType)
 end
 q = 'Average of how long on either side?';
 smoothN = inputdlg(q, q, 1, {'100ms'});
+if isempty(smoothN)
+    filterType = [];
+    return
+end
 
 end
 

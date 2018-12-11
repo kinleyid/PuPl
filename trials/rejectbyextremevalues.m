@@ -20,8 +20,8 @@ for dataIdx = 1:numel(EYE)
     for epochIdx = 1:numel(EYE(dataIdx).epoch)
         isRej = false;
         for field = {'left' 'right'}
-            if any(EYE(dataIdx).epoch(epochIdx).data.(field{:}) <= lims(1))...
-                    || any(EYE(dataIdx).epoch(epochIdx).data.(field{:}) >= lims(2))
+            if any(EYE(dataIdx).epoch(epochIdx).diam.(field{:}) <= lims(1))...
+                    || any(EYE(dataIdx).epoch(epochIdx).diam.(field{:}) >= lims(2))
                 EYE(dataIdx).epoch(epochIdx).reject = true;
                 isRej = true;
             end
@@ -111,9 +111,21 @@ allEpochData = [mergefields(f.UserData.data, 'epoch', 'diam', 'left')...
 ax = findobj(f, 'Tag', 'axis');
 axes(ax); cla; hold on
 edges = linspace(min(allEpochData), max(allEpochData), 100);
-histogram(allEpochData, edges)
-histogram(allEpochData(allEpochData >= upperlim), edges, 'FaceColor', 'r')
-histogram(allEpochData(allEpochData <= lowerlim), edges, 'FaceColor', 'r')
+if isnan(lowerlim)
+    lowerlim = -inf;
+end
+if isnan(upperlim)
+    upperlim = inf;
+end
+
+try
+    histogram(allEpochData, edges)
+    histogram(allEpochData(allEpochData >= upperlim), edges, 'FaceColor', 'r')
+    histogram(allEpochData(allEpochData <= lowerlim), edges, 'FaceColor', 'r')
+catch
+    hist(allEpochData(allEpochData > lowerlim & allEpochData < upperlim), edges)
+end
+
 title('Data distribution for trials');
 xlabel('Measured value');
 ylabel('Number of data points');
