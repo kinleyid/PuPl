@@ -31,12 +31,12 @@ for fileIdx = 1:numel(filename)
     fprintf('done\n')
     
     timestamps = R(2:end, strcmp(R(1, :), 'RecordingTimestamp'));
+    timestamps = cellfun(@(x) x/1000, timestamps, 'un', 0); % Get time in seconds
     
     [events, times] = deal({});
     eventCols = ~cellfun(@isempty, regexp(R(1, :), '[eE]vent'))...
         & ~strcmpi(R(1, :), 'GazeEventType')...
-        & ~strcmpi(R(1, :), 'GazeEventDuration')...
-        & ~strcmpi(R(1, :), 'Index');
+        & ~strcmpi(R(1, :), 'GazeEventDuration');
     for colIdx = find(eventCols)
         currEvents = R(2:end, colIdx);
         events = cat(1, events, currEvents(~cellfun(@isempty, currEvents)));
@@ -51,7 +51,7 @@ for fileIdx = 1:numel(filename)
     
     if strcmp(p.Results.as, 'eye data')
         timestamps = cell2mat(timestamps);
-        srate = round((length(timestamps))/((max(timestamps) - min(timestamps))/1000));
+        srate = round((length(timestamps))/((max(timestamps) - min(timestamps))));
         fprintf('\tEstimated sample rate: %d Hz\n', srate);
 
         diam = struct(...
@@ -69,7 +69,12 @@ for fileIdx = 1:numel(filename)
         urDiam.right.x = diam.right;
         urDiam.right.y = diam.right;
         
-        latencies = num2cell([event.time]/srate + 1);
+        [~, latencies] = min(abs(bsxfun(@minus,...
+            reshape(timestamps,...
+                [], 1),...
+            reshape([event.time],...
+                1, []))));
+        latencies = num2cell(latencies);
         [event.latency] = latencies{:};
         
         urGaze = [];
