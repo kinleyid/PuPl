@@ -184,12 +184,12 @@ xticks('');
 yticks('');
 axes(findobj(f, 'Tag', 'bottomhist'));
 cla
-histogram(x)
+hist(x, xlimits(2) - xlimits(1))
 xlim(xlimits);
 yticks('');
 axes(findobj(f, 'Tag', 'lefthist'));
 cla
-histogram(y)
+hist(y, ylimits(2) - ylimits(1))
 xlim(ylimits)
 yticks('');
 set(gca,'view',[90 -90])

@@ -22,8 +22,8 @@ for xi = 1:numel(ranges.x)
         currIdx =  abs(EYE.gaze.x - ranges.x(xi)) <= widths.x...
             & abs(EYE.gaze.y - ranges.y(yi)) <= widths.y...
             & ~EYE.isBlink;
-        surface(yi, xi) = mean(EYE.data.left(currIdx), 'omitnan');
-        density(yi, xi) = nnz(~isnan(EYE.data.left(currIdx)));
+        surface(yi, xi) = mean(EYE.diam.left(currIdx), 'omitnan');
+        density(yi, xi) = nnz(~isnan(EYE.diam.left(currIdx)));
     end
 end
 
