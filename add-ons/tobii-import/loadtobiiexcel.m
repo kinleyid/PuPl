@@ -43,6 +43,7 @@ for fileIdx = 1:numel(filename)
         times = cat(1, times, timestamps(~cellfun(@isempty, currEvents)));
     end
     fprintf('\tFound %d events\n', numel(events))
+    events = cellfun(@num2str, events, 'un', 0);
     event = struct(...
         'type', events(:)',...
         'time', times(:)');

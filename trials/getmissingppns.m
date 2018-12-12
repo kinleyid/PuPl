@@ -9,11 +9,10 @@ ppns = cell(1, numel(EYE));
 for dataIdx = 1:numel(EYE)
     currPpns = nan(1, numel(EYE(dataIdx).epoch));
     for epochIdx = 1:numel(currPpns)
-        currLats = EYE(dataIdx).epoch(epochIdx).latencies;
-        amtMissing = ...
-            nnz(isnan(EYE(dataIdx).diam.left(currLats))) +...
-            nnz(isnan(EYE(dataIdx).diam.right(currLats)));
-        currPpns(epochIdx) = amtMissing/(2*numel(currLats));
+        isMissing = isnan([
+            EYE(dataIdx).epoch(epochIdx).diam.left
+            EYE(dataIdx).epoch(epochIdx).diam.right]);
+        currPpns(epochIdx) = nnz(isMissing)/numel(isMissing);
     end
     ppns{dataIdx} = currPpns;
 end

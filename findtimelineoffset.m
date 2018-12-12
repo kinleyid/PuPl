@@ -24,7 +24,7 @@ else
 end
 
 if numel(varargin) < 2
-    pct = 0.5;
+    pct = 0.80;
 else
     pct = varargin{2};
 end

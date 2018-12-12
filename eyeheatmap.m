@@ -48,7 +48,7 @@ data = EYE(dataIdx).bin(strcmp({EYE(dataIdx).bin.name}, bin)).data.both;
 latencies = 1:size(data, 2);
 times = (latencies - 1)/EYE(dataIdx).srate;
 figure;
-image(times, 1:size(data, 1), data,'CDataMapping','scaled')
+image(times, 1:size(data, 1), data,'CDataMapping','scaled','AlphaData',~isnan(data));
 ylabel('Trial')
 xlabel('Time (s)')
 colorbar;

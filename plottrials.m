@@ -55,8 +55,8 @@ while true
     f.Visible = 'on';
     figure(f);
     plot(t, mean(data, 'omitnan'))
-    plot(t, mean(data, 'omitnan') + std(data, 'omitnan') ./ sum(~isnan(data)), '--k');
-    plot(t, mean(data, 'omitnan') - std(data, 'omitnan') ./ sum(~isnan(data)), '--k');
+    plot(t, mean(data, 'omitnan') + std(data, 'omitnan') ./ sqrt(sum(~isnan(data))), '--k');
+    plot(t, mean(data, 'omitnan') - std(data, 'omitnan') ./ sqrt(sum(~isnan(data))), '--k');
     q = 'Add more data to this plot?';
     a = questdlg(q, q, 'Yes', 'No', 'Yes');
     if strcmp(a, 'No')
