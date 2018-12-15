@@ -51,6 +51,7 @@ figure;
 image(times, 1:size(data, 1), data,'CDataMapping','scaled','AlphaData',~isnan(data));
 ylabel('Trial')
 xlabel('Time (s)')
-colorbar;
+cb = colorbar;
+ylabel(cb, 'Pupil diameter')
 
 end
