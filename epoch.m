@@ -64,7 +64,7 @@ if isempty(p.Results.epochDescriptions)
                 fprintf('Cancelling\n')
                 return
             else
-                fprintf('Trials defined from [event] + %s to [event] + %s\n', baselineLims{:})
+                fprintf('Baselines defined from [event] + %s to [event] + %s\n', baselineLims{:})
             end
             [epochDescriptions, baselineDescriptions] = deal(struct([]));
             for eventTypeIdx = 1:numel(eventTypes)

@@ -63,6 +63,7 @@ plot(t, diam.right, 'r');
 if isfield(diam, 'both')
     plot(t, diam.both, 'k');
 end
+xlim([t(1) t(end)]);
 ylim(f.UserData.ylims);
 xlabel('Time (s)');
 ylabel('Pupil diameter');

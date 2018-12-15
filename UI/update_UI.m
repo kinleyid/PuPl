@@ -4,8 +4,8 @@ function update_UI
 
 global userInterface eyeData eventLogs
 activeEventLogsIdx = userInterface.UserData.activeEventLogsIdx;
-activeEyeDataPanel = getcomponentbytag(userInterface, 'activeEyeDataPanel');
-activeEventLogsPanel = getcomponentbytag(userInterface, 'activeEventLogsPanel');
+activeEyeDataPanel = findobj(userInterface, 'Tag', 'activeEyeDataPanel');
+activeEventLogsPanel = findobj(userInterface, 'Tag', 'activeEventLogsPanel');
 
 if userInterface.UserData.dataCount ~= numel(eyeData) || userInterface.UserData.eventLogCount ~= numel(eventLogs)
     % Data added or deleted

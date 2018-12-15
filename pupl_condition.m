@@ -19,18 +19,16 @@ if isempty(EYE)
 end
 
 if isempty(p.Results.conditions)
-    conditions = [];
-    nConditions = 1;
-    while true
-        currName = inputdlg(sprintf('Name of condition %d?', nConditions));
-        if isempty(char(currName))
-            break
-        else
-            nConditions = nConditions + 1;
-            conditions = cat(1, conditions, currName);
-        end
+    nConditions = str2double(inputdlg('How many conditions?'));
+    if isempty(nConditions)
+        EYE = [];
+        return
     end
+    conditions = UI_getnames(...
+        arrayfun(@(x) sprintf('Name of condition %d', x), 1:nConditions, 'un', 0),...
+        repmat({''}, nConditions, 1));
     if isempty(conditions)
+        EYE = [];
         return
     end
 else
@@ -41,12 +39,20 @@ if isempty(p.Results.condIdx)
     for condIdx = 1:length(conditions)
         dataIdx = listdlg('PromptString', sprintf('Which datasets are in %s?', conditions{condIdx}),...
             'ListString', {EYE.name});
-        [EYE(dataIdx).cond] = deal(conditions{condIdx});
+        for curridx = dataIdx
+            if ~isfield(EYE(dataIdx), 'cond')
+                EYE(dataIdx).cond = [];
+            end
+            EYE(curridx).cond = EYE(curridx).cond(:)';
+            EYE(curridx).cond = [EYE(curridx).cond conditions(condIdx)];
+        end
         fprintf('Condition %s includes:\n', conditions{condIdx})
         fprintf('\t%s\n', EYE(dataIdx).name)
     end
 else
     [EYE.cond] = conditions(p.Results.condIdx);
 end
+
+EYE = pupl_merge(EYE);
 
 end

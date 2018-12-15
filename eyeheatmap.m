@@ -53,5 +53,6 @@ ylabel('Trial')
 xlabel('Time (s)')
 cb = colorbar;
 ylabel(cb, 'Pupil diameter')
+title([EYE(dataIdx).name ' ' EYE(dataIdx).bin.name]);
 
 end

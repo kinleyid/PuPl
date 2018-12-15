@@ -67,6 +67,7 @@ while true
         'FaceAlpha', 0.1,...
         'EdgeAlpha', 0.5,...
         'HandleVisibility', 'off');
+    xlim([t(1) t(end)]);
     legend(legendentries);
     q = 'Add more data to this plot?';
     a = questdlg(q, q, 'Yes', 'No', 'Yes');

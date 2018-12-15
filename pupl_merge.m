@@ -5,7 +5,7 @@ if isempty(EYE)
     return
 end
 
-conditions = unique({EYE.cond});
+conditions = unique(mergefields(EYE, 'cond'));
 
 if numel(unique(mergefields(EYE, 'srate'))) > 1
     uiwait(msgbox('Inconsistent sample rates'));
@@ -21,7 +21,8 @@ for condIdx = 1:numel(conditions)
         'name', conditions{condIdx},...
         'srate', srate,...
         'bin', []);
-    currBins = mergefields(EYE(strcmpi({EYE.cond}, conditions{condIdx})), 'bin');
+    memberIdx = arrayfun(@(x) any(strcmp(x.cond, conditions{condIdx})), EYE);
+    currBins = mergefields(EYE(memberIdx), 'bin');
     binNames = unique({currBins.name});
     for binIdx = 1:numel(binNames)
         mergedBin = struct('name', binNames{binIdx},...
