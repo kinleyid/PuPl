@@ -8,8 +8,12 @@ if numel(EYE) > 1
     end
 end
 
-alldata = [mergefields(EYE, 'epoch', 'diam', 'left')...
-    mergefields(EYE, 'epoch', 'diam', 'right')];
+
+reject = [EYE.epoch.reject];
+tmpEYE = EYE;
+tmpEYE.epoch(reject) = [];
+alldata = [mergefields(tmpEYE, 'epoch', 'diam', 'left')...
+    mergefields(tmpEYE, 'epoch', 'diam', 'right')];
 
 
 f = figure('Name', 'Use H J K L keys to scroll',...
