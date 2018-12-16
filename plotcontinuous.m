@@ -144,6 +144,11 @@ for plotIdx = 1:numel(plotinfo)
         end
     end
     xlim([xtimes(1) xtimes(end)]);
+    if plotIdx ~= numel(plotinfo)
+        xticks('');
+    else
+        xlabel('Time (s)');
+    end
     if ~isempty(EYE(plotIdx).event)
         for eventIdx = find(ismember([EYE(plotIdx).event.latency], x))
             t = (EYE(plotIdx).event(eventIdx).latency - 1)/EYE(plotIdx).srate;
@@ -154,8 +159,13 @@ for plotIdx = 1:numel(plotinfo)
         end
     end
     ylim(plotinfo(plotIdx).ylim);
-    xlabel('Time (s)');
-    title(EYE(plotIdx).name, 'Interpreter', 'none');
+    text(-0.05, 0.5, EYE(plotIdx).name,...
+        'Interpreter', 'none',...
+        'FontSize', 8,...
+        'HorizontalAlignment', 'right',...
+        'Rotation', 45,...
+        'Units', 'normalized');
+    % title(EYE(plotIdx).name, 'Interpreter', 'none');
 end
 
 end

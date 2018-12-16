@@ -8,7 +8,6 @@ if numel(EYE) > 1
     end
 end
 
-
 reject = [EYE.epoch.reject];
 tmpEYE = EYE;
 tmpEYE.epoch(reject) = [];
