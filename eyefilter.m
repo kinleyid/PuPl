@@ -1,6 +1,7 @@
 function EYE = eyefilter(EYE, varargin)
 
 p = inputParser;
+addParameter(p, 'dataType', []);
 addParameter(p, 'filterType', []);
 addParameter(p, 'hwidth', []);
 parse(p, varargin{:})
@@ -10,7 +11,17 @@ if isempty(EYE)
     return
 end
 
-if isempty(p.Results.filterType) || isempty(p.Results.n)
+if isempty(p.Results.dataType)
+    q = 'Filter which data?';
+    dataType = questdlg(q, q, 'Dilation', 'Gaze', 'Dilation');
+    if isempty(dataType)
+        return
+    end
+else
+    dataType = p.Results.dataType;
+end
+
+if isempty(p.Results.filterType) || isempty(p.Results.hwidth)
     [filterType, hwidth] = UI_getfilterinfo;
     if isempty(filterType)
         return
@@ -25,7 +36,13 @@ fprintf('Applying %s filter of %s on either side\n', filterType, hwidth);
 for dataidx = 1:numel(EYE)
     currN = round(parsetimestr(hwidth, EYE(dataidx).srate)*EYE(dataidx).srate);
     fprintf('\t%s: filter width is %d data points\n', EYE(dataidx).name, currN*2 + 1); 
-    EYE(dataidx).diam = applyeyefilter(EYE(dataidx), filterType, currN);
+    switch dataType
+        case 'Dilation'
+            field = 'diam';
+        case 'Gaze'
+            field = 'gaze';
+    end
+    EYE(dataidx).(field) = applyeyefilter(EYE(dataidx), dataType, filterType, currN);
 end
 fprintf('done\n');
 
@@ -50,7 +67,7 @@ end
 
 end
 
-function tempData = applyeyefilter(EYE, filterType, smoothN)
+function tempData = applyeyefilter(EYE, dataType, filterType, smoothN)
 
 %  Inputs
 % EYE--single struct, not array
@@ -65,10 +82,15 @@ elseif strcmpi(filterType, 'Gaussian kernel')
     filtfunc = @gaussiankernel;
 end
 
-[permData, tempData] = deal(EYE.diam);
+switch dataType
+    case 'Dilation'
+        [permData, tempData] = deal(EYE.diam);
+    case 'Gaze'
+        [permData, tempData] = deal(EYE.gaze);
+end
 
 for stream = reshape(fieldnames(tempData), 1, [])
-    for latIdx = 1:length(permData.left)
+    for latIdx = 1:length(permData.(stream{:}))
         if ~isnan(tempData.(stream{:})(latIdx))
             sLat = max(latIdx-smoothN,1);
             eLat = min(latIdx+smoothN,length(tempData.(stream{:})));

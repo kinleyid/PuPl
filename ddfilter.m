@@ -1,6 +1,6 @@
 function ddfilter(EYE)
 
-fielnames(EYE.gaze.x)
+fieldnames(EYE.gaze.x)
 
 end
 
