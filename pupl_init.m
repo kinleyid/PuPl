@@ -7,17 +7,12 @@ function pupl_init(varargin)
 %   Example
 % >> pupl_init noui noaddons
 
-if ~any(strcmpi(varargin, 'noLog'))
-    fprintf('Initializing processing log file...\n')
-    uiwait(msgbox('Select where to log processing history to'));
-    pupl_diary
-end
-
 fprintf('Version 1.0\n');
 
 % Navigate to directory containing this very function
 previousDir = pwd;
-cd(fileparts(which('pupl_init.m')));
+cd(fileparts(which('pupl_init.m')))
+addpath(cd)
 
 if ~any(strcmpi(varargin, 'noGlobals'))
     fprintf('Initializing global variables...\n')
@@ -63,13 +58,13 @@ if ~any(strcmpi(varargin, 'noAddOns'))
 end
 
 % Add subdirectories
-for subdir = {'trials' 'PFEcorrection'}
-    cd(subdir{:});
-    addpath(cd);
+for subdir = {'file' 'process' 'trials' 'experiment' 'plot' 'spreadsheet'}
+    cd(subdir{:})
+    addpath(genpath(cd)) % Add folder and subfolders
     cd ..
 end
 % Navigate back to the user's directory
-cd(previousDir);
+cd(previousDir)
 
 fprintf('done\n')
 end
