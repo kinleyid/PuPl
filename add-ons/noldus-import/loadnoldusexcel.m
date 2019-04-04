@@ -28,7 +28,9 @@ for fileIdx = 1:numel(filename)
     for modifierIdx = modifiers
         eventTypes = strcat(eventTypes, R(2:end, modifierIdx));
     end
-    eventTypes = strcat(eventTypes,R(2:end, strcmp(R(1, :), 'Event_Type')));
+    if any(strcmp(R(1, :), 'Event_Type'))
+        eventTypes = strcat(eventTypes, R(2:end, strcmp(R(1, :), 'Event_Type')));
+    end
     eventTimes = cell2mat(R(2:end, strcmp(R(1,:), 'Time_Relative_sf'))); % Time is in seconds
     
     fprintf('\t%d events found\n', numel(eventTypes));
@@ -42,5 +44,7 @@ for fileIdx = 1:numel(filename)
                        'type', eventTypes))];
     fprintf('\tdone\n')
 end
+
+eventLogsArray = pupl_init(eventLogsArray);
 
 end

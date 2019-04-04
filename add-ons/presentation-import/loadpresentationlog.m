@@ -53,3 +53,7 @@ for fileIdx = 1:numel(filename)
                             'type', eventTypes))];
     fprintf('\t%d events loaded\n', numel(eventTimes))
 end
+
+eventLogsArray = pupl_check(eventLogsArray);
+
+end

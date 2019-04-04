@@ -166,6 +166,9 @@ for fileIdx = 1:numel(filename)
     outStructArray = [outStructArray currStruct];
 end
 
+fprintf('Calling pupl_check...\n')
+outStructArray = pupl_check(outStructArray);
+
 fprintf('Done\n');
 
 end

@@ -16,6 +16,8 @@ else
     rightLims = p.Results.rightLims;
 end
 
+callStr = sprintf('trimdiam(''leftLims'', %s, ''rightLims'', %s)\n', num2str(leftLims), num2str(rightLims));
+
 fprintf('Trimming extreme pupil diameter values...\n')
 fprintf('Trimming points where\n')
 fprintf('Left < %0.1f\n', leftLims(1));

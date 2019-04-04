@@ -32,6 +32,7 @@ for dataIdx = 1:numel(EYE)
     end
     fprintf('\t%s: %0.2f%% of data removed\n', EYE(dataIdx).name, 100*nnz(badIdx)/numel(EYE(dataIdx).isBlink))
 end
+fprintf('done\n')
 
 end
 

@@ -1,6 +1,6 @@
 function update_UI
 
-% For when new data is loaded or the active datasets change
+% Update UI panels when new data is loaded or the active datasets change
 
 global userInterface eyeData eventLogs
 activeEventLogsIdx = userInterface.UserData.activeEventLogsIdx;
@@ -24,7 +24,33 @@ for i = 1:numel(activeEventLogsPanel.Children)
         logical(activeEventLogsPanel.Children(i).Value);
 end
 
+% Inactivate or activate UI menu elements
+
+allMenus = findobj('parent', userInterface);
+
+for currMenu = reshape(allMenus, 1, [])
+    recursiveupdatemenu(currMenu);
+end
+
 userInterface.Visible = 'off';
 userInterface.Visible = 'on';
+
+end
+
+function recursiveupdatemenu(currMenu)
+
+if strcmp(currMenu.Type, 'uimenu')
+    if ~isempty(currMenu.UserData)
+        if feval(currMenu.UserData)
+            set(currMenu, 'Enable', 'on');
+        else
+            set(currMenu, 'Enable', 'off');
+        end
+    end
+end
+
+for newMenu = reshape(currMenu.Children, 1, [])
+    recursiveupdatemenu(newMenu);
+end
 
 end

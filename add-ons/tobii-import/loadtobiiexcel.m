@@ -119,6 +119,8 @@ for fileIdx = 1:numel(filename)
     
 end
 
+outStructArray = pupl_check(outStructArray);
+
 fprintf('done\n')
 
 end

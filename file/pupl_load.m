@@ -58,4 +58,6 @@ for fileIdx = 1:numel(filenames)
     structArray = cat(2, structArray, data.data);
 end
 
+structArray = pupl_check(structArray);
+
 end

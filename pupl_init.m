@@ -7,12 +7,20 @@ function pupl_init(varargin)
 %   Example
 % >> pupl_init noui noaddons
 
-fprintf('Version 1.0\n');
+fprintf('Version 0.5\n');
 
 % Navigate to directory containing this very function
 previousDir = pwd;
 cd(fileparts(which('pupl_init.m')))
 addpath(cd)
+
+% Add built-in subdirectories
+fprintf('Loading source...\n')
+for subdir = {'base' 'UI' 'file' 'process' 'trials' 'experiment' 'plot' 'spreadsheet' 'dev'}
+    cd(subdir{:})
+    addpath(genpath(cd)) % Add folder and subfolders
+    cd ..
+end
 
 if ~any(strcmpi(varargin, 'noGlobals'))
     fprintf('Initializing global variables...\n')
@@ -35,9 +43,6 @@ if ~any(strcmpi(varargin, 'noUI'))
         delete(userInterface)
     end
     fprintf('Initilizing user interface...\n')
-    cd UI
-    addpath(cd)
-    cd ..
     pupl_UI
 end
 
@@ -49,7 +54,7 @@ if ~any(strcmpi(varargin, 'noAddOns'))
         if ~any(strcmp(currFolder.name, {'.' '..'}))
             fprintf('\t%s...\n', currFolder.name)
             cd(currFolder.name)
-            addpath(cd);
+            addpath(genpath(cd));
             run('./init.m');
             cd ..
         end
@@ -57,12 +62,6 @@ if ~any(strcmpi(varargin, 'noAddOns'))
     cd ..
 end
 
-% Add subdirectories
-for subdir = {'file' 'process' 'trials' 'experiment' 'plot' 'spreadsheet'}
-    cd(subdir{:})
-    addpath(genpath(cd)) % Add folder and subfolders
-    cd ..
-end
 % Navigate back to the user's directory
 cd(previousDir)
 
