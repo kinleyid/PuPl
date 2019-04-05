@@ -11,7 +11,9 @@ if isfield(outStruct, 'event')
 end
 
 if ~isfield(outStruct, 'history')
-    outStruct.history = {};
+    for dataidx = 1:numel(outStruct)
+        outStruct(dataidx).history = {};
+    end
 end
 
 end
