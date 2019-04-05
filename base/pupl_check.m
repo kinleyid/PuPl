@@ -10,4 +10,8 @@ if isfield(outStruct, 'event')
     end
 end
 
+if ~isfield(outStruct, 'history')
+    outStruct.history = {};
+end
+
 end

@@ -4,13 +4,13 @@ function outtime = parsetimestr(timestr, srate)
 cmd = lower(timestr);
 cmd = strrep(cmd,' ','');
 
-for x = {'milliseconds' 'ms' 'm'}
+for x = {'ms' 'm'}
     cmd = replacewith(cmd, x{:}, '1/1000');
 end
-for x = {'seconds' 's'}
+for x = {'s'}
     cmd = replacewith(cmd, x{:}, '1');
 end
-for x = {'datapoints' 'dp' 'd'}
+for x = {'dp' 'd'}
     cmd = replacewith(cmd, x{:}, sprintf('%f', 1/srate));
 end
 

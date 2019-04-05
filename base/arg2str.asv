@@ -1,0 +1,16 @@
+
+function outstr = arg2str(arg)
+
+if isnumeric(arg)
+    outstr = sprintf('%f', arg);
+elseif ischar(arg)
+    outstr = arg;
+elseif isstruct(arg)
+    
+    outstr = [];
+    for field = reshape(fieldnames(arg), 1, [])
+        outstr = [outstr field{:} arg2str
+    end
+end
+
+end

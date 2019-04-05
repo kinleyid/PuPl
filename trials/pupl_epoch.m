@@ -1,4 +1,4 @@
-function EYE = epoch(EYE, varargin)
+function EYE = pupl_epoch(EYE, varargin)
 
 %   Inputs
 % epochDescriptions--struct array

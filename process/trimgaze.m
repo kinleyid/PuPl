@@ -14,6 +14,8 @@ else
     lims = p.Results.lims;
 end
 
+callStr = sprintf('eyeData = %s(eyeData, ''lims'', %s)', mfilename, all2str(lims));
+
 fprintf('Trimming extreme gaze values...\n')
 fprintf('Trimming points where:\n')
 fprintf('x < %0.1f\n', lims(1))
@@ -31,6 +33,7 @@ for dataIdx = 1:numel(EYE)
         end
     end
     fprintf('\t%s: %0.2f%% of data removed\n', EYE(dataIdx).name, 100*nnz(badIdx)/numel(EYE(dataIdx).isBlink))
+    EYE(dataIdx).history = cat(1, EYE(dataIdx).history, callStr);
 end
 fprintf('done\n')
 

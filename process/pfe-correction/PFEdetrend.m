@@ -130,7 +130,6 @@ d = f.UserData.d(:);
 badIdx = badIdx | isnan(d) | isnan(y);
 if strcmp(f.UserData.axis, 'y')
     detrendParams = polyfit(y(~badIdx), d(~badIdx), 1);
-    % detrendParams = [y(~badIdx) ones(size(y(~badIdx)))] \ d(~badIdx);
 elseif strcmp(f.UserData.axis, 'x')
     detrendParams = polyfit(y(~badIdx), d(~badIdx), 2);
 end
