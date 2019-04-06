@@ -1,10 +1,5 @@
 function structArray = pupl_merge(EYE)
 
-if isempty(EYE)
-    uiwait(msgbox('No eye data'));
-    return
-end
-
 conditions = unique(mergefields(EYE, 'cond'));
 
 if numel(unique(mergefields(EYE, 'srate'))) > 1

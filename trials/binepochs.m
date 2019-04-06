@@ -8,29 +8,29 @@ function EYE = binepochs(EYE, varargin)
 
 p = inputParser;
 addParameter(p, 'binDescriptions', []);
+addParameter(p, 'overwrite', []);
 parse(p, varargin{:});
 
-if isempty(EYE)
-    uiwait(msgbox('No eye data'));
-    return
-end
+callStr = sprintf('%s(', mfilename);
 
-try arrayfun(@(x) x.epoch, EYE, 'un', 0);
-catch
-    uiwait(msgbox('At least one dataset does not have trials'));
-    return
-end
-
-if any(arrayfun(@(x) ~isempty(x.bin), EYE))
+if isempty(p.Results.overwrite)
     q = 'Overwrite existing trial sets?';
     a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
     switch a
         case 'Yes'
-            [EYE.bin] = deal([]);
+            overwrite = true;
         case 'No'
+            overwrite = false;
         otherwise
             return
     end
+else
+    overwrite = p.Results.overwrite;
+end
+callStr = sprintf('%s''overwrite'', %s, ', callStr, overwrite);
+
+if overwrite
+    [EYE.bin] = deal([]);
 end
 
 if isempty(p.Results.binDescriptions)
@@ -40,6 +40,13 @@ if isempty(p.Results.binDescriptions)
     end
 else
     binDescriptions = p.Results.binDescriptions;
+end
+callStr = sprintf('%s''binDescriptions'', %s', callStr, binDescriptions);
+
+for dataIdx = 1:numel(EYE)
+    EYE(dataIdx).history = [
+        EYE(dataIdx).history
+        callStr];
 end
 
 EYE = applybindescriptions(EYE, binDescriptions);

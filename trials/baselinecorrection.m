@@ -1,7 +1,9 @@
 function EYE = baselinecorrection(EYE, baselineDescriptions, correctionType)
 
+fprintf('Baseline correcting using method ''%s''\n', correctionType{:})
+
 for dataIdx = 1:numel(EYE)
-    fprintf('Baseline correcting %s...', EYE(dataIdx).name);
+    fprintf('\t%s...', EYE(dataIdx).name);
     dataStreams = fieldnames(EYE(dataIdx).diam);
     for bIdx = 1:numel(baselineDescriptions)
         latencies = getlatenciesfromspandescription(EYE(dataIdx),...
@@ -34,6 +36,8 @@ for dataIdx = 1:numel(EYE)
     end
     fprintf('done\n')
 end
+
+fprintf('Done\n')
 
 end
 

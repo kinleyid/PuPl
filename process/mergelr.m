@@ -24,5 +24,5 @@ for dataIdx = 1:numel(EYE)
     end
     fprintf('done\n')
 end
-
+fprintf('Done\n')
 end

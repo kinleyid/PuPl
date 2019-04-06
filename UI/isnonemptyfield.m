@@ -10,9 +10,11 @@ if isempty(varargin)
     return
 end
 
-try 
-    if isempty(mergefields(structArray, varargin{:}))
-        out = false;
+try
+    for idx = 1:numel(structArray)
+        if isempty(mergefields(structArray(idx), varargin{:}))
+            out = false;
+        end
     end
 catch
     out = false;

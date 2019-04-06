@@ -21,10 +21,7 @@ addParameter(p, 'epochsToCorrect', []);
 addParameter(p, 'correctionType', []);
 parse(p, varargin{:});
 
-if isempty(EYE)
-    uiwait(msgbox('No eye data'));
-    return
-end
+callStr = sprintf('%s(', mfilename);
 
 if any(arrayfun(@(x) ~isempty(x.epoch), EYE))
     q = 'Overwrite existing trials?';

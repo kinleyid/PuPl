@@ -8,8 +8,10 @@ function EYE = applyepochdescriptions(EYE, epochDescriptions)
 %   Outputs
 % EYE--struct array
 
+fprintf('Epoching...\n')
+
 for dataIdx = 1:numel(EYE)
-    fprintf('Epoching %s...\n', EYE(dataIdx).name)
+    fprintf('\t%s...', EYE(dataIdx).name)
     if ~isfield(EYE(dataIdx), 'epoch')
         EYE(dataIdx).epoch = [];
     else
@@ -30,7 +32,9 @@ for dataIdx = 1:numel(EYE)
             EYE(dataIdx).epoch = [EYE(dataIdx).epoch currEpoch];
         end
     end
-    fprintf('\t%d trials created\n', numel(EYE(dataIdx).epoch))
+    fprintf('%d trials created\n', numel(EYE(dataIdx).epoch))
 end
+
+fprintf('Done\n')
 
 end

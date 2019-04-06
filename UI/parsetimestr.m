@@ -1,6 +1,12 @@
 
 function outtime = parsetimestr(timestr, srate)
 
+%   Inputs
+% timestr--something with ms, m, s, dp, or d
+% srate--sample rate
+%   Outputs
+% outtime--time in seconds
+
 cmd = lower(timestr);
 cmd = strrep(cmd,' ','');
 

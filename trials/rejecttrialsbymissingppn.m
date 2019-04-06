@@ -31,12 +31,14 @@ for dataIdx = 1:numel(EYE)
             nRej = nRej + 1;
         end
     end
-    fprintf('%s:\n\t%d/%d trials rejected\n',...
+    fprintf('\t%s:\n\t\t%d/%d trials rejected\n',...
         EYE(dataIdx).name,...
         nRej,...
         numel(EYE(dataIdx).epoch));
-    fprintf('\t%d trials total marked for rejection\n', nnz([EYE(dataIdx).epoch.reject]));
+    fprintf('\t\t%d trials total marked for rejection\n', nnz([EYE(dataIdx).epoch.reject]));
 end
+
+fprintf('Done\n')
 
 end
 
