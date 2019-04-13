@@ -1,9 +1,6 @@
 function EYE = mergelr(EYE, varargin)
 
-if isempty(EYE)
-    uiwait(msgbox('No eye data'));
-    return
-end
+callStr = sprintf('eyeData = %s(eyeData)', mfilename);
 
 fprintf('Merging left and right streams\n');
 
@@ -23,6 +20,7 @@ for dataIdx = 1:numel(EYE)
                 EYE(dataIdx).bin(binIdx).data.right), 3);
     end
     fprintf('done\n')
+    EYE(dataIdx).history = cat(1, EYE(dataIdx).history, callStr);
 end
 fprintf('Done\n')
 end

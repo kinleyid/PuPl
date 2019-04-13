@@ -6,11 +6,7 @@ addParameter(p, 'filterType', []);
 addParameter(p, 'hwidth', []);
 parse(p, varargin{:})
 
-if isempty(EYE)
-    uiwait(msgbox('No eye data'));
-    return
-end
-
+callStr = sprintf('eyeData = %s(eyeData, ', mfilename);
 if isempty(p.Results.dataType)
     q = 'Filter which data?';
     dataType = questdlg(q, q, 'Dilation', 'Gaze', 'Dilation');
@@ -20,6 +16,7 @@ if isempty(p.Results.dataType)
 else
     dataType = p.Results.dataType;
 end
+callStr = sprintf('%s''dataType'', %s, ', callStr, all2str(dataType));
 
 if isempty(p.Results.filterType) || isempty(p.Results.hwidth)
     [filterType, hwidth] = UI_getfilterinfo;
@@ -31,6 +28,7 @@ else
     filterType = p.Results.filterType;
     hwidth = p.Results.hwidth;
 end
+callStr = sprintf('%s''filterType'', %s, ''hwidth'', %s)', callStr, all2str(filterType), all2str(hwidth));
 
 fprintf('Applying %s filter of %s on either side\n', filterType, hwidth);
 for dataidx = 1:numel(EYE)
@@ -43,6 +41,7 @@ for dataidx = 1:numel(EYE)
             field = 'gaze';
     end
     EYE(dataidx).(field) = applyeyefilter(EYE(dataidx), dataType, filterType, currN);
+    EYE(dataidx).history = cat(1, EYE(dataidx).history, callStr);
 end
 fprintf('done\n');
 

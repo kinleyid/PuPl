@@ -4,6 +4,7 @@ p = inputParser;
 addParameter(p, 'timearg', []);
 parse(p, varargin{:});
 
+callStr = sprintf('eyeData = %s(eyeData, ', mfilename);
 if isempty(p.Results.timearg)
     prompt = 'Trim islands of data shorter than or equal to:';
     timearg = inputdlg(prompt, prompt, [1 50], {'100ms'});
@@ -15,6 +16,7 @@ if isempty(p.Results.timearg)
 else
     timearg = p.Results.timearg;
 end
+callStr = sprintf('%s''timearg'', %s)', callStr, all2str(timearg));
 
 fprintf('Trimming islands of data shorter than or equal to %s\n', timearg);
 
@@ -26,6 +28,8 @@ for dataidx = 1:numel(EYE)
         fprintf('\t\t%s: %0.2f%% removed\n', field{:}, 100*nnz(trimidx)/numel(trimidx));
         EYE(dataidx).diam.(field{:})(trimidx) = nan;
     end
+    EYE(dataidx).history = cat(1, EYE(dataidx).history, callStr);
 end
+fprintf('Done\n')
 
 end

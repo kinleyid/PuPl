@@ -7,43 +7,53 @@ parse(p, varargin{:});
 
 axis = p.Results.axis;
 
-fprintf('Detrending...\n')
-for dataIdx = 1:numel(EYE)
-    fprintf('%s\n', EYE(dataIdx).name)
-    if isfield(EYE(dataIdx).diam, 'both')
-        currData = EYE(dataIdx).diam.both(:);
-    else
-        currData = mean([EYE(dataIdx).diam.left(:) EYE(dataIdx).diam.right(:)], 2, 'omitnan');
-    end
-    currCoord = EYE(dataIdx).gaze.(axis)(:);
-    if isempty(p.Results.detrendParams)
-        detrendParams = UI_getdetrendparams(currCoord, currData, axis);
-        if isempty(detrendParams)
-            EYE = [];
-            fprintf('Cancelled\n');
+callStr = sprintf('eyeData = %s(eyeData, ''axis'', %s,', mfilename, axis);
+if isempty(p.Results.detrendParams)
+    detrendParams = cell(1, numel(EYE));
+    for dataidx = 1:numel(EYE)
+        if isfield(EYE(dataidx).diam, 'both')
+            currData = EYE(dataidx).diam.both(:);
+        else
+            currData = mean([EYE(dataidx).diam.left(:) EYE(dataidx).diam.right(:)], 2, 'omitnan');
+        end
+        currCoord = EYE(dataidx).gaze.(axis)(:);
+        currDetrendParams = UI_getdetrendparams(currCoord, currData, axis, EYE(dataidx).name);
+        if isempty(currDetrendParams)
             return
         end
-    else
-        detrendParams = p.Results.detrendParams;
+        detrendParams{dataidx} = currDetrendParams;
     end
-    fprintf('\tCorrecting for the following equation:\n');
+else
+    if ~iscell(detrendParams)
+        detrendParams = repmat({detrendParams}, 1, numel(EYE));
+    end
+end
+
+fprintf('Detrending...\n')
+for dataidx = 1:numel(EYE)
+    fprintf('\t%s:\n\t', EYE(dataidx).name)
+    currDetrendParams = detrendParams{dataidx};
+    fprintf('Correcting for the following equation:\n\t');
     if strcmp(axis, 'y')
-        fprintf('\tDiam = C + %f*gaze_y\n', detrendParams(1))
+        fprintf('Diam = C + %f*gaze_y\n', currDetrendParams(1))
     elseif strcmp(axis, 'x')
-        fprintf('\tDiam = C + %f*gaze_x + %f*gaze_x^2\n', detrendParams(2), detrendParams(1))
+        fprintf('Diam = C + %f*gaze_x + %f*gaze_x^2\n', currDetrendParams(2), currDetrendParams(1))
     end
-    est = polyval(detrendParams, EYE(dataIdx).gaze.(axis));
+    est = polyval(currDetrendParams, EYE(dataidx).gaze.(axis));
     est = est - mean(est, 'omitnan');
-    for stream = reshape(fieldnames(EYE(dataIdx).diam), 1, [])
-        EYE(dataIdx).diam.(stream{:}) = EYE(dataIdx).diam.(stream{:}) - est;
+    for stream = reshape(fieldnames(EYE(dataidx).diam), 1, [])
+        EYE(dataidx).diam.(stream{:}) = EYE(dataidx).diam.(stream{:}) - est;
     end
+    EYE(dataidx).history = cat(1, EYE(dataidx).history, sprintf('%s''detrendParams'', %s)', callStr, all2str(currDetrendParams)));
 end
+fprintf('Done\n')
 
 end
 
-function detrendParams = UI_getdetrendparams(y, d, axis)
+function detrendParams = UI_getdetrendparams(y, d, axis, name)
 
 f = figure(...
+    'Name', name,...
     'ToolBar', 'none',...
     'MenuBar', 'none',...
     'UserData', struct(...

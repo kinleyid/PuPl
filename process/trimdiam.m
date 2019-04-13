@@ -5,6 +5,7 @@ addParameter(p, 'leftLims', [])
 addParameter(p, 'rightLims', [])
 parse(p, varargin{:});
 
+callStr = sprintf('eyeData = %s(eyeData, ', mfilename);
 if isempty(p.Results.leftLims) || isempty(p.Results.rightLims)
     [leftLims, rightLims] = UI_getdiamlims(EYE);
     if isempty(leftLims)
@@ -15,8 +16,7 @@ else
     leftLims = p.Results.leftLims;
     rightLims = p.Results.rightLims;
 end
-
-callStr = sprintf('eyeData = %s(eyeData, ''leftLims'', %s, ''rightLims'', %s)', mfilename, all2str(leftLims), all2str(rightLims));
+callStr = sprintf('%s''leftLims'', %s, ''rightLims'', %s)', callStr, all2str(leftLims), all2str(rightLims));
 
 fprintf('Trimming extreme pupil diameter values...\n')
 fprintf('Trimming points where\n')
@@ -38,6 +38,7 @@ for dataIdx = 1:numel(EYE)
     fprintf('\t%s: %0.2f%% of data removed\n', EYE(dataIdx).name, 100*nnz(badIdx)/numel(EYE(dataIdx).isBlink))
     EYE(dataIdx).history = cat(1, EYE(dataIdx).history, callStr);
 end
+fprintf('Done\n')
 
 end
 

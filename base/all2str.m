@@ -2,7 +2,7 @@
 function outstr = all2str(arg)
 
 if isnumeric(arg) || islogical(arg)
-    outstr = sprintf('[%s]', num2str(arg));
+    outstr = regexprep(sprintf('[%s]', num2str(arg)), '\s+', ' ');
 elseif ischar(arg)
     outstr = sprintf('''%s''', arg);
 elseif iscell(arg)

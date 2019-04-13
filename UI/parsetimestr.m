@@ -32,6 +32,6 @@ if ~isempty(b)
         cmd = strcat(cmd(1:a(i)), ['*' fnd], cmd(b(i)+1:end));
     end
 end
-cmd = strrep(cmd,fnd,repl);
+cmd = strrep(cmd, fnd, repl);
 
 end

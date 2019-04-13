@@ -4,6 +4,7 @@ p = inputParser;
 addParameter(p, 'maxlen', []);
 parse(p, varargin{:});
 
+callStr = sprintf('eyeData = %s(eyeData, ', mfilename);
 if isempty(p.Results.maxlen)
     prompt = 'Max length of data to interpolate';
     maxlen = inputdlg(prompt, prompt, [1 50], {'500ms'});
@@ -16,11 +17,7 @@ if isempty(p.Results.maxlen)
 else
     maxlen = p.Results.maxlen;
 end
-
-if isempty(EYE)
-    uiwait(msgbox('No eye data'));
-    return
-end
+callStr = sprintf('%s''maxlen'', %s)', callStr, all2str(maxlen));
 
 fprintf('Interpolating max. %s of missing data\n', maxlen)
 for dataidx = 1:numel(EYE)
@@ -30,8 +27,9 @@ for dataidx = 1:numel(EYE)
         fprintf('\t\t%s: ', field{:});
         EYE(dataidx).diam.(field{:}) = applyinterpolation(EYE(dataidx).diam.(field{:}), currn);
     end
+    EYE(dataidx).history = cat(1, EYE(dataidx).history, callStr);
 end
-fprintf('done\n');
+fprintf('Done\n');
 
 end
 
