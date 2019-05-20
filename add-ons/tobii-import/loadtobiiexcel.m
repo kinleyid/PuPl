@@ -25,7 +25,11 @@ for fileIdx = 1:numel(filename)
     
     [~, name] = fileparts(filename{fileIdx});
     fprintf('Importing %s\n', name)
-    currStruct = struct('name', name);
+    currStruct = struct(...
+        'name', name,...
+        'loadsrc', sprintf('%s\\%s', directory, filename{fileIdx}),...
+        'loadstr', sprintf('%s(''filename'', %s, ''directory'', %s, ''as'', %s)',...
+            mfilename, filename{fileIdx}, directory, p.Results.as));
     fprintf('\tReading Excel file...')
     [~ , ~, R] = xlsread([directory '\\' filename{fileIdx}]);
     fprintf('done\n')
@@ -115,7 +119,8 @@ for fileIdx = 1:numel(filename)
     
     currStruct.event = event;
     
-    outStructArray = [outStructArray currStruct];
+    outStructArray = [outStructArray
+        currStruct];
     
 end
 

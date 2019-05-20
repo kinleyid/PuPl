@@ -12,11 +12,15 @@ elseif iscell(arg)
     end
     outstr = sprintf('%s\b}', outstr);
 elseif isstruct(arg)
-    outstr = 'struct(';
-    for field = reshape(fieldnames(arg), 1, [])
-        outstr = sprintf('%s''%s'', %s, ', outstr, field{:}, all2str({arg.(field{:})}));
+    if isfield(arg, 'loadstr')
+        outstr = arg.loadstr;
+    else
+        outstr = 'struct(';
+        for field = reshape(fieldnames(arg), 1, [])
+            outstr = sprintf('%s''%s'', %s, ', outstr, field{:}, all2str({arg.(field{:})}));
+        end
+        outstr = sprintf('%s\b\b)', outstr);
     end
-    outstr = sprintf('%s\b\b)', outstr);
 elseif isempty(arg)
     outstr = '[]';
 end

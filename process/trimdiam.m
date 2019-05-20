@@ -18,6 +18,12 @@ else
 end
 callStr = sprintf('%s''leftLims'', %s, ''rightLims'', %s)', callStr, all2str(leftLims), all2str(rightLims));
 
+% Convert string limits to numerical limits
+leftLims = [strlim2numlim(leftLims{1}, EYE.diam.left, 'Lower')...
+    strlim2numlim(leftLims{1}, EYE.diam.left, 'Upper')];
+rightLims = [strlim2numlim(rightLims{1}, EYE.diam.right, 'Lower')...
+    strlim2numlim(rightLims{1}, EYE.diam.right, 'Upper')];
+
 fprintf('Trimming extreme pupil diameter values...\n')
 fprintf('Trimming points where\n')
 fprintf('Left < %0.1f\n', leftLims(1));
@@ -115,8 +121,10 @@ updateplot(f);
 uiwait(f);
 
 if isvalid(f)
-    leftLims = [getlim(f, 'left', 'Lower') getlim(f, 'left', 'Upper')];
-    rightLims = [getlim(f, 'right', 'Lower') getlim(f, 'right', 'Upper')];
+    [~, leftLims{1}] = getlim(f, 'left', 'Lower');
+    [~, leftLims{2}] = getlim(f, 'left', 'Upper');
+    [~, rightLims{1}] = getlim(f, 'right', 'Lower');
+    [~, rightLims{2}] = getlim(f, 'right', 'Upper');
     close(f);
 else
     [leftLims, rightLims] = deal([]);
@@ -174,30 +182,13 @@ title(sprintf('%0.2f%% trimmed', 100*nnz(badIdx.both)/numel(badIdx.both)));
 
 end
 
-function currLim = getlim(f, side, limType)
+function [currLim, currStr] = getlim(f, side, limType)
 
 side = cellstr(side);
 limType = cellstr(limType);
 currStr = get(findobj(f, 'Tag', [side{:} limType{:}]), 'String');
-if ~isempty(strfind(currStr, '%'))
-    ppn = str2double(strrep(currStr, '%', ''))/100;
-    vec = sort(f.UserData.(side{:}));
-    vec = vec(~isnan(vec));
-    if strcmp(limType, 'Lower')
-        currLim = vec(max(1, round(ppn*numel(vec))));
-    else
-        currLim = vec(min(numel(vec), round((1 - ppn)*numel(vec))));
-    end
-else
-    currLim = str2num(currStr);
-end
+currLim = strlim2numlim(currStr, f.UserData.(side{:}), limType);
 
-if isempty(currLim)
-    if strcmp(limType, 'Lower')
-        currLim = -inf;
-    else
-        currLim = inf;
-    end
 end
 
 end

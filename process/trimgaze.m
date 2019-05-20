@@ -16,6 +16,14 @@ end
 
 callStr = sprintf('eyeData = %s(eyeData, ''lims'', %s)', mfilename, all2str(lims));
 
+% Convert string to numerical limits
+lims = [
+    strlim2numlim(lims{1}, EYE.gaze.x, 'Lower')
+    strlim2numlim(lims{2}, EYE.gaze.x, 'Upper')
+    strlim2numlim(lims{3}, EYE.gaze.y, 'Lower')
+    strlim2numlim(lims{4}, EYE.gaze.y, 'Upper')
+];
+
 fprintf('Trimming extreme gaze values...\n')
 fprintf('Trimming points where:\n')
 fprintf('x < %0.1f\n', lims(1))
@@ -135,10 +143,10 @@ updateplot(f);
 uiwait(f);
 
 if isvalid(f)
-    lims = [getlim(f, 'x', 'Lower')...
-        getlim(f, 'x', 'Upper')...
-        getlim(f, 'y', 'Lower')...
-        getlim(f, 'y', 'Upper')];
+    [~, lims{1}] = getlim(f, 'x', 'Lower');
+    [~, lims{2}] = getlim(f, 'x', 'Upper');
+    [~, lims{3}] = getlim(f, 'y', 'Lower');
+    [~, lims{4}] = getlim(f, 'y', 'Upper');
     close(f);
 else
     lims = [];
@@ -202,30 +210,11 @@ set(findobj(f, 'Tag', 'reporttext'), 'String', sprintf('%0.2f%% trimmed', 100*nn
 
 end
 
-function currLim = getlim(f, side, limType)
+function [currLim, currStr] = getlim(f, side, limType)
 
 side = cellstr(side);
 limType = cellstr(limType);
 currStr = get(findobj(f, 'Tag', [side{:} limType{:}]), 'String');
-if ~isempty(strfind(currStr, '%'))
-    ppn = str2double(strrep(currStr, '%', ''))/100;
-    vec = sort(f.UserData.(side{:}));
-    vec = vec(~isnan(vec));
-    if strcmp(limType, 'Lower')
-        currLim = vec(max(1, round(ppn*numel(vec))));
-    else
-        currLim = vec(min(numel(vec), round((1 - ppn)*numel(vec))));
-    end
-else
-    currLim = str2num(currStr);
-end
-
-if isempty(currLim)
-    if strcmp(limType, 'Lower')
-        currLim = -inf;
-    else
-        currLim = inf;
-    end
-end
+currLim = strlim2numlim(currStr, f.UserData.(side{:}), limType);
 
 end
