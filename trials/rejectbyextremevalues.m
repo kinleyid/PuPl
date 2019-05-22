@@ -3,6 +3,7 @@ function EYE = rejectbyextremevalues(EYE, varargin)
 p = inputParser;
 addParameter(p, 'lims', []);
 parse(p, varargin{:});
+callStr = sprintf('eyeData = %s(eyeData, ', mfilename);
 
 if isempty(p.Results.lims)
     lims = UI_getextremevaluelims(EYE);
@@ -12,6 +13,7 @@ if isempty(p.Results.lims)
 else
     lims = p.Results.lims;
 end
+callStr = sprintf('%s''lims'', %s, ', callStr, lims);
 
 fprintf('Rejecting trials with data values <= %0.2f or >= %0.2f...\n', lims(1), lims(2));
 
@@ -35,6 +37,10 @@ for dataIdx = 1:numel(EYE)
         nRej,...
         numel(EYE(dataIdx).epoch));
     fprintf('\t%d trials total marked for rejection\n', nnz([EYE(dataIdx).epoch.reject]));
+    EYE(dataIdx).history = [
+        EYE(dataIdx).history
+        callStr
+    ];
 end
 
 end

@@ -82,5 +82,6 @@ for dataIdx = 1:numel(EYE)
         overwrite);
     EYE(dataIdx).history = cat(2, EYE(dataIdx).history, callStr);
 end
+fprintf('Done\n');
 
 end

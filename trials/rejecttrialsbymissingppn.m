@@ -8,6 +8,7 @@ function EYE = rejecttrialsbymissingppn(EYE, varargin)
 p = inputParser;
 addParameter(p, 'threshold', []);
 parse(p, varargin{:});
+callStr = sprintf('eyeData = %s(eyeData, ', mfilename);
 
 if isempty(p.Results.threshold)
     threshold = UI_getrejectionthreshold(EYE);
@@ -18,6 +19,7 @@ if isempty(p.Results.threshold)
 else
     threshold = p.Results.threshold;
 end
+callStr = sprintf('%s''threshold'', %s)', callStr, all2str(threshold));
 
 fprintf('Rejecting trials with >= %0.1f%% missing data...\n', threshold*100);
 
@@ -36,6 +38,10 @@ for dataIdx = 1:numel(EYE)
         nRej,...
         numel(EYE(dataIdx).epoch));
     fprintf('\t\t%d trials total marked for rejection\n', nnz([EYE(dataIdx).epoch.reject]));
+    EYE(dataIdx).history = [
+        EYE(dataIdx).history
+        callStr
+    ];
 end
 
 fprintf('Done\n')

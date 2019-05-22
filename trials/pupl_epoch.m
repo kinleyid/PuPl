@@ -21,7 +21,7 @@ addParameter(p, 'epochsToCorrect', []);
 addParameter(p, 'correctionType', []);
 parse(p, varargin{:});
 
-callStr = sprintf('%s(', mfilename);
+callStr = sprintf('eyeData = %s(eyeData, ', mfilename);
 
 if any(arrayfun(@(x) ~isempty(x.epoch), EYE))
     q = 'Overwrite existing trials?';
@@ -90,6 +90,7 @@ if isempty(p.Results.epochDescriptions)
 else
     epochDescriptions = p.Results.epochDescriptions;
 end
+callStr = sprintf('%s''epochDescriptions'', %s, ', callStr, all2str(epochDescriptions));
 
 EYE = applyepochdescriptions(EYE, epochDescriptions);
 
@@ -100,6 +101,7 @@ if isempty(p.Results.correctionType)
 else
     correctionType = p.Results.correctionType;
 end
+callStr = sprintf('%s''correctionType'', %s, ', callStr, all2str(correctionType));
 
 [EYE.correctionType] = deal(correctionType);
 
@@ -123,6 +125,13 @@ if ~strcmp(correctionType, 'none')
     end
     [EYE.baselineDescriptions] = deal(baselineDescriptions);
     EYE = baselinecorrection(EYE, baselineDescriptions, correctionType);
+end
+
+for dataidx = 1:numel(EYE)
+    EYE(dataidx).history = [
+        EYE(dataidx).history
+        callStr
+    ];
 end
 
 end

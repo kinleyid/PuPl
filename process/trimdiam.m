@@ -190,5 +190,3 @@ currStr = get(findobj(f, 'Tag', [side{:} limType{:}]), 'String');
 currLim = strlim2numlim(currStr, f.UserData.(side{:}), limType);
 
 end
-
-end
