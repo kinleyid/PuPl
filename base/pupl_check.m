@@ -16,4 +16,10 @@ if ~isfield(outStruct, 'history')
     end
 end
 
+if ~isfield(outStruct, 'eventlog')
+    for dataidx = 1:numel(outStruct)
+        outStruct(dataidx).eventlog = [];
+    end
+end
+
 end

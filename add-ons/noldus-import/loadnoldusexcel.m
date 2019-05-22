@@ -1,26 +1,23 @@
+
 function eventLogsArray = loadnoldusexcel(varargin)
+
+% Input: full path to file
 
 eventLogsArray = [];
 
-p = inputParser;
-addParameter(p, 'filename', [])
-addParameter(p, 'directory', '.');
-parse(p, varargin{:});
-
-directory = p.Results.directory;
-
-if isempty(p.Results.filename)
-    [filename, directory] = uigetfile([directory '\\*.*'],...
-        'MultiSelect', 'on');
+if nargin ~= 1
+    [filename, directory] = uigetfile('*.*',...
+        'MultiSelect', 'off');
     if isnumeric(filename)
         return
     end
 else
-    filename = p.Results.filename;
+    [directory, name, ext] = fileparts(varargin{1});
+    filename = sprintf('%s', name, ext);
 end
 filename = cellstr(filename);
 
-for fileIdx = 1:numel(filename)
+for fileIdx = 1
     fprintf('Importing %s...\n', filename{fileIdx});
     [~, ~, R] = xlsread([directory '\\' filename{fileIdx}]);
     eventTypes = R(2:end, strcmp(R(1, :), 'Behavior'));
@@ -35,14 +32,16 @@ for fileIdx = 1:numel(filename)
     
     fprintf('\t%d events found\n', numel(eventTypes));
     
-    eventLogsArray(fileIdx) = ...
+    eventLogsArray = [
+        eventLogsArray
         struct(...
             'name', filename{fileIdx},...
             'loadsrc', sprintf('%s\\%s', directory, filename{fileIdx}),...
             'loadstr', sprintf('%s(''filename'', %s, ''directory'', %s)', mfilename, filename{fileIdx}, directory),...
             'event',...
                 struct('time', num2cell(eventTimes),...
-                       'type', eventTypes));
+                       'type', eventTypes))
+    ];
     fprintf('\tdone\n')
 end
 

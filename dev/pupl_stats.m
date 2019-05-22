@@ -16,6 +16,7 @@ addParameter(p, 'stat', []);
 addParameter(p, 'win', []);
 addParameter(p, 'byTrial', []);
 parse(p, varargin{:});
+callStr = sprintf('%s(', mfilename);
 
 if isempty(p.Results.stat)
     sel = listdlg('PromptString', 'Compute which statistic?',...
@@ -29,6 +30,7 @@ if isempty(p.Results.stat)
 else
     stat = p.Results.stat;
 end
+callStr = sprintf('%s''stat'', %s, ', callStr, stat);
 
 if isempty(p.Results.win)
     win = (inputdlg(...
@@ -40,6 +42,7 @@ if isempty(p.Results.win)
 else
     win = p.Results.win;
 end
+callStr = sprintf('%s''win'', %s, ', callStr, win);
 
 if isempty(p.Results.byTrial)
     q = 'Average over trials?';
@@ -53,6 +56,7 @@ if isempty(p.Results.byTrial)
 else
     byTrial = p.Results.byTrial;
 end
+callStr = sprintf('%s''byTrial'', %s)', callStr, byTrial);
 
 statsTable = table;
 columnNames = {'Dataset' 'TrialType'};
@@ -94,11 +98,9 @@ for dataIdx = 1:numel(EYE)
                 mean(currStats, 'omitnan'),...
                 'VariableNames', columnNames);
         end
-        statsTable = [
-            statsTable
-            newTable
-        ];
+        statsTable = cat(2, statsTable, newTable);
     end
+    EYE(dataIdx).history = cat(1, EYE(dataIdx).history, callStr);
 end
 
 end

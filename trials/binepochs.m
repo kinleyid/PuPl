@@ -27,7 +27,7 @@ if isempty(p.Results.overwrite)
 else
     overwrite = p.Results.overwrite;
 end
-callStr = sprintf('%s''overwrite'', %s, ', callStr, overwrite);
+callStr = sprintf('%s''overwrite'', %s, ', callStr, all2str(overwrite));
 
 if overwrite
     [EYE.bin] = deal([]);
@@ -41,7 +41,7 @@ if isempty(p.Results.binDescriptions)
 else
     binDescriptions = p.Results.binDescriptions;
 end
-callStr = sprintf('%s''binDescriptions'', %s', callStr, binDescriptions);
+callStr = sprintf('%s''binDescriptions'', %s', callStr, all2str(binDescriptions));
 
 for dataIdx = 1:numel(EYE)
     EYE(dataIdx).history = [

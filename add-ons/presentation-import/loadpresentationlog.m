@@ -1,26 +1,23 @@
+
 function eventLogsArray = loadpresentationlog(varargin)
+
+% Input: full path to file
 
 eventLogsArray = [];
 
-p = inputParser;
-addParameter(p, 'filename', [])
-addParameter(p, 'directory', '.');
-parse(p, varargin{:});
-
-directory = p.Results.directory;
-
-if isempty(p.Results.filename)
-    [filename, directory] = uigetfile([directory '\\*.*'],...
-        'MultiSelect', 'on');
+if nargin ~= 1
+    [filename, directory] = uigetfile('*.*',...
+        'MultiSelect', 'off');
     if isnumeric(filename)
         return
     end
 else
-    filename = p.Results.filename;
+    [directory, name, ext] = fileparts(file);
+    filename = sprintf('%s', name, ext);
 end
 filename = cellstr(filename);
 
-for fileIdx = 1:numel(filename)
+for fileIdx = 1 % God this is a lazy solution
     fprintf('Importing %s\n', filename{fileIdx})
     [~, name] = fileparts(filename{fileIdx});
     fID = fopen([directory '\\' filename{fileIdx}]);

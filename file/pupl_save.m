@@ -35,19 +35,15 @@ else
     structArray = p.Results.data;
 end
 
-if isempty(p.Results.directory)
-    saveDirectory = uigetdir('.',...
-        sprintf('Save %s', dataType));
-    if saveDirectory == 0
+for dataidx = 1:numel(structArray)
+    currdata = structArray(dataidx);
+    [file,path] = uiputfile(sprintf('%s', currdata.name, fileExt),...
+        sprintf('Save %s', currdata.name));
+    if file == 0
         return
     end
-else
-    saveDirectory = p.Results.directory;
-end
-
-for data = structArray(:)'
-    fprintf('Saving %s\n', data.name);
-    save(strcat(saveDirectory, '\\', data.name, fileExt), 'data');
+    fprintf('Saving %s\n', currdata.name);
+    save(sprintf('%s', path, file, fileExt), 'currdata');
 end
 
 end
