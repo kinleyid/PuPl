@@ -2,26 +2,18 @@ function update_UI
 
 % Update UI panels when new data is loaded or the active datasets change
 
-global userInterface eyeData eventLogs
-activeEventLogsIdx = userInterface.UserData.activeEventLogsIdx;
+global userInterface eyeData
 activeEyeDataPanel = findobj(userInterface, 'Tag', 'activeEyeDataPanel');
-activeEventLogsPanel = findobj(userInterface, 'Tag', 'activeEventLogsPanel');
 
-if userInterface.UserData.dataCount ~= numel(eyeData) || userInterface.UserData.eventLogCount ~= numel(eventLogs)
+if userInterface.UserData.dataCount ~= numel(eyeData)
     % Data added or deleted
     userInterface.UserData.dataCount = numel(eyeData);
-    userInterface.UserData.eventLogCount = numel(eventLogs);
     preservelayout
 end
 
 for i = 1:numel(activeEyeDataPanel.Children)
     userInterface.UserData.activeEyeDataIdx(numel(activeEyeDataPanel.Children) + 1 - i) = ...
         logical(activeEyeDataPanel.Children(i).Value);
-end
-
-for i = 1:numel(activeEventLogsPanel.Children)
-    userInterface.UserData.activeEventLogsIdx(numel(activeEventLogsPanel.Children) + 1 - i) = ...
-        logical(activeEventLogsPanel.Children(i).Value);
 end
 
 % Inactivate or activate UI menu elements
