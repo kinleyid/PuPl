@@ -30,7 +30,7 @@ if isempty(p.Results.stat)
 else
     stat = p.Results.stat;
 end
-callStr = sprintf('%s''stat'', %s, ', callStr, stat);
+callStr = sprintf('%s''stat'', %s, ', callStr, all2str(stat));
 
 if isempty(p.Results.win)
     win = (inputdlg(...
@@ -42,7 +42,7 @@ if isempty(p.Results.win)
 else
     win = p.Results.win;
 end
-callStr = sprintf('%s''win'', %s, ', callStr, win);
+callStr = sprintf('%s''win'', %s, ', callStr, all2str(win));
 
 if isempty(p.Results.byTrial)
     q = 'Average over trials?';
@@ -56,7 +56,7 @@ if isempty(p.Results.byTrial)
 else
     byTrial = p.Results.byTrial;
 end
-callStr = sprintf('%s''byTrial'', %s)', callStr, byTrial);
+callStr = sprintf('%s''byTrial'', %s)', callStr, all2str(byTrial));
 
 statsTable = table;
 columnNames = {'Dataset' 'TrialType'};
@@ -86,21 +86,24 @@ for dataIdx = 1:numel(EYE)
         end
         if byTrial
             newTable = table(...
-                repmat(EYE(dataIdx).name, nRows, 1),...
-                repmat(EYE(dataIdx).bin(binIdx).name, nRows, 1),...
+                cellstr(repmat(EYE(dataIdx).name, nRows, 1)),...
+                cellstr(repmat(EYE(dataIdx).bin(binIdx).name, nRows, 1)),...
                 (1:nRows)',...
                 currStats(:),...
                 'VariableNames', columnNames);
         else
             newTable = table(...
-                EYE(dataIdx).name,...
-                EYE(dataIdx).bin(binIdx).name,...
+                cellstr(EYE(dataIdx).name),...
+                cellstr(EYE(dataIdx).bin(binIdx).name),...
                 mean(currStats, 'omitnan'),...
                 'VariableNames', columnNames);
         end
-        statsTable = cat(2, statsTable, newTable);
+        statsTable = cat(1, statsTable, newTable);
     end
     EYE(dataIdx).history = cat(1, EYE(dataIdx).history, callStr);
 end
+
+[file, path] = uiputfile('*');
+writetable(statsTable, sprintf('%s', path, file))
 
 end

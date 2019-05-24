@@ -4,7 +4,6 @@ function EYE = applyepochdescriptions(EYE, epochDescriptions)
 %   Inputs
 % EYE--struct array
 % epochDescriptions--struct array
-% rejection threshold--number from 0 to 1
 %   Outputs
 % EYE--struct array
 

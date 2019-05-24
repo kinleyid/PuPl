@@ -80,7 +80,7 @@ for dataIdx = 1:numel(EYE)
         eventsToAttach,...
         namesToAttach,...
         overwrite);
-    EYE(dataIdx).history = cat(2, EYE(dataIdx).history, callStr);
+    EYE(dataIdx).history = cat(1, EYE(dataIdx).history, callStr);
 end
 fprintf('Done\n');
 

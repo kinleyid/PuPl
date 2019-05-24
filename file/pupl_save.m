@@ -11,6 +11,7 @@ p = inputParser;
 addParameter(p, 'type', [])
 addParameter(p, 'data', [])
 addParameter(p, 'directory', [])
+addParameter(p, 'batch', false)
 parse(p, varargin{:});
 
 if isempty(p.Results.type)
@@ -35,15 +36,25 @@ else
     structArray = p.Results.data;
 end
 
-for dataidx = 1:numel(structArray)
-    currdata = structArray(dataidx);
-    [file,path] = uiputfile(sprintf('%s', currdata.name, fileExt),...
-        sprintf('Save %s', currdata.name));
-    if file == 0
-        return
+if p.Results.batch
+    path = [uigetdir '\\'];
+    for dataidx = 1:numel(structArray)
+        data = structArray(dataidx);
+        fprintf('Saving %s\n', data.name);
+        save(sprintf('%s', path, data.name, fileExt), 'data');
     end
-    fprintf('Saving %s\n', currdata.name);
-    save(sprintf('%s', path, file, fileExt), 'currdata');
+else
+    path = '';
+    for dataidx = 1:numel(structArray)
+        data = structArray(dataidx);
+        [file,path] = uiputfile(sprintf('%s', path, data.name, fileExt),...
+            sprintf('Save %s', data.name));
+        if file == 0
+            return
+        end
+        fprintf('Saving %s\n', data.name);
+        save(sprintf('%s', path, file, fileExt), 'data');
+    end
 end
 
 end

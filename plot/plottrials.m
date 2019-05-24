@@ -49,13 +49,13 @@ elseif f.UserData.trialidx > numel(f.UserData.EYE.epoch)
     f.UserData.trialidx = numel(f.UserData.EYE.epoch);
 end
 
-diam = f.UserData.EYE.epoch(f.UserData.trialidx).diam;
+epoch = f.UserData.EYE.epoch(f.UserData.trialidx); 
+diam = epoch.diam;
 
 figure(f);
 clf; hold on
 
-x = 1:numel(diam.left);
-t = (x - 1) / f.UserData.EYE.srate;
+t = (epoch.relLatencies - 1) / f.UserData.EYE.srate;
 
 plot(t, diam.left, 'b');
 plot(t, diam.right, 'r');
@@ -64,7 +64,7 @@ if isfield(diam, 'both')
 end
 xlim([t(1) t(end)]);
 ylim(f.UserData.ylims);
-xlabel('Time (s)');
+xlabel('Relative time (s)');
 ylabel('Pupil diameter');
 
 currtitle = f.UserData.EYE.epoch(f.UserData.trialidx).name;

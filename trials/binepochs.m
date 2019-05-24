@@ -11,7 +11,7 @@ addParameter(p, 'binDescriptions', []);
 addParameter(p, 'overwrite', []);
 parse(p, varargin{:});
 
-callStr = sprintf('%s(', mfilename);
+callStr = sprintf('eyeData = %s(eyeData, ', mfilename);
 
 if isempty(p.Results.overwrite)
     q = 'Overwrite existing trial sets?';
