@@ -7,7 +7,7 @@ function pupl_init(varargin)
 %   Example
 % >> pupl_init noui noaddons
 
-fprintf('Version 0.5\n');
+fprintf('Version 0.9\n');
 fprintf('Visit <a href="github.com/kinleyid/pupillometry-pipeline">github.com/kinleyid/pupillometry-pipeline</a> for updates\n');
 
 % Navigate to directory containing this very function

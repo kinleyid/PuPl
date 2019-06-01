@@ -9,12 +9,19 @@ function pupl_stats(EYE, varargin)
 statOptions = {
     'Mean'
     'Peak-to-peak difference'
+    'Variance'
+};
+
+trialwiseOptions = {
+    'Compute stats per trial'
+    'Compute average of trial stats'
+    'Compute stat of trial average'
 };
 
 p = inputParser;
 addParameter(p, 'stat', []);
 addParameter(p, 'win', []);
-addParameter(p, 'byTrial', []);
+addParameter(p, 'trialwise', []);
 parse(p, varargin{:});
 callStr = sprintf('%s(', mfilename);
 
@@ -44,19 +51,19 @@ else
 end
 callStr = sprintf('%s''win'', %s, ', callStr, all2str(win));
 
-if isempty(p.Results.byTrial)
-    q = 'Average over trials?';
-    a = questdlg(q, q, 'Yes', 'No', 'Yes');
-    switch a
-        case 'Yes'
-            byTrial = false;
-        case 'No'
-            byTrial = true;
+if isempty(p.Results.trialwise)
+    sel = listdlg('PromptString', 'How should individual trials be handled?',...
+        'ListString', trialwiseOptions,...
+        'SelectionMode', 'single');
+    if isempty(sel)
+        return
+    else
+        trialwise = trialwiseOptions{sel};
     end
 else
-    byTrial = p.Results.byTrial;
+    trialwise = p.Results.trialwise;
 end
-callStr = sprintf('%s''byTrial'', %s)', callStr, all2str(byTrial));
+callStr = sprintf('%s''trialwise'', %s)', callStr, all2str(trialwise));
 
 statsTable = table;
 columnNames = {'Dataset' 'TrialType'};
@@ -68,39 +75,56 @@ switch lower(stat)
     case 'peak-to-peak difference'
         statcompfun = @(x) max(x) - min(x);
         columnNames = [columnNames 'PeakToPeakDiff'];
+    case 'variance'
+        statcompfun = @(x) var(x, 'omitnan');
+        columnNames = [columnNames 'PeakToPeakDiff'];
 end
 
-if byTrial
-    columnNames = [columnNames(1:2) 'TrialN' columnNames(end)];
-end
-
-for dataIdx = 1:numel(EYE)
+for dataidx = 1:numel(EYE)
     if ~isnumeric(win)
-        currwin = cellfun(@(x) parsetimestr(x, EYE(dataIdx).srate), win);
+        currwin = cellfun(@(x) parsetimestr(x, EYE(dataidx).srate), win);
+    else
+        currwin = win;
     end
-    for binIdx = 1:numel(EYE(dataIdx).bin)
-        nRows = size(EYE(dataIdx).bin(binIdx).data.both, 1);
-        currStats = nan(nRows, 1);
-        for rowIdx = 1:nRows
-            currStats(rowIdx) = feval(statcompfun, EYE(dataIdx).bin(binIdx).data.both(rowIdx, :));
+    currwin = currwin(:)'*EYE(dataidx).srate; % Window in latencies
+    for binidx = 1:numel(EYE(dataidx).bin)
+        relLats = EYE(dataidx).bin(binidx).relLatencies;
+        if isempty(relLats)
+            warning('You have combined epochs into a bin that do not all begin and end at the same time relative to their events');
+            relLats = 0:size(bin.data.left, 2) - 1;
         end
-        if byTrial
+        latidx = find(relLats == currwin(1)):find(relLats == currwin(2));
+        if strcmp(trialwise, 'Compute stat of trial average')
+            nRows = 1;
+            data = mean(EYE(dataidx).bin(binidx).data.both(:, latidx), 'omitnan');
+        else
+            nRows = size(EYE(dataidx).bin(binidx).data.both, 1);
+            data = EYE(dataidx).bin(binidx).data.both(:, latidx);
+        end
+        currStats = nan(nRows, 1);
+        for rowidx = 1:nRows
+            currStats(rowidx) = feval(statcompfun, data(rowidx, :));
+        end
+        if strcmp(trialwise, 'Compute average of trial stats')
+            currStats = mean(currStats, 'omitnan');
+        end
+        if strcmp(trialwise, 'Compute stats per trial')
             newTable = table(...
-                cellstr(repmat(EYE(dataIdx).name, nRows, 1)),...
-                cellstr(repmat(EYE(dataIdx).bin(binIdx).name, nRows, 1)),...
+                cellstr(repmat(EYE(dataidx).name, nRows, 1)),...
+                cellstr(repmat(EYE(dataidx).bin(binidx).name, nRows, 1)),...
                 (1:nRows)',...
                 currStats(:),...
-                'VariableNames', columnNames);
+                'VariableNames', [columnNames(1:end-1) 'TrialN' columnNames(end)]);
         else
             newTable = table(...
-                cellstr(EYE(dataIdx).name),...
-                cellstr(EYE(dataIdx).bin(binIdx).name),...
+                cellstr(EYE(dataidx).name),...
+                cellstr(EYE(dataidx).bin(binidx).name),...
                 mean(currStats, 'omitnan'),...
                 'VariableNames', columnNames);
         end
         statsTable = cat(1, statsTable, newTable);
     end
-    EYE(dataIdx).history = cat(1, EYE(dataIdx).history, callStr);
+    EYE(dataidx).history = cat(1, EYE(dataidx).history, callStr);
 end
 
 [file, path] = uiputfile('*');
