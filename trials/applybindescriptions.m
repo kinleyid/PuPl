@@ -10,30 +10,36 @@ function EYE = applybindescriptions(EYE, binDescriptions)
 % element of EYE.bin is a numerical array of dimension (n. trials x trial
 % length)--I.e., each row 
 
-for dataIdx = 1:numel(EYE)
-    fprintf('Merging trials from %s...\n', EYE(dataIdx).name);
-    if ~isfield(EYE(dataIdx), 'bin')
-        EYE(dataIdx).bin = [];
+for dataidx = 1:numel(EYE)
+    fprintf('Merging trials from %s...\n', EYE(dataidx).name);
+    if ~isfield(EYE(dataidx), 'bin')
+        EYE(dataidx).bin = [];
     else
-        EYE(dataIdx).bin = EYE(dataIdx).bin(:)';
+        EYE(dataidx).bin = EYE(dataidx).bin(:)';
     end
     for binIdx = 1:numel(binDescriptions)
-        currBin = struct('name', binDescriptions(binIdx).name,...
-            'data', []);
-        binMembers = find(ismember({EYE(dataIdx).epoch.name},...
+        binMembers = find(ismember({EYE(dataidx).epoch.name},...
             binDescriptions(binIdx).epochs));
-        dataStreams = fieldnames(EYE(dataIdx).epoch(1).diam);
+        currBin = struct('name', binDescriptions(binIdx).name,...
+            'data', [],...
+            'relLatencies', EYE(dataidx).epoch(binMembers(1)).relLatencies);
+        dataStreams = fieldnames(EYE(dataidx).epoch(1).diam);
         for stream = dataStreams(:)'
             currBin.data.(stream{:}) = [];
             for binMemberIdx = binMembers
-                if ~EYE(dataIdx).epoch(binMemberIdx).reject
-                    currData = [EYE(dataIdx).epoch(binMemberIdx).diam.(stream{:})];
+                % Same relative location of defining event?
+                if ~all(currBin.relLatencies == EYE(dataidx).epoch(binMemberIdx).relLatencies)
+                    warning('You are combining epochs into a bin that do not all begin and end at the same time relative to their events');
+                    currBin.relLatencies = [];
+                end
+                if ~EYE(dataidx).epoch(binMemberIdx).reject
+                    currData = [EYE(dataidx).epoch(binMemberIdx).diam.(stream{:})];
                     currBin.data.(stream{:}) = cat(1, currBin.data.(stream{:}), currData(:)');
                 end
             end
         end
-        fprintf('\tTrial set ''%s'' contains data from %d trials\n', binDescriptions(binIdx).name, nnz(~[EYE(dataIdx).epoch(binMembers).reject]))
-        EYE(dataIdx).bin = [EYE(dataIdx).bin currBin];
+        fprintf('\tTrial set ''%s'' contains data from %d trials\n', binDescriptions(binIdx).name, nnz(~[EYE(dataidx).epoch(binMembers).reject]))
+        EYE(dataidx).bin = [EYE(dataidx).bin currBin];
     end
 end
 

@@ -52,11 +52,16 @@ while true
     
     legendentries = [legendentries {[EYE(dataIdx).name ' ' bin]}];
     
-    data = EYE(dataIdx).bin(strcmp({EYE(dataIdx).bin.name}, bin)).data.both;
+    currBin = EYE(dataIdx).bin(strcmp({EYE(dataIdx).bin.name}, bin));
+    data = currBin.data.both;
     
-    x = 1:size(data, 2);
+    if ~isempty(currBin.relLatencies)
+        x = currBin.relLatencies;
+    else
+        1:size(data, 2);
+    end
     t = (x - 1)/EYE(dataIdx).srate;
-    f.Visible = 'on';
+    set(f, 'Visible', 'on');
     figure(f);
     currplot = plot(t, mean(data, 'omitnan'));
     x = [t t(end:-1:1)];
@@ -68,7 +73,7 @@ while true
         'EdgeAlpha', 0.5,...
         'HandleVisibility', 'off');
     xlim([t(1) t(end)]);
-    legend(legendentries);
+    legend(legendentries, 'Interpreter', 'none');
     q = 'Add more data to this plot?';
     a = questdlg(q, q, 'Yes', 'No', 'Yes');
     if strcmp(a, 'No')
@@ -76,4 +81,4 @@ while true
     end
 end
 
-    end
+end

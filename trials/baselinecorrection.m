@@ -53,7 +53,7 @@ if isempty(p.Results.event) || isempty(p.Results.lims)
             event = [];
         case 'one:all'
             eventTypes = unique(mergefields(EYE, 'event', 'type'));
-            event = eventTypes(listdlgregexp('PromptString', 'Epoch relative to which events?',...
+            event = eventTypes(listdlgregexp('PromptString', 'Baseline is defined relative to which event?',...
                 'SelectionMode', 'single',...
                 'ListString', eventTypes));
             lims = (inputdlg(...
@@ -64,7 +64,7 @@ if isempty(p.Results.event) || isempty(p.Results.lims)
             end
         case 'one:some'
             eventTypes = unique(mergefields(EYE, 'event', 'type'));
-            event = eventTypes(listdlgregexp('PromptString', 'Epoch relative to which events?',...
+            event = eventTypes(listdlgregexp('PromptString', 'Baselines are defined relative to which events?',...
                 'SelectionMode', 'single',...
                 'ListString', eventTypes));
             if isempty(event)
@@ -98,15 +98,21 @@ for dataidx = 1:numel(EYE)
         end
     else % Baselines defined relative to their own events
         epochlats = [EYE(dataidx).epoch.eventLat]; % Central latencies for epochs
-        baselineEventLats = [EYE(dataidx).event(...
-            ismember({EYE(dataidx).event.type}, event)).eventLat]; % Central latencies for baselines
+        switch mapping{:}
+            case 'one:all'
+                baselineEventLats = [EYE(dataidx).event(...
+                    find(ismember({EYE(dataidx).event.type}, event), 1)).eventLat]; % Central latencies for baselines
+            case 'one:some'
+                baselineEventLats = [EYE(dataidx).event(...
+                    ismember({EYE(dataidx).event.type}, event)).eventLat]; % Central latencies for baselines
+        end
         for baselineidx = 1:numel(baselineEventLats)
             baselineLats = baselineEventLats(baselineidx) + currLims;
             if baselineidx == 1 && any(epochlats < baselineEventLats(baselineidx))
                 error('Some epochs occur before the first baseline period')
             end
             if baselineidx == numel(baselineEventLats)
-                epochsToCorrectIdx = find(epochlats > baselineEventLats(baselineidx));
+                epochsToCorrectIdx = find(epochlats >= baselineEventLats(baselineidx));
             else
                 epochsToCorrectIdx = find(...
                     epochlats > baselineEventLats(baselineidx) &...

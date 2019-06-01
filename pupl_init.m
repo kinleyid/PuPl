@@ -13,14 +13,14 @@ fprintf('Visit <a href="github.com/kinleyid/pupillometry-pipeline">github.com/ki
 % Navigate to directory containing this very function
 previousDir = pwd;
 cd(fileparts(which('pupl_init.m')))
-addpath(cd)
+addpath(pwd)
 
 % Add built-in subdirectories
 fprintf('Loading source...\n')
 for subdir = {'base' 'UI' 'file' 'process' 'trials' 'experiment' 'plot' 'spreadsheet' 'dev'}
     cd(subdir{:})
-    addpath(genpath(cd)) % Add folder and subfolders
-    cd ..
+    addpath(genpath(pwd)) % Add folder and subfolders
+    cd('..')
 end
 
 if ~any(strcmpi(varargin, 'noGlobals'))
@@ -55,12 +55,12 @@ if ~any(strcmpi(varargin, 'noAddOns'))
         if ~any(strcmp(currFolder.name, {'.' '..'}))
             fprintf('\t%s...\n', currFolder.name)
             cd(currFolder.name)
-            addpath(genpath(cd));
+            addpath(genpath(pwd));
             run('./init.m');
-            cd ..
+            cd('..');
         end
     end
-    cd ..
+    cd('..');
 end
 
 % Navigate back to the user's directory

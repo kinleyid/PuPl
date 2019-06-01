@@ -14,7 +14,7 @@ addParameter(p, 'filenames', [])
 addParameter(p, 'directory', [])
 parse(p, varargin{:});
 
-structArray = [];
+structArray = struct([]);
 
 if isempty(p.Results.type)
     dataTypeOptions = {

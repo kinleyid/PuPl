@@ -5,16 +5,22 @@ function update_UI
 global userInterface eyeData
 activeEyeDataPanel = findobj(userInterface, 'Tag', 'activeEyeDataPanel');
 
-if userInterface.UserData.dataCount ~= numel(eyeData)
+UserData = get(userInterface, 'UserData');
+if UserData.dataCount ~= numel(eyeData)
     % Data added or deleted
-    userInterface.UserData.dataCount = numel(eyeData);
+    UserData.dataCount = numel(eyeData);
+    set(userInterface, 'UserData', UserData);
     preservelayout
 end
+set(userInterface, 'UserData', UserData);
 
-for i = 1:numel(activeEyeDataPanel.Children)
-    userInterface.UserData.activeEyeDataIdx(numel(activeEyeDataPanel.Children) + 1 - i) = ...
-        logical(activeEyeDataPanel.Children(i).Value);
+UserData = get(userInterface, 'UserData');
+children = get(activeEyeDataPanel, 'Children');
+for i = 1:numel(children)
+    UserData.activeEyeDataIdx(numel(children) + 1 - i) = ...
+        logical(children(i).Value);
 end
+set(userInterface, 'UserData', UserData);
 
 % Inactivate or activate UI menu elements
 
@@ -24,16 +30,16 @@ for currMenu = reshape(allMenus, 1, [])
     recursiveupdatemenu(currMenu);
 end
 
-userInterface.Visible = 'off';
-userInterface.Visible = 'on';
+set(userInterface, 'Visible', 'off');
+set(userInterface, 'Visible', 'on');
 
 end
 
 function recursiveupdatemenu(currMenu)
 
-if strcmp(currMenu.Type, 'uimenu')
-    if ~isempty(currMenu.UserData)
-        if feval(currMenu.UserData)
+if strcmp(get(currMenu, 'Type'), 'uimenu')
+    if ~isempty(get(currMenu, 'UserData'))
+        if feval(get(currMenu, 'UserData'))
             set(currMenu, 'Enable', 'on');
         else
             set(currMenu, 'Enable', 'off');
@@ -41,7 +47,7 @@ if strcmp(currMenu.Type, 'uimenu')
     end
 end
 
-for newMenu = reshape(currMenu.Children, 1, [])
+for newMenu = reshape(get(currMenu, 'Children'), 1, [])
     recursiveupdatemenu(newMenu);
 end
 
