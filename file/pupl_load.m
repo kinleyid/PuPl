@@ -60,4 +60,6 @@ end
 
 structArray = pupl_check(structArray);
 
+fprintf('Done\n');
+
 end

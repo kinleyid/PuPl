@@ -58,9 +58,10 @@ while true
     if ~isempty(currBin.relLatencies)
         x = currBin.relLatencies;
     else
-        1:size(data, 2);
+        warning('Bin contains epochs in which the relative positions of the events are different\nX-axis will begin at 0 seconds');
+        0:size(data, 2)-1;
     end
-    t = (x - 1)/EYE(dataIdx).srate;
+    t = x /EYE(dataIdx).srate;
     set(f, 'Visible', 'on');
     figure(f);
     currplot = plot(t, mean(data, 'omitnan'));

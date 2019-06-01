@@ -6,13 +6,15 @@ buttonHeight = 20;
 global userInterface eyeData
 
 currData = eyeData;
-currPanel = getcomponentbytag(userInterface, 'activeEyeDataPanel');
-activeIdx = userInterface.UserData.activeEyeDataIdx;
-if ~isempty(currPanel.Children)
-    delete(currPanel.Children)
+currPanel = findobj('tag', 'activeEyeDataPanel');
+activeIdx = getfield(get(userInterface, 'UserData'), 'activeEyeDataIdx');
+if ~isempty(get(currPanel, 'Children'))
+    % delete(currPanel.Children);
+    set(currPanel, 'Children', []);
 end
 activeIdx(numel(activeIdx)+1:numel(currData)) = true;
-bgPos = getpixelposition(currPanel);
+% bgPos = getpixelposition(currPanel);
+bgPos = get(userInterface, 'position') .* get(currPanel, 'position');
 top = bgPos(4) - buttonHeight;
 buttonWidth = bgPos(3) - sep;
 for i = 1:numel(currData)
@@ -30,6 +32,8 @@ for i = 1:numel(currData)
         'Callback', @(h, e) update_UI);
 end
 
-userInterface.UserData.activeEyeDataIdx = activeIdx;
+UserData = get(userInterface, 'UserData');
+UserData.activeEyeDataIdx = activeIdx;
+set(userInterface, 'UserData', UserData);
 
 end

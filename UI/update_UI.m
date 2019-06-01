@@ -18,7 +18,7 @@ UserData = get(userInterface, 'UserData');
 children = get(activeEyeDataPanel, 'Children');
 for i = 1:numel(children)
     UserData.activeEyeDataIdx(numel(children) + 1 - i) = ...
-        logical(children(i).Value);
+        logical(get(children(i), 'Value'));
 end
 set(userInterface, 'UserData', UserData);
 
