@@ -89,10 +89,10 @@ switch dataType
 end
 
 for stream = reshape(fieldnames(tempData), 1, [])
-    for latIdx = 1:length(permData.(stream{:}))
+    for latIdx = 1:numel(permData.(stream{:}))
         if ~isnan(tempData.(stream{:})(latIdx))
-            sLat = max(latIdx-smoothN,1);
-            eLat = min(latIdx+smoothN,length(tempData.(stream{:})));
+            sLat = max(latIdx - smoothN, 1);
+            eLat = min(latIdx + smoothN, numel(tempData.(stream{:})));
             tempData.(stream{:})(latIdx) = filtfunc(permData.(stream{:})(sLat:eLat),...
                 sLat, eLat, latIdx);
         end

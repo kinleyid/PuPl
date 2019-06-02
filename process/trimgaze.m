@@ -89,8 +89,9 @@ axes(ax);
 scatter(x, y);
 xlimits = xlim;
 ylimits = ylim;
-f.UserData.lims = [xlimits ylimits];
-
+UserData = get(f, 'UserData');
+UserData.lims = [xlimits ylimits];
+set(f, 'UserData', UserData);
 p = uipanel(f,...
     'Units', 'normalized',...
     'Position', [0.01 0.01 0.48 0.08]);
@@ -162,23 +163,27 @@ else
     f = gcbf;
 end
 
+UserData = get(f, 'UserData');
+
 badIdx = struct(...
-    'x', false(size(f.UserData.x)),...
-    'y', false(size(f.UserData.y)));
+    'x', false(size(UserData.x)),...
+    'y', false(size(UserData.y)));
 
 for side = {'x' 'y'}
     for limType = {'Lower' 'Upper'}
         currLim = getlim(f, side, limType);
         if strcmp(limType, 'Lower')
-            badIdx.(side{:}) = badIdx.(side{:}) | f.UserData.(side{:}) < currLim;
+            badIdx.(side{:}) = badIdx.(side{:}) | UserData.(side{:}) < currLim;
         else
-            badIdx.(side{:}) = badIdx.(side{:}) | f.UserData.(side{:}) > currLim;
+            badIdx.(side{:}) = badIdx.(side{:}) | UserData.(side{:}) > currLim;
         end
     end
 end
 
-x = f.UserData.x;
-y = f.UserData.y;
+x = UserData.x;
+y = UserData.y;
+
+set(f, 'UserData', UserData);
 
 badIdx.both = badIdx.x | badIdx.y;
 
@@ -212,9 +217,10 @@ end
 
 function [currLim, currStr] = getlim(f, side, limType)
 
+UserData = get(f, 'UserData');
 side = cellstr(side);
 limType = cellstr(limType);
 currStr = get(findobj(f, 'Tag', [side{:} limType{:}]), 'String');
-currLim = strlim2numlim(currStr, f.UserData.(side{:}), limType);
+currLim = strlim2numlim(currStr, UserData.(side{:}), limType);
 
 end

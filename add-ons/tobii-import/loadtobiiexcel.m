@@ -1,6 +1,5 @@
-function outStructArray = loadtobiiexcel(varargin)
 
-outStructArray = [];
+function outStructArray = loadtobiiexcel(varargin)
 
 p = inputParser;
 addParameter(p, 'filename', [])
@@ -21,6 +20,7 @@ else
 end
 filename = cellstr(filename);
 
+outStructArray = struct([]);
 for fileIdx = 1:numel(filename)
     
     [~, name] = fileparts(filename{fileIdx});
@@ -110,10 +110,6 @@ for fileIdx = 1:numel(filename)
         currStruct.srate = srate;
         currStruct.gaze = gaze;
         currStruct.urGaze = urGaze;
-        currStruct.epoch = [];
-        currStruct.bin = [];
-        currStruct.cond = [];
-        currStruct.isBlink = false(size(diam.left));
         
     end
     

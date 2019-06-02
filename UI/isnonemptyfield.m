@@ -3,6 +3,10 @@ function out = isnonemptyfield(structArray, varargin)
 
 out = true;
 
+if isempty(structArray)
+    out = false;
+end
+
 if isempty(varargin)
     if isempty(structArray)
         out = false;

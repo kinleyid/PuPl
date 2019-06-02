@@ -17,7 +17,7 @@ addpath(pwd)
 
 % Add built-in subdirectories
 fprintf('Loading source...\n')
-for subdir = {'base' 'UI' 'file' 'process' 'trials' 'experiment' 'plot' 'spreadsheet' 'dev'}
+for subdir = {'base' 'UI' 'file' 'process' 'trials' 'experiment' 'plot' 'stats' 'dev'}
     cd(subdir{:})
     addpath(genpath(pwd)) % Add folder and subfolders
     cd('..')
@@ -26,10 +26,8 @@ end
 if ~any(strcmpi(varargin, 'noGlobals'))
     fprintf('Initializing global variables...\n')
     globalVariables = {
-        'eyeData'
-        'eventLogs'};
+        'eyeData'};
     globalValues = {
-        'struct([])'
         'struct([])'};
     for i = 1:numel(globalVariables)
         evalin('base',...

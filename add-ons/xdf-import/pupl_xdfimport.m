@@ -9,7 +9,7 @@ function outStructArray = pupl_xdfimport(varargin)
 %   Outputs
 % outStructArray--struct array
 
-outStructArray = [];
+outStructArray = struct([]);
 
 p = inputParser;
 addParameter(p, 'filename', [])
@@ -52,7 +52,7 @@ for fileIdx = 1:numel(filename)
                 'SelectionMode', 'single',...
                 'ListSize', listSize));
             if isempty(eyeDataStreamType)
-                outStructArray = [];
+                outStructArray = struct([]);
                 return
             end
         end
@@ -65,7 +65,7 @@ for fileIdx = 1:numel(filename)
             'SelectionMode', 'single',...
             'ListSize', listSize));
         if isempty(eventsStreamType)
-            outStructArray = [];
+            outStructArray = struct([]);
             return
         end
     end
@@ -113,7 +113,7 @@ for fileIdx = 1:numel(filename)
                                 'SelectionMode', 'single',...
                                 'ListSize', listSize);
                             if isempty(currIdx)
-                                outStructArray = [];
+                                outStructArray = struct([]);
                                 return;
                             else
                                 idx.(currField1{:}).(currField2{:}).(currField3{:}) = currIdx; 
@@ -156,10 +156,6 @@ for fileIdx = 1:numel(filename)
             currStruct.srate = srate;
             currStruct.gaze = data.gaze;
             currStruct.urGaze = data.gaze;
-            currStruct.epoch = [];
-            currStruct.bin = [];
-            currStruct.cond = [];
-            currStruct.isBlink = false(1, size(eyeDataStruct.time_series, 2));
         end
     end
     currStruct.event = event;
@@ -167,10 +163,8 @@ for fileIdx = 1:numel(filename)
     currStruct = mergedata(currStruct, 'gazelr');
     fprintf('\tMerging x and y diameter measurements\n')
     currStruct = mergedata(currStruct, 'diamxy');
-    outStructArray = [outStructArray currStruct];
+    outStructArray = cat(2, outStructArray, currStruct);
 end
-
-fprintf('Calling pupl_check...\n')
 outStructArray = pupl_check(outStructArray);
 
 fprintf('Done\n');

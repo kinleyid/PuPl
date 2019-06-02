@@ -32,30 +32,31 @@ end
 
 function plotcurrtrial(f, e)
 
+UserData = get(f, 'UserData');
 if ~isempty(e)
     switch e.Key
         case {'pagedown', 'rightarrow'}
-            f.UserData.trialidx = f.UserData.trialidx + 1;
+            UserData.trialidx = UserData.trialidx + 1;
         case {'pageup', 'leftarrow'}
-            f.UserData.trialidx = f.UserData.trialidx - 1;
+            UserData.trialidx = UserData.trialidx - 1;
         otherwise
             return
     end
 end
 
-if f.UserData.trialidx < 1
-    f.UserData.trialidx = 1;
-elseif f.UserData.trialidx > numel(f.UserData.EYE.epoch)
-    f.UserData.trialidx = numel(f.UserData.EYE.epoch);
+if UserData.trialidx < 1
+    UserData.trialidx = 1;
+elseif UserData.trialidx > numel(UserData.EYE.epoch)
+    UserData.trialidx = numel(UserData.EYE.epoch);
 end
 
-epoch = f.UserData.EYE.epoch(f.UserData.trialidx); 
+epoch = UserData.EYE.epoch(UserData.trialidx); 
 diam = epoch.diam;
 
 figure(f);
 clf; hold on
 
-t = (epoch.relLatencies - 1) / f.UserData.EYE.srate;
+t = (epoch.relLatencies - 1) / UserData.EYE.srate;
 
 plot(t, diam.left, 'b');
 plot(t, diam.right, 'r');
@@ -63,15 +64,17 @@ if isfield(diam, 'both')
     plot(t, diam.both, 'k');
 end
 xlim([t(1) t(end)]);
-ylim(f.UserData.ylims);
+ylim(UserData.ylims);
 xlabel('Relative time (s)');
 ylabel('Pupil diameter');
 
-currtitle = f.UserData.EYE.epoch(f.UserData.trialidx).name;
+currtitle = UserData.EYE.epoch(UserData.trialidx).name;
 
-if f.UserData.EYE.epoch(f.UserData.trialidx).reject
+if UserData.EYE.epoch(UserData.trialidx).reject
     currtitle = ['[REJECTED] ' currtitle];
 end
 title(currtitle);
+
+set(f, 'UserData', UserData)
 
 end

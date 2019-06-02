@@ -140,22 +140,24 @@ else
     f = gcbf;
 end
 
+UserData = get(f, 'UserData');
+
 badIdx = struct(...
-    'left', false(size(f.UserData.left)),...
-    'right', false(size(f.UserData.right)));
+    'left', false(size(UserData.left)),...
+    'right', false(size(UserData.right)));
 
 for side = {'left' 'right'}
     for limType = {'Lower' 'Upper'}
         currLim = getlim(f, side, limType);
         if strcmp(limType, 'Lower')
-            badIdx.(side{:}) = badIdx.(side{:}) | f.UserData.(side{:}) < currLim;
+            badIdx.(side{:}) = badIdx.(side{:}) | UserData.(side{:}) < currLim;
         else
-            badIdx.(side{:}) = badIdx.(side{:}) | f.UserData.(side{:}) > currLim;
+            badIdx.(side{:}) = badIdx.(side{:}) | UserData.(side{:}) > currLim;
         end
     end
 end
-left = f.UserData.left;
-right = f.UserData.right;
+left = UserData.left;
+right = UserData.right;
 
 badIdx.both = badIdx.right | badIdx.left;
 axes(findobj(f, 'Type', 'axes', 'Tag', 'hist'));
@@ -163,15 +165,15 @@ cla;
 bins = linspace(min([left right]), max([left right]), 200);
 try
     for side = {'left' 'right'}
-        histogram(f.UserData.(side{:}), bins);
+        histogram(UserData.(side{:}), bins);
     end
     for side = {'left' 'right'}
-        histogram(f.UserData.(side{:})(badIdx.(side{:})), bins, 'FaceColor', 'k');
+        histogram(UserData.(side{:})(badIdx.(side{:})), bins, 'FaceColor', 'k');
     end
     legend({'Left' 'Right' 'Trimmed'})
 catch
     for side = {'left' 'right'}
-        hist(f.UserData.(side{:}), bins);
+        hist(UserData.(side{:}), bins);
     end
     h = findobj(gca,'Type','patch');
     set(h,'FaceAlpha', 0.0, 'EdgeColor','k')
@@ -180,13 +182,17 @@ xlabel('Diameter')
 
 title(sprintf('%0.2f%% trimmed', 100*nnz(badIdx.both)/numel(badIdx.both)));
 
+set(f, 'UserData', UserData);
+
 end
 
 function [currLim, currStr] = getlim(f, side, limType)
 
+UserData = get(f, 'UserData');
+
 side = cellstr(side);
 limType = cellstr(limType);
 currStr = get(findobj(f, 'Tag', [side{:} limType{:}]), 'String');
-currLim = strlim2numlim(currStr, f.UserData.(side{:}), limType);
+currLim = strlim2numlim(currStr, UserData.(side{:}), limType);
 
 end

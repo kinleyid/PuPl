@@ -6,14 +6,12 @@ buttonHeight = 20;
 global userInterface eyeData
 
 currData = eyeData;
-currPanel = findobj('tag', 'activeEyeDataPanel');
+currPanel = findobj(userInterface, 'tag', 'activeEyeDataPanel');
 activeIdx = getfield(get(userInterface, 'UserData'), 'activeEyeDataIdx');
 if ~isempty(get(currPanel, 'Children'))
-    % delete(currPanel.Children);
-    set(currPanel, 'Children', []);
+    delete(get(currPanel, 'Children'));
 end
 activeIdx(numel(activeIdx)+1:numel(currData)) = true;
-% bgPos = getpixelposition(currPanel);
 bgPos = get(userInterface, 'position') .* get(currPanel, 'position');
 top = bgPos(4) - buttonHeight;
 buttonWidth = bgPos(3) - sep;

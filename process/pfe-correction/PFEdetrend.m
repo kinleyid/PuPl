@@ -7,7 +7,7 @@ parse(p, varargin{:});
 
 axis = p.Results.axis;
 
-callStr = sprintf('eyeData = %s(eyeData, ''axis'', %s,', mfilename, axis);
+callStr = sprintf('eyeData = %s(eyeData, ''axis'', %s, ', mfilename, all2str(axis));
 if isempty(p.Results.detrendParams)
     detrendParams = cell(1, numel(EYE));
     for dataidx = 1:numel(EYE)

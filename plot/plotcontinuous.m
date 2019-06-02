@@ -27,7 +27,7 @@ if strcmpi(type, 'dilation')
             EYE(dataIdx).diam.right
             mean([
                 EYE(dataIdx).urDiam.left.x
-                EYE(dataIdx).urDiam.left.y]);
+                EYE(dataIdx).urDiam.left.y])
             mean([
                 EYE(dataIdx).urDiam.right.x
                 EYE(dataIdx).urDiam.right.y])};
@@ -52,13 +52,23 @@ elseif strcmpi(type, 'gaze')
     for dataIdx = 1:numel(EYE)
         plotinfo(dataIdx).data = {
             EYE(dataIdx).gaze.x
-            EYE(dataIdx).gaze.y};
+            EYE(dataIdx).gaze.y
+            mean([
+                EYE(dataIdx).urGaze.x.left
+                EYE(dataIdx).urGaze.x.right])
+            mean([
+                EYE(dataIdx).urGaze.y.left
+                EYE(dataIdx).urGaze.y.right])};
         plotinfo(dataIdx).colours = {
             'b'
-            'r'};
+            'r'
+            'b:'
+            'r:'};
         plotinfo(dataIdx).greyblinks = [
             true
-            true];
+            true
+            false
+            false];
         plotinfo(dataIdx).ylim = [min(structfun(@min, EYE(dataIdx).gaze)) max(structfun(@max, EYE(dataIdx).gaze))];
     end
 end
@@ -104,10 +114,12 @@ switch e.Key
     otherwise
         return
 end
-h.UserData.x = h.UserData.x + change*h.UserData.srate;
-if any(h.UserData.x < 1)
-    h.UserData.x = h.UserData.x - min(h.UserData.x) + 1;
+UserData = get(h, 'UserData');
+UserData.x = UserData.x + change*UserData.srate;
+if any(UserData.x < 1)
+    UserData.x = UserData.x - min(UserData.x) + 1;
 end
+set(h, 'UserData', UserData);
 
 plotdata(h);
 
@@ -117,10 +129,11 @@ function plotdata(f)
 
 figure(f);
 
-plotinfo = f.UserData.plotinfo;
-EYE = f.UserData.EYE;
-x = f.UserData.x;
-srate = f.UserData.srate;
+UserData = get(f, 'UserData');
+plotinfo = UserData.plotinfo;
+EYE = UserData.EYE;
+x = UserData.x;
+srate = UserData.srate;
 xtimes = (x - 1)/srate;
 %{
 for dataIdx = 1:numel(EYE)
