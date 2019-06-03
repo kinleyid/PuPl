@@ -6,7 +6,7 @@ addParameter(p, 'aoisets', []);
 parse(p, varargin{:});
 
 if isempty(p.Results.aoisets)
-    aoisets = UI_getAOIsets(EYE);
+    aoisets = UI_getsets(unique(mergefields(EYE, 'aoi', 'name')), 'AOI set');
     if isempty(aoisets)
         return
     end

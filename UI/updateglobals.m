@@ -6,7 +6,7 @@ function updateglobals(globalVarName, globalVarIndex, functionToCall, outputInde
 % globalVarName--string
 % globalVarIndex--logical or integer array or 'append'
 % functionToCall--function handle
-% outputIndex--which serial output of functionToCall to assign to 
+% outputIndex--which serial output of functionToCall to assign to
 
 if isempty(globalVarName) ||...
         isempty(globalVarIndex) ||...
@@ -29,7 +29,8 @@ else
     % Are we subsetting or appending?
     if strcmpi(globalVarIndex, 'append')
         % We are appending
-        eval(sprintf('%s = cat(2, %s, codeSmell);', globalVarName, globalVarName));
+        eval(sprintf('[~, dim] = max(size(%s))', globalVarName));
+        eval(sprintf('%s = cat(dim, %s, codeSmell);', globalVarName, globalVarName));
     else
         % We are subsetting
         eval(sprintf('%s(globalVarIndex) = codeSmell;', globalVarName));

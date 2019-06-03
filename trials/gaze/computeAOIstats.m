@@ -18,7 +18,7 @@ statOptions = {
     'Average fixation duration' @afd
 };
 if isempty(p.Results.stats)
-    stats = allEventTypes(listdlgregexp('PromptString', sprintf('Compute which stats?', p.Results.spanName),...
+    stats = allEventTypes(listdlgregexp('PromptString', 'Compute which stats?',...
             'ListString', statOptions(:, 1)));
 else
     stats = p.Results.stats;
