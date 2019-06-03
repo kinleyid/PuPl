@@ -22,6 +22,7 @@ p = inputParser;
 addParameter(p, 'stat', []);
 addParameter(p, 'win', []);
 addParameter(p, 'trialwise', []);
+addParameter(p, 'path', []);
 parse(p, varargin{:});
 callStr = sprintf('%s(', mfilename);
 
@@ -127,7 +128,12 @@ for dataidx = 1:numel(EYE)
     EYE(dataidx).history = cat(1, EYE(dataidx).history, callStr);
 end
 
-[file, path] = uiputfile('*');
-writetable(statsTable, sprintf('%s', path, file))
+if isempty(p.Results.path)
+    [file, dir] = uiputfile('*');
+    path = sprintf('%s', dir, file);
+else
+    path = p.Results.path;
+end
+writetable(statsTable, path);
 
 end

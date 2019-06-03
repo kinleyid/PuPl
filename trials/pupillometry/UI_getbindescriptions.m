@@ -81,7 +81,7 @@ else
 end
 
 end
-
+%%
 function createbin(h,e)
 
 f = gcbf;
@@ -117,7 +117,7 @@ function ifkeydo(e, key, do)
 
 switch e.Key
     case key
-        do();
+        feval(do);
 end
 
 end
