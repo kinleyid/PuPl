@@ -2,7 +2,9 @@
 function EYE = maptofixationcentroid(EYE)
 
 callstr = sprintf('eyeData = %s(eyeData)', mfilename);
+fprintf('Moving gaze data to centroids of fixations...\n');
 for dataidx = 1:numel(EYE)
+    fprintf('\t%s...', EYE(dataidx).name);
     i = 1;
     isf = true;
     islandidx = [true false(1, EYE(dataidx).ndata - 1)];
@@ -28,6 +30,8 @@ for dataidx = 1:numel(EYE)
         end
     end
     EYE(dataidx).history = cat(1, EYE(dataidx).history, callstr);
+    fprintf('done\n');
 end
+fprintf('Done\n');
 
 end

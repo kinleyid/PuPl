@@ -45,6 +45,4 @@ for fileIdx = 1
     fprintf('\tdone\n')
 end
 
-eventLogsArray = pupl_check(eventLogsArray);
-
 end

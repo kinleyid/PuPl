@@ -50,17 +50,16 @@ callStr = sprintf('%s''lims'', %s)', callStr, all2str(lims));
 fprintf('Extracting trial data...\n')
 for dataidx = 1:numel(EYE)
     fprintf('\t%s...', EYE(dataidx).name);
-    currEvents = {EYE(dataidx).event.type};
     currLims = EYE(dataidx).srate*[parsetimestr(lims{1}, EYE(dataidx).srate) parsetimestr(lims{2}, EYE(dataidx).srate)];
     relLatencies = currLims(1):currLims(2);
     for eventType = reshape(events, 1, [])
-        for eventidx = find(strcmp(currEvents, eventType))
+        for eventidx = find(strcmp({EYE(dataidx).event.type}, eventType))
             currEpoch = struct(...
                 'reject', false,...
                 'relLatencies', relLatencies,...
+                'absLatencies', EYE(dataidx).event(eventidx).latency + relLatencies,...
                 'name', EYE(dataidx).event(eventidx).type,...
                 'eventLat', EYE(dataidx).event(eventidx).latency);
-            currEpoch.absLatencies = EYE(dataidx).event(eventidx).latency + relLatencies;
             for datatype = {'diam' 'gaze'}
                 for stream = reshape(fieldnames(EYE(dataidx).(datatype{:})), 1, [])
                     currEpoch.(datatype{:}).(stream{:}) = EYE(dataidx).(datatype{:}).(stream{:})(currEpoch.absLatencies);

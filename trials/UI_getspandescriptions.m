@@ -1,6 +1,6 @@
-function spans = UI_getspandescriptions(EYE, spanName)
+function spandescs = UI_getspandescriptions(EYE, spanName)
 
-spans = struct([]);
+spandescs = struct([]);
 eventTypes = unique(mergefields(EYE, 'event', 'type'));
 
 while true
@@ -26,7 +26,7 @@ while true
     currSpan.lims(2).bookend = str2double(inputdlg(...
         sprintf('%s ends how many seconds relative to %s?', spanName, currSpan.lims(2).event)));
     
-    spans = cat(2, spans, currSpan);
+    spandescs = cat(2, spandescs, currSpan);
 
     q = sprintf('define more %ss?', spanName);
     a = questdlg(q, q, 'Yes', 'No', 'Yes');
