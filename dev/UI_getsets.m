@@ -114,7 +114,7 @@ bins = findobj(f, 'Tag', 'binsBox');
 UserData = get(f, 'UserData');
 UserData.binDescriptions(get(bins, 'Value')) = [];
 String = get(bins, 'String');
-String(get(bins, Value)) = [];
+String(get(bins, 'Value')) = [];
 set(bins, 'String', String);
 set(bins, 'Value', []);
 set(f, 'UserData', UserData);
