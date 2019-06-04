@@ -20,13 +20,13 @@ uicontrol(parent,...
     'Units', 'normalized',...
     'Position', [0.01 0.01 0.98 0.08],...
     'Callback', @(h,e) selectbyregexp(h),...
-    'KeyReleaseFcn', @(h,e) enterdo(e, @() selectbyregexp(h)))
+    'KeyPressFcn', @(h,e) enterdo(e, @() selectbyregexp(h)))
 
 end
 
 function selectbyregexp(src)
 
-listBox = findobj(src.Parent, 'Style', 'listbox');
-listBox.Value = find(~cellfun(@isempty, regexp(listBox.String, src.String)));
+listBox = findobj(get(src, 'Parent'), 'Style', 'listbox');
+set(listBox, 'Value', find(~cellfun(@isempty, regexp(get(listBox, 'String'), get(src, 'String')))));
 
 end

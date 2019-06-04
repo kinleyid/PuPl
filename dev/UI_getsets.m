@@ -7,7 +7,7 @@ f = figure(...
     'NumberTitle', 'off',...
     'Name', sprintf('Create %ss', setsname),...
     'UserData', struct(...
-        'binDescriptions', [],...
+        'binDescriptions', struct([]),...
         'setsname', setsname));
 %% Left panel
 createBinsPanel = uipanel(f,...
@@ -73,8 +73,8 @@ uicontrol(binControlPanel,...
 %%
 uicontrol(findobj(f, 'Tag', 'binName'));
 uiwait(f);
-if isvalid(f)
-    AOIsets = f.UserData.binDescriptions;
+if isgraphics(f)
+    AOIsets = getfield(get(f, 'UserData'), 'binDescriptions');
     close(f);
 else
     AOIsets = [];
@@ -90,11 +90,11 @@ eps = findobj(get(h, 'Parent'), 'Style', 'listbox');
 bins = findobj(f, 'Tag', 'binsBox');
 priorBinsValue = get(bins, 'Value');
 binName = findobj(f, 'Tag', 'binName');
-bins.String = [bins.String; cellstr(binName.String)];
+set(bins, 'String', [get(bins, 'String'); cellstr(get(binName, 'String'))]);
 
 epsString = get(eps, 'String');
 UserData.binDescriptions = cat(2, UserData.binDescriptions,...
-    struct('name', binName.String,...
+    struct('name', get(binName, 'String'),...
         'members', {epsString(get(eps, 'Value'))}));  
 
 set(binName, 'String', sprintf('New %s', UserData.setsname));
@@ -111,17 +111,21 @@ function deletebins(varargin)
 
 f = gcbf;
 bins = findobj(f, 'Tag', 'binsBox');
-f.UserData.binDescriptions(bins.Value) = [];
-bins.String(bins.Value) = [];
-bins.Value = [];
+UserData = get(f, 'UserData');
+UserData.binDescriptions(get(bins, 'Value')) = [];
+String = get(bins, 'String');
+String(get(bins, Value)) = [];
+set(bins, 'String', String);
+set(bins, 'Value', []);
+set(f, 'UserData', UserData);
 
 end
 
-function ifkeydo(e, key, do)
+function ifkeydo(e, key, fn)
 
 switch e.Key
     case key
-        feval(do);
+        feval(fn);
 end
 
 end
