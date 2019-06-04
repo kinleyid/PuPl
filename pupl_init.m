@@ -16,12 +16,14 @@ cd(fileparts(which('pupl_init.m')))
 addpath(pwd)
 
 % Add built-in subdirectories
-fprintf('Loading source...\n')
+fprintf('Loading source');
 for subdir = {'base' 'UI' 'file' 'process' 'trials' 'experiment' 'plot' 'stats' 'dev'}
     cd(subdir{:})
     addpath(genpath(pwd)) % Add folder and subfolders
+    fprintf('.');
     cd('..')
 end
+fprintf('\n');
 
 if ~any(strcmpi(varargin, 'noGlobals'))
     fprintf('Initializing global variables...\n')
