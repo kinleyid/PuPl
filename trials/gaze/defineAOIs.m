@@ -88,6 +88,8 @@ fprintf('Done\n');
 
 end
 
+end
+
 function aoidescs = UI_getaoidescs(EYE, type)
 
 aoidescs = struct([]);
