@@ -32,9 +32,13 @@ if overwrite
 end
 
 if isempty(p.Results.binDescriptions)
-    binDescriptions = UI_getbindescriptions(EYE);
+    binDescriptions = UI_getsets(unique({EYE.event.type}), 'trial set');
     if isempty(binDescriptions)
         return
+    else
+        % A little code duct tape
+        binDescriptions.epochs = binDescriptions.members;
+        rmfield(binDescriptions, 'members');
     end
 else
     binDescriptions = p.Results.binDescriptions;

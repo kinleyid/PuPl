@@ -2,23 +2,31 @@ function deleteinactive(dataType)
 
 global userInterface
 
+UserData = get(userInterface, 'UserData');
 switch dataType
     case 'eye data'
         global eyeData
-        currIdx = ~userInterface.UserData.activeEyeDataIdx;
+        dots = repmat({' '}, 1, numel(eyeData));
+        dots(UserData.activeEyeDataIdx) = {'>'};
+        [~, currIdx] = listdlg(...
+            'ListString', strcat(dots, {eyeData.name}),...
+            'PromptString', 'Remove which?');
+        % currIdx = ~UserData.activeEyeDataIdx;
         for currData = reshape(eyeData(currIdx), 1, [])
             fprintf('Removing %s\n', currData.name);
         end
         eyeData(currIdx) = [];
-        userInterface.UserData.activeEyeDataIdx(currIdx) = [];
+        UserData.activeEyeDataIdx(currIdx) = [];
     case 'event logs'
         global eventLogs
-        currIdx = ~userInterface.UserData.activeEventLogsIdx;
+        currIdx = ~UserData.activeEventLogsIdx;
         for currData = reshape(eventLogs(currIdx), 1, [])
             fprintf('Removing %s\n', currData.name);
         end
         eventLogs(currIdx) = [];
-        userInterface.UserData.activeEventLogsIdx(currIdx) = [];
+        UserData.activeEventLogsIdx(currIdx) = [];
 end
+
+set(userInterface, 'UserData', UserData);
 
 end

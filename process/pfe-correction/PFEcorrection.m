@@ -25,8 +25,8 @@ for dataIdx = 1:numel(EYE)
         rand - 0.5                          % 1 Cx Should be approx. 0
         -1.5*range(EYE.gaze.y)              % 2 Cy Roughly one screen height above camera
         8*range(EYE.gaze.y)                 % 3 Cz Roughly 4 screen heights distance from camera
-        median(EYE.gaze.x, 'omitnan')       % 4 Tx0 Participant should be looking roughly at center of screen
-        median(EYE.gaze.y, 'omitnan')       % 5 Ty0 Ditto
+        nanmedian_bc(EYE.gaze.x)       % 4 Tx0 Participant should be looking roughly at center of screen
+        nanmedian_bc(EYE.gaze.y)       % 5 Ty0 Ditto
         9*range(EYE.gaze.y)                 % 6 Tz One screen height distance between camera and screen
     ];
     options = optimset('PlotFcns',@optimplotfval);
@@ -74,7 +74,7 @@ EYE = applyPFEcorrection(EYE, coords);
 
 [d0, density] = computePFEsurface(EYE, varargin{:});
 
-err = (((d0 - mean(d0(:), 'omitnan'))/mean(d0(:), 'omitnan')).^2).*density;
-err = median(err(:), 'omitnan');
+err = (((d0 - nanmean_bc(d0(:)))/nanmean_bc(d0(:))).^2).*density;
+err = nanmedian_bc(err(:));
 
 end

@@ -129,12 +129,12 @@ uicontrol(controlPanel,...
     'Units', 'normalized',...
     'Position', [0.51 0.01 0.48 0.08])
 
-plotErrorSurf(f, f.UserData.currPlotType);
+plotErrorSurf(f, getfield(get(f, 'UserData', 'currPlotType'));
 
 uiwait(f);
 if isvalid(f)
-    errorSurf = f.UserData.errorSurf;
-    flip = f.UserData.flip;
+    errorSurf = getfield(get(f, 'UserData', 'errorSurf'));
+    flip = getfield(get(f, 'UserData', 'flip');
     close(f);
 else
     errorSurf = [];
@@ -154,7 +154,7 @@ else
     f = gcbf;
 end
 
-EYE = f.UserData.EYE;
+EYE = getfield(get(f, 'UserData'), 'EYE');
 
 gridN = str2num(get(getcomponentbytag(f, 'controlPanel', 'gridN'), 'String'));
 trimPpn = str2num(get(getcomponentbytag(f, 'controlPanel', 'trimPpn'), 'String'));
@@ -162,10 +162,12 @@ inputRange = str2num(get(getcomponentbytag(f, 'controlPanel', 'inputRange'), 'St
 boxcar = str2num(get(getcomponentbytag(f, 'controlPanel', 'boxcar'), 'String'));
 
 fprintf('Computing error surface...')
-f.UserData.errorSurf = struct(...
+UserData = get(f, 'UserData');
+UserData.errorSurf = struct(...
     'surface', computePFEsurface,...
     'x', ranges.x,...
     'y', ranges.y);
+set(f, 'UserData', UserData);
 fprintf('Plotting...')
 axes(getcomponentbytag(f, 'errorSurface'));
 if any(strcmpi(varargin, 'density'))
@@ -193,12 +195,13 @@ end
 function flipycoords
 
 f = gcbf;
-if f.UserData.flip
-    f.UserData.flip = false;
+UserData = get(f, 'UserData');
+if UserData.flip
+    UserData.flip = false;
 else
-    f.UserData.flip = true;
+    UserData.flip = true;
 end
-f.UserData.EYE.gaze.y = -f.UserData.EYE.gaze.y;
-plotErrorSurf(f.UserData.EYE, f, f.UserData.currPlotType)
-
+UserData.EYE.gaze.y = -UserData.EYE.gaze.y;
+plotErrorSurf(UserData.EYE, f, UserData.currPlotType)
+set(f, 'UserData', UserData);
 end

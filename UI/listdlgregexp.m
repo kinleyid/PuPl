@@ -13,7 +13,7 @@ else
     listString = p.Results.ListString;
 end
 if isempty(p.Results.PromptString)
-    prompt = '';
+    [prompt, figTitle] = deal('');
 else
     [prompt, figTitle] = deal(p.Results.PromptString);
 end
@@ -33,6 +33,7 @@ panel = uipanel(f,...
     'Units', 'normalized',...
     'Position', [0.01 0.11 0.98 0.78]);
 listboxregexp(panel, listString);
+set(findobj(f, 'Style', 'listbox'), 'KeyPressFcn', @enterkeyuiresume);
 uicontrol(f,...
     'Style', 'pushbutton',...
     'String', 'Done',...
@@ -44,9 +45,9 @@ uicontrol(f,...
 uicontrol(findobj(f, 'Style', 'edit'))
 
 uiwait(f);
-if isvalid(f)
+if isgraphics(f)
     listBox = findobj(panel, 'Style', 'listbox');
-    idx = listBox.Value;
+    idx = get(listBox, 'Value');
     close(f);
 else
     idx = [];

@@ -2,8 +2,10 @@
 function listboxregexp(parent, contents)
 
 %   Inputs
-% parent--grapgics object
+% parent--graphics object
 % contents--cell array of char
+
+contents = cellstr(contents);
 
 % List box
 uicontrol(parent,...
@@ -21,7 +23,6 @@ uicontrol(parent,...
     'Position', [0.01 0.01 0.98 0.08],...
     'Callback', @(h,e) selectbyregexp(h),...
     'KeyPressFcn', @(h,e) enterdo(e, @() selectbyregexp(h)))
-
 end
 
 function selectbyregexp(src)

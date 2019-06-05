@@ -154,17 +154,19 @@ else
     f = gcbf;
 end
 
-EYE = f.UserData.EYE;
+UserData = get(f, 'UserData');
+
+EYE = UserData.EYE;
 
 gridN = str2num(get(getcomponentbytag(f, 'controlPanel', 'gridN'), 'String'));
 trimPpn = str2num(get(getcomponentbytag(f, 'controlPanel', 'trimPpn'), 'String'));
 inputRange = str2num(get(getcomponentbytag(f, 'controlPanel', 'inputRange'), 'String'));
 boxcar = str2num(get(getcomponentbytag(f, 'controlPanel', 'boxcar'), 'String'));
 
-f.UserData.gridN = gridN;
-f.UserData.trimPpn = trimPpn;
-f.UserData.inputRange = inputRange;
-f.UserData.boxcar = boxcar;
+UserData.gridN = gridN;
+UserData.trimPpn = trimPpn;
+UserData.inputRange = inputRange;
+UserData.boxcar = boxcar;
 
 fprintf('Computing error surface...\n')
 [surface, density, x, y] = computePFEsurface(EYE, gridN, trimPpn, inputRange, boxcar);
@@ -189,6 +191,8 @@ ylabel('Gaze y');
 c = colorbar;
 c.Label.String = cbarLabel;
 
+set(f, 'UserData', UserData);
+
 fprintf('done\n')
 
 end
@@ -196,12 +200,15 @@ end
 function flipycoords
 
 f = gcbf;
-if f.UserData.flip
-    f.UserData.flip = false;
+UserData = get(f, 'UserData');
+if UserData.flip
+    UserData.flip = false;
 else
-    f.UserData.flip = true;
+    UserData.flip = true;
 end
-f.UserData.EYE.gaze.y = -f.UserData.EYE.gaze.y;
+UserData.EYE.gaze.y = -UserData.EYE.gaze.y;
 plotErrorSurf(f.UserData.EYE, f, f.UserData.currPlotType)
+
+set(f, 'UserData', UserData);
 
 end

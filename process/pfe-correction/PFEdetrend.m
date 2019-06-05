@@ -108,7 +108,7 @@ uiwait(f);
 
 if isvalid(f)
     updateplot(f);
-    detrendParams = f.UserData.detrendParams;
+    detrendParams = getfield(get(f, 'UserData'), 'detrendParams');
     close(f);
 else
     detrendParams = [];
@@ -124,26 +124,27 @@ else
     f = gcbf;
 end
 
-badIdx = false(size(f.UserData.y));
+UserData = get(f, 'UserData');
+badIdx = false(size(UserData.y));
 for limType = {'lower' 'upper'}
     currLim = getlim(f, limType);
     if strcmp(limType, 'lower')
-        badIdx = badIdx | f.UserData.y < currLim;
+        badIdx = badIdx | UserData.y < currLim;
     else
-        badIdx = badIdx | f.UserData.y > currLim;
+        badIdx = badIdx | UserData.y > currLim;
     end
 end
 
-y = f.UserData.y(:);
-d = f.UserData.d(:);
+y = UserData.y(:);
+d = UserData.d(:);
 
 badIdx = badIdx | isnan(d) | isnan(y);
-if strcmp(f.UserData.axis, 'y')
+if strcmp(UserData.axis, 'y')
     detrendParams = polyfit(y(~badIdx), d(~badIdx), 1);
-elseif strcmp(f.UserData.axis, 'x')
+elseif strcmp(UserData.axis, 'x')
     detrendParams = polyfit(y(~badIdx), d(~badIdx), 2);
 end
-f.UserData.detrendParams = detrendParams;
+UserData.detrendParams = detrendParams;
 
 axes(findobj(f, 'Type', 'axes', 'Tag', 'scatter'));
 cla; hold on
@@ -155,18 +156,21 @@ newLine = polyval(detrendParams, sort(y(~badIdx)));
 % newLine = [y(:) ones(size(d(:)))] * detrendParams;
 plot(sort(y(~badIdx)), newLine, 'r');
 % plot([min(y(~badIdx)); max(y(~badIdx))], newLine, 'r');
-xlabel(['Gaze ' f.UserData.axis]);
+xlabel(['Gaze ' UserData.axis]);
 ylabel('Pupil diameter');
+
+set(f, 'UserData', UserData);
 
 end
 
 function currLim = getlim(f, limType)
 
+UserData = get(f, 'UserData');
 limType = cellstr(limType);
 currStr = get(findobj(f, 'Tag', [limType{:}]), 'String');
 if ~isempty(strfind(currStr, '%'))
     ppn = str2double(strrep(currStr, '%', ''))/100;
-    vec = sort(f.UserData.y);
+    vec = sort(UserData.y);
     vec = vec(~isnan(vec));
     if strcmp(limType, 'lower')
         currLim = vec(max(1, round(ppn*numel(vec))));
