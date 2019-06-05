@@ -80,10 +80,10 @@ for dataidx = 1:numel(EYE)
                         'b', repmat(currAOIdesc.coords(4), 1, numel(allLatencies{latidx}))...
                         );
             EYE(dataidx).aoi = cat(1, EYE(dataidx).aoi, currAOI);
+            end
         end
-    end
     EYE(dataidx).history = cat(1, EYE(dataidx).history, callstr);
-end
+    end
 fprintf('Done\n');
 
 end
