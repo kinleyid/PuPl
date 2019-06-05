@@ -103,13 +103,13 @@ end
 
 function y = eyemean(v, varargin)
 
-y = mean(v, 'omitnan');
+y = nanmean_bc(v);
 
 end
 
 function y = eyemedian(v, varargin)
 
-y = median(v, 'omitnan');
+y = nanmedian_bc(v);
 
 end
 
@@ -119,7 +119,7 @@ if numel(v) > 1
     x = (sLat:eLat) - latIdx;
     s = max(eLat - latIdx, latIdx - sLat);
     g = exp(-((((x)/(s/3)).^2)));
-    y = sum(g(:) .* v(:), 'omitnan');
+    y = nansum_bc(g(:) .* v(:));
     y = y / sum(g(~isnan(v)));
 end
 

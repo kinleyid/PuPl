@@ -2,7 +2,12 @@
 function outstr = all2str(arg)
 
 if isnumeric(arg) || islogical(arg)
-    outstr = regexprep(sprintf('[%s]', num2str(arg)), '\s+', ' ');
+    if numel(arg) > 1
+        fmt = '[%s]';
+    else
+        fmt = '%s';
+    end
+    outstr = regexprep(sprintf(fmt, num2str(arg)), '\s+', ' ');
 elseif ischar(arg)
     outstr = sprintf('''%s''', arg);
 elseif iscell(arg)
@@ -12,15 +17,11 @@ elseif iscell(arg)
     end
     outstr = sprintf('%s\b}', outstr);
 elseif isstruct(arg)
-    if isfield(arg, 'loadstr')
-        outstr = arg.loadstr;
-    else
-        outstr = 'struct(';
-        for field = reshape(fieldnames(arg), 1, [])
-            outstr = sprintf('%s''%s'', %s, ', outstr, field{:}, all2str({arg.(field{:})}));
-        end
-        outstr = sprintf('%s\b\b)', outstr);
+    outstr = 'struct(';
+    for field = reshape(fieldnames(arg), 1, [])
+        outstr = sprintf('%s''%s'', %s, ', outstr, field{:}, all2str({arg.(field{:})}));
     end
+    outstr = sprintf('%s\b\b)', outstr);
 elseif isempty(arg)
     outstr = '[]';
 end

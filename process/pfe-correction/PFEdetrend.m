@@ -14,7 +14,7 @@ if isempty(p.Results.detrendParams)
         if isfield(EYE(dataidx).diam, 'both')
             currData = EYE(dataidx).diam.both(:);
         else
-            currData = mean([EYE(dataidx).diam.left(:) EYE(dataidx).diam.right(:)], 2, 'omitnan');
+            currData = nanmean_bc([EYE(dataidx).diam.left(:) EYE(dataidx).diam.right(:)], 2);
         end
         currCoord = EYE(dataidx).gaze.(axis)(:);
         currDetrendParams = UI_getdetrendparams(currCoord, currData, axis, EYE(dataidx).name);
@@ -40,7 +40,7 @@ for dataidx = 1:numel(EYE)
         fprintf('Diam = C + %f*gaze_x + %f*gaze_x^2\n', currDetrendParams(2), currDetrendParams(1))
     end
     est = polyval(currDetrendParams, EYE(dataidx).gaze.(axis));
-    est = est - mean(est, 'omitnan');
+    est = est - nanmean_bc(est);
     for stream = reshape(fieldnames(EYE(dataidx).diam), 1, [])
         EYE(dataidx).diam.(stream{:}) = EYE(dataidx).diam.(stream{:}) - est;
     end

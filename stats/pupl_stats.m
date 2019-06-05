@@ -77,7 +77,7 @@ switch lower(stat)
         statcompfun = @(x) max(x) - min(x);
         columnNames = [columnNames 'PeakToPeakDiff'];
     case 'variance'
-        statcompfun = @(x) var(x, 'omitnan');
+        statcompfun = @(x) nanvar_bc(x);
         columnNames = [columnNames 'PeakToPeakDiff'];
 end
 
@@ -97,7 +97,7 @@ for dataidx = 1:numel(EYE)
         latidx = find(relLats == currwin(1)):find(relLats == currwin(2));
         if strcmp(trialwise, 'Compute stat of trial average')
             nRows = 1;
-            data = mean(EYE(dataidx).bin(binidx).data.both(:, latidx), 'omitnan');
+            data = nanmean_bc(EYE(dataidx).bin(binidx).data.both(:, latidx));
         else
             nRows = size(EYE(dataidx).bin(binidx).data.both, 1);
             data = EYE(dataidx).bin(binidx).data.both(:, latidx);
@@ -107,7 +107,7 @@ for dataidx = 1:numel(EYE)
             currStats(rowidx) = feval(statcompfun, data(rowidx, :));
         end
         if strcmp(trialwise, 'Compute average of trial stats')
-            currStats = mean(currStats, 'omitnan');
+            currStats = nanmean_bc(currStats);
         end
         if strcmp(trialwise, 'Compute stats per trial')
             newTable = table(...
@@ -120,7 +120,7 @@ for dataidx = 1:numel(EYE)
             newTable = table(...
                 cellstr(EYE(dataidx).name),...
                 cellstr(EYE(dataidx).bin(binidx).name),...
-                mean(currStats, 'omitnan'),...
+                nanmean_bc(currStats),...
                 'VariableNames', columnNames);
         end
         statsTable = cat(1, statsTable, newTable);

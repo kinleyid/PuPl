@@ -41,7 +41,7 @@ if p.Results.batch
     for dataidx = 1:numel(structArray)
         data = structArray(dataidx);
         fprintf('Saving %s\n', data.name);
-        save(sprintf('%s', path, data.name, fileExt), 'data', '-v4');
+        save(sprintf('%s', path, data.name, fileExt), 'data', '-ascii');
     end
 else
     path = '';
@@ -50,10 +50,19 @@ else
         [file,path] = uiputfile(sprintf('%s', path, data.name, fileExt),...
             sprintf('Save %s', data.name));
         if file == 0
+            if dataidx > 1
+                fprintf('Done\n');
+            end
             return
         end
         fprintf('Saving %s\n', data.name);
-        save(sprintf('%s', path, file, fileExt), 'data');
+        save(sprintf('%s', path, file, fileExt), 'data', '-v6');
+        %{
+        fid = fopen(sprintf('%s', path, file, fileExt), 'w');
+        fprintf(fid, all2str(structArray));
+        fclose(fid);
+        %}
+        % save(sprintf('%s', path, file, fileExt), 'data', '-ascii');
     end
 end
 

@@ -1,7 +1,7 @@
 function enterdo(e, func)
 
 if strcmp(e.Key, 'return')
-    func();
+    feval(func);
 end
 
 end

@@ -18,7 +18,7 @@ for dataidx = 1:numel(EYE)
                 for fld = {'x' 'y'}
                     EYE(dataidx).gaze.(fld{:})(...
                         islandidx &...
-                        ~isnan(EYE(dataidx).gaze.(fld{:}))) = mean(EYE(dataidx).gaze.(fld{:})(islandidx), 'omitnan');
+                        ~isnan(EYE(dataidx).gaze.(fld{:}))) = nanmean_bc(EYE(dataidx).gaze.(fld{:})(islandidx));
                 end
                 islandidx(islandidx) = false;
             end

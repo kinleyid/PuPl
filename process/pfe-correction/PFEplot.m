@@ -45,7 +45,7 @@ widths = structfun(@(x) (x(2) - x(1))*boxCar, ranges, 'un', 0);
 if isfield(EYE.data, 'both')
     dataVector = EYE.data.both;
 else
-    dataVector = mean([EYE.data.left; EYE.data.right], 'omitnan');
+    dataVector = nanmean_bc([EYE.data.left; EYE.data.right]);
 end
 
 for xi = 1:numel(ranges.x)
@@ -53,7 +53,7 @@ for xi = 1:numel(ranges.x)
         currIdx = abs(EYE.gaze.x - ranges.x(xi)) <= widths.x...
             & abs(EYE.gaze.y - ranges.y(yi)) <= widths.y...
             & ~EYE.isBlink;
-        averages(yi, xi) = mean(dataVector(currIdx), 'omitnan');
+        averages(yi, xi) = nanmean_bc(dataVector(currIdx));
         densities(yi, xi) = nnz(currIdx);
     end
 end

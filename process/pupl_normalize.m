@@ -40,19 +40,19 @@ callStr = sprintf('%s''scale'', %s)', callStr, all2str(scale));
 
 switch center
     case 'mean'
-        centerfunc = @(x) x - mean(x, 'omitnan');
+        centerfunc = @(x) x - nanmean_bc(x);
     case 'median'
-        centerfunc = @(x) x - median(x, 'omitnan');
+        centerfunc = @(x) x - nanmedian_bc(x);
     otherwise
         centerfunc = @(x) x;
 end
 switch scale
     case 'mean'
-        scalefunc = @(x) x / mean(x, 'omitnan');
+        scalefunc = @(x) x / nanmean_bc(x);
     case 'median'
-        scalefunc = @(x) x / median(x, 'omitnan');
+        scalefunc = @(x) x / nanmedian_bc(x);
     case 'stdev'
-        scalefunc = @(x) x / std(x, 'omitnan');
+        scalefunc = @(x) x / nanstd_bc(x);
     otherwise
         scalefunc = @(x) x;
 end

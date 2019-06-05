@@ -44,7 +44,10 @@ end
 function threshold = UI_getthreshold(EYE)
 
 vel = computevel(EYE);
-[y,edges] = histcounts(vel);
+k = ceil(2*numel(vel)^(1/3));
+edges = linspace(min(vel)-eps, max(vel)+eps, k);
+y = histc(vel, edges);
+y = y(1:end-1);
 x = edges(1:end-1) + diff(edges)/2;
 
 f = figure(...
@@ -84,7 +87,7 @@ plotrejection(f)
 uiwait(f)
 if isgraphics(f)
     teditbox = findobj(f, 'Tag', 'threshold');
-    threshold = str2double(teditbox.String);
+    threshold = str2double(get(teditbox, 'String'));
     close(f)
 else
     threshold = [];
@@ -100,7 +103,7 @@ y = data.y;
 vel = data.vel;
 
 teditbox = findobj(f, 'Tag', 'threshold');
-currThreshold = str2double(teditbox.String);
+currThreshold = str2double(get(teditbox, 'String'));
 
 ax = findobj(f, 'Tag', 'axis');
 axes(ax); cla; hold on

@@ -139,9 +139,9 @@ end
 function outvec = correctionfunc(trialvec, basevec, correctionType)
     switch correctionType
         case 'subtract baseline mean'
-            outvec = trialvec - mean(basevec, 'omitnan');
+            outvec = trialvec - nanmean_bc(basevec);
         case 'percent change from baseline mean'
-            basemean = mean(basevec, 'omitnan');
+            basemean = nanmean_bc(basevec);
             outvec = 100 * (trialvec - basemean) / basemean;
     end
 end

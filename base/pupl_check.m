@@ -9,6 +9,7 @@ defaults = {
     'bin' @(x)struct([])
     'cond' @(x)[]
     'event' @(x)struct([])
+    'isBlink' @(x)false(1, getndata(x))
     'history' @(x){}
     'eventlog' @(x)struct([])
     'datalabel' @(x)repmat(' ', 1, getndata(x) - 1)
