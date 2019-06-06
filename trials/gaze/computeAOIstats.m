@@ -18,8 +18,11 @@ statOptions = {
     'Average fixation duration' @afd
 };
 if isempty(p.Results.stats)
-    stats = allEventTypes(listdlgregexp('PromptString', 'Compute which stats?',...
-            'ListString', statOptions(:, 1)));
+    stats = statOptions(listdlgregexp('PromptString', 'Compute which stats?',...
+            'ListString', statOptions(:, 1)), 1);
+    if isempty(stats)
+        return
+    end
 else
     stats = p.Results.stats;
 end
@@ -29,7 +32,6 @@ for dataidx = 1:numel(EYE)
     x = EYE(dataidx).gaze.x;
     y = EYE(dataidx).gaze.y;
     srate = EYE(dataidx).srate;
-    datalabel = EYE(dataidx).datalabel;
     for aoiidx = 1:numel(EYE(dataidx).aoi)
         aoi = EYE(dataidx).aoi(aoiidx);
         switch aoi.type
@@ -47,11 +49,14 @@ for dataidx = 1:numel(EYE)
                           ((aoi.gaze.y - aoi.coords.y)*sin(aoi.coords.theta) +...
                            (aoi.gaze.x - aoi.coords.x)*cos(aoi.coords.theta) ./ aoi.coords.b).^2 < 1;
         end
-        for statidx = find(ismember(statOptions(1, :), stats))
+        for statidx = find(ismember(statOptions(:, 1), stats))
             EYE(dataidx).aoi(aoiidx).stats = cat(2, EYE(dataidx).aoi(aoiidx).stats,...
                 struct(...
                     'name', statOptions{statidx, 1},...
-                    'stat', feval(statOptions{statidx, 2}, isinaoi, srate, datalabel)));
+                    'stat', feval(statOptions{statidx, 2},...
+                                    isinaoi,...
+                                    srate,...
+                                    EYE(dataidx).datalabel(EYE(dataidx).aoi(aoiidx).absLatencies(1:end-1)))));
         end
     end
     EYE(dataidx).history = cat(1, EYE(dataidx).history, callstr);

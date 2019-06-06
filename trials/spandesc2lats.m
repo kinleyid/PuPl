@@ -8,8 +8,8 @@ function latencies = spandesc2lats(EYE, spandesc)
 % latencies--cell array of integer arrays
 
 lims = EYE.srate * [
-    parsetimestr(spandesc.bookends(1), EYE.srate)
-    parsetimestr(spandesc.bookends(2), EYE.srate)
+    parsetimestr(spandesc.bookends{1}, EYE.srate)
+    parsetimestr(spandesc.bookends{2}, EYE.srate)
 ];
 
 starts = find(ismember(spandesc.events{1}, {EYE.event.type}));
