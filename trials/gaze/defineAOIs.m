@@ -31,7 +31,7 @@ fprintf('Defining areas of interest (AOIs)...\n')
 for dataidx = 1:numel(EYE)
     fprintf('\t%s...', EYE(dataidx).name);
     for aoiidx = 1:numel(aoidescs)
-        currAOIdesc = aoidescs{aoiidx};
+        currAOIdesc = aoidescs(aoiidx);
         allLatencies = spandesc2lats(EYE(dataidx), currAOIdesc.spandesc);
         for latidx = 1:numel(allLatencies)
             currAOI = struct(...
@@ -81,8 +81,8 @@ for dataidx = 1:numel(EYE)
                         'b', repmat(currAOIdesc.coords(4), 1, numel(allLatencies{latidx})),...
                         'theta', repmat(currAOIdesc.coords(5), 1, numel(allLatencies{latidx}))...
                         );
-            EYE(dataidx).aoi = cat(1, EYE(dataidx).aoi, currAOI);
             end
+            EYE(dataidx).aoi = cat(1, EYE(dataidx).aoi, currAOI);
         end
     EYE(dataidx).history = cat(1, EYE(dataidx).history, callstr);
     end
