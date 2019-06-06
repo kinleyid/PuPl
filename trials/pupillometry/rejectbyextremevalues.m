@@ -95,9 +95,9 @@ plotrejection(f)
 uiwait(f)
 if isgraphics(f)
     teditbox = findobj(f, 'Tag', 'lowerlim');
-    lowerlim = str2double(teditbox.String);
+    lowerlim = str2double(get(teditbox, 'String'));
     teditbox = findobj(f, 'Tag', 'upperlim');
-    upperlim = str2double(teditbox.String);
+    upperlim = str2double(get(teditbox, 'String'));
     lims = [lowerlim upperlim];
     close(f)
 else
@@ -109,11 +109,12 @@ end
 function plotrejection(f)
 
 teditbox = findobj(f, 'Tag', 'lowerlim');
-lowerlim = str2double(teditbox.String);
+lowerlim = str2double(get(teditbox, 'String'));
 teditbox = findobj(f, 'Tag', 'upperlim');
-upperlim = str2double(teditbox.String);
-allEpochData = [mergefields(f.UserData.data, 'epoch', 'diam', 'left')...
-                mergefields(f.UserData.data, 'epoch', 'diam', 'right')];
+upperlim = str2double(get(teditbox, 'String'));
+UserData = get(f, 'UserData');
+allEpochData = [mergefields(UserData.data, 'epoch', 'diam', 'left')...
+                mergefields(UserData.data, 'epoch', 'diam', 'right')];
 ax = findobj(f, 'Tag', 'axis');
 axes(ax); cla; hold on
 edges = linspace(min(allEpochData), max(allEpochData), 100);

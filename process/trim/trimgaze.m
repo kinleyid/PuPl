@@ -143,7 +143,7 @@ updateplot(f);
 
 uiwait(f);
 
-if isvalid(f)
+if isgraphics(f)
     [~, lims{1}] = getlim(f, 'x', 'Lower');
     [~, lims{2}] = getlim(f, 'x', 'Upper');
     [~, lims{3}] = getlim(f, 'y', 'Lower');
@@ -187,28 +187,31 @@ set(f, 'UserData', UserData);
 
 badIdx.both = badIdx.x | badIdx.y;
 
-axes(findobj(f, 'Type', 'axes', 'Tag', 'middlescatter'));
+ax = findobj(f, 'Type', 'axes', 'Tag', 'middlescatter');
+axes(ax);
 cla;
-scatter(x(~badIdx.both), y(~badIdx.both), 5, 'k', 'filled',...
-    'MarkerFaceAlpha', 0.1,...
-    'MarkerEdgeAlpha', 0.1)
-scatter(x(badIdx.both), y(badIdx.both), 5, 'r', 'filled',...
-    'MarkerFaceAlpha', 0.1,...
-    'MarkerEdgeAlpha', 0.1)
+s = scatter(x(~badIdx.both), y(~badIdx.both), 5, 'k', 'filled');
+try
+    alpha(s, 0.1);
+end
+s = scatter(x(badIdx.both), y(badIdx.both), 5, 'r', 'filled');
+try
+    alpha(s, 0.1);
+end
 xlimits = xlim;
 ylimits = ylim;
-xticks('');
-yticks('');
+set(ax, 'xtick', []);
+set(ax, 'ytick', []);
 axes(findobj(f, 'Tag', 'bottomhist'));
 cla
 hist(x, xlimits(2) - xlimits(1))
 xlim(xlimits);
-yticks('');
+set(gca, 'ytick', []);
 axes(findobj(f, 'Tag', 'lefthist'));
 cla
 hist(y, ylimits(2) - ylimits(1))
 xlim(ylimits)
-yticks('');
+set(gca, 'ytick', []);
 set(gca,'view',[90 -90])
 
 set(findobj(f, 'Tag', 'reporttext'), 'String', sprintf('%0.2f%% trimmed', 100*nnz(badIdx.both)/numel(badIdx.both)));

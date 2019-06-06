@@ -92,7 +92,7 @@ plotrejection(f)
 uiwait(f)
 if isgraphics(f)
     teditbox = findobj(f, 'Tag', 'threshold');
-    threshold = str2double(teditbox.String);
+    threshold = str2double(get(teditbox, 'String'));
     close(f)
 else
     threshold = [];
@@ -103,9 +103,11 @@ end
 function plotrejection(f)
 
 teditbox = findobj(f, 'Tag', 'threshold');
-currThreshold = str2double(teditbox.String);
+currThreshold = str2double(get(teditbox, 'String'));
 
-missingPpns = cell2mat(getmissingppns(f.UserData.data));
+UserData = get(f, 'UserData');
+
+missingPpns = cell2mat(getmissingppns(UserData.data));
 
 proportions = 0:0.01:1;   
 ppnViolating = sum(bsxfun(@ge, missingPpns', proportions))/numel(missingPpns);

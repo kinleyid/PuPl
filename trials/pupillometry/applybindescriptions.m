@@ -43,4 +43,6 @@ for dataidx = 1:numel(EYE)
     end
 end
 
+fprintf('Done\n');
+
 end

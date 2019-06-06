@@ -120,7 +120,7 @@ updateplot(f);
 
 uiwait(f);
 
-if isvalid(f)
+if isgraphics(f)
     [~, leftLims{1}] = getlim(f, 'left', 'Lower');
     [~, leftLims{2}] = getlim(f, 'left', 'Upper');
     [~, rightLims{1}] = getlim(f, 'right', 'Lower');

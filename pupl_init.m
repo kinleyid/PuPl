@@ -63,6 +63,12 @@ if ~any(strcmpi(varargin, 'noAddOns'))
     cd('..');
 end
 
+% Is octave?
+if exist('OCTAVE_VERSION', 'builtin') ~= 0
+    fprintf('Octave detected. Loading packages\n');
+    pkg load statistics
+end
+
 % Navigate back to the user's directory
 cd(previousDir)
 

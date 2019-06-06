@@ -32,7 +32,7 @@ if overwrite
 end
 
 if isempty(p.Results.binDescriptions)
-    binDescriptions = UI_getsets(unique({EYE.event.type}), 'trial set');
+    binDescriptions = UI_getsets(unique({EYE.epoch.name}), 'trial set');
     if isempty(binDescriptions)
         return
     else
