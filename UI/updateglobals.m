@@ -29,8 +29,8 @@ else
     % Are we subsetting or appending?
     if strcmpi(globalVarIndex, 'append')
         % We are appending
-        eval(sprintf('[~, dim] = max(size(%s));', globalVarName));
-        eval(sprintf('%s = cat(dim, %s, codeSmell);', globalVarName, globalVarName));
+        % eval(sprintf('[~, dim] = max(size(%s));', globalVarName));
+        eval(sprintf('%s = cat(2, %s, codeSmell);', globalVarName, globalVarName));
     else
         % We are subsetting
         eval(sprintf('%s(globalVarIndex) = codeSmell;', globalVarName));
