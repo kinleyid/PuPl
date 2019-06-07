@@ -6,11 +6,11 @@ function pupl_stats(EYE, varargin)
 % win--either a numeric vector of 2 latencies or a cell array of 2 time strings
 % byTrial--true or false
 
-statOptions = {
-    'Mean'
-    'Peak-to-peak difference'
-    'Variance'
-};
+statOptions = [ % Name presented to user, function, column name
+    {'Mean'} {@nanmean_bc} {'MeanDiam'};...
+    {'Peak-to-peak difference'} {@(x)(max(x) - min(x))} {'PeakToPeakDiff'};...
+    {'Variance'} {@nanvar_bc} {'Variance'}
+];
 
 trialwiseOptions = {
     'Compute stats per trial'
@@ -19,26 +19,25 @@ trialwiseOptions = {
 };
 
 p = inputParser;
-addParameter(p, 'stat', []);
+addParameter(p, 'stats', []);
 addParameter(p, 'win', []);
 addParameter(p, 'trialwise', []);
 addParameter(p, 'path', []);
 parse(p, varargin{:});
 callStr = sprintf('%s(', mfilename);
 
-if isempty(p.Results.stat)
+if isempty(p.Results.stats)
     sel = listdlg('PromptString', 'Compute which statistic?',...
-        'ListString', statOptions,...
-        'SelectionMode', 'single');
+        'ListString', statOptions(:, 1));
     if isempty(sel)
         return
     else
-        stat = statOptions{sel};
+        stats = reshape(statOptions(sel, 1), 1, []);
     end
 else
-    stat = p.Results.stat;
+    stats = p.Results.stats;
 end
-callStr = sprintf('%s''stat'', %s, ', callStr, all2str(stat));
+callStr = sprintf('%s''stats'', %s, ', callStr, all2str(stats));
 
 if isempty(p.Results.win)
     win = (inputdlg(...
@@ -64,24 +63,28 @@ if isempty(p.Results.trialwise)
 else
     trialwise = p.Results.trialwise;
 end
-callStr = sprintf('%s''trialwise'', %s)', callStr, all2str(trialwise));
+callStr = sprintf('%s''trialwise'', %s, ', callStr, all2str(trialwise));
 
-statsTable = table;
-columnNames = {'Dataset' 'TrialType'};
-
-switch lower(stat)
-    case 'mean'
-        statcompfun = @mean;
-        columnNames = [columnNames 'MeanDiam'];
-    case 'peak-to-peak difference'
-        statcompfun = @(x) max(x) - min(x);
-        columnNames = [columnNames 'PeakToPeakDiff'];
-    case 'variance'
-        statcompfun = @(x) nanvar_bc(x);
-        columnNames = [columnNames 'PeakToPeakDiff'];
+if isempty(p.Results.path)
+    [file, dir] = uiputfile('*');
+    fullpath = sprintf('%s', dir, file);
+else
+    fullpath = p.Results.path;
 end
+callStr = sprintf('%s''path'', %s)', callStr, all2str(fullpath));
 
+statidx = find(ismember(statOptions(:, 1), stats));
+colNames = {'Dataset' 'TrialType'};
+if strcmp(trialwise, 'Compute stats per trial')
+    colNames = [colNames 'Trial'];
+end
+colNames = [colNames reshape(statOptions(statidx, 3), [], 1)];
+
+statsTable = colNames;
+
+fprintf('Computing statistics...\n');
 for dataidx = 1:numel(EYE)
+    fprintf('\t%s...', EYE(dataidx).name);
     if ~isnumeric(win)
         currwin = cellfun(@(x) parsetimestr(x, EYE(dataidx).srate), win);
     else
@@ -95,6 +98,7 @@ for dataidx = 1:numel(EYE)
             relLats = 0:size(bin.data.left, 2) - 1;
         end
         latidx = find(relLats == currwin(1)):find(relLats == currwin(2));
+        
         if strcmp(trialwise, 'Compute stat of trial average')
             nRows = 1;
             data = nanmean_bc(EYE(dataidx).bin(binidx).data.both(:, latidx));
@@ -102,38 +106,45 @@ for dataidx = 1:numel(EYE)
             nRows = size(EYE(dataidx).bin(binidx).data.both, 1);
             data = EYE(dataidx).bin(binidx).data.both(:, latidx);
         end
-        currStats = nan(nRows, 1);
+        
+        currStats = nan(nRows, numel(statidx));
+        
         for rowidx = 1:nRows
-            currStats(rowidx) = feval(statcompfun, data(rowidx, :));
+            for currstatidx = statidx
+                currStats(rowidx, currstatidx) = feval(statOptions{currstatidx, 2}, data(rowidx, :));
+            end
         end
+        
         if strcmp(trialwise, 'Compute average of trial stats')
             currStats = nanmean_bc(currStats);
         end
         if strcmp(trialwise, 'Compute stats per trial')
-            newTable = table(...
-                cellstr(repmat(EYE(dataidx).name, nRows, 1)),...
-                cellstr(repmat(EYE(dataidx).bin(binidx).name, nRows, 1)),...
-                (1:nRows)',...
-                currStats(:),...
-                'VariableNames', [columnNames(1:end-1) 'TrialN' columnNames(end)]);
+            statsTable = [
+                statsTable
+                [
+                    cellstr(repmat(EYE(dataidx).name, nRows, 1))...
+                    cellstr(repmat(EYE(dataidx).bin(binidx).name, nRows, 1))...
+                    num2cell(1:nRows)'...
+                    num2cell(currStats)
+                ];
+            ];
         else
-            newTable = table(...
-                cellstr(EYE(dataidx).name),...
-                cellstr(EYE(dataidx).bin(binidx).name),...
-                nanmean_bc(currStats),...
-                'VariableNames', columnNames);
+            statsTable = [
+                statsTable
+                [
+                    cellstr(EYE(dataidx).name)
+                    cellstr(EYE(dataidx).bin(binidx).name)...
+                    currStats
+                ];
+            ];
         end
-        statsTable = cat(1, statsTable, newTable);
     end
     EYE(dataidx).history = cat(1, EYE(dataidx).history, callStr);
+    fprintf('done\n');
 end
 
-if isempty(p.Results.path)
-    [file, dir] = uiputfile('*');
-    path = sprintf('%s', dir, file);
-else
-    path = p.Results.path;
-end
-writetable(statsTable, path);
+fprintf('Writing to table...\n');
+writecell(fullpath, statsTable, '\t');
+fprintf('Done\n');
 
 end

@@ -12,7 +12,9 @@ for dataidx = 1:numel(EYE)
     end
     fullpath = sprintf('%s', path, file);
     fprintf('Attaching %s to %s\n', file, EYE(dataidx).name);
-    EYE(dataidx).eventlog = feval(loadfunc, fullpath);
+    eventlog = feval(loadfunc, fullpath);
+    eventlog.src = fullpath;
+    EYE(dataidx).eventlog = eventlog;
 end
 fprintf('Done\n');
 

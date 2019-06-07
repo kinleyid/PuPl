@@ -5,6 +5,7 @@ function outStruct = pupl_check(outStruct)
 
 % Fill in default values
 defaults = {
+    'src', @(x)[] 
     'epoch' @(x)struct([])
     'bin' @(x)struct([])
     'cond' @(x)[]
