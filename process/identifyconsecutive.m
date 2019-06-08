@@ -1,7 +1,15 @@
-function idx = identifyconsecutive(vec, n, func)
+function idx = identifyconsecutive(vec, n, func, varargin)
 
-% Identify stretches of at most n elements in vec that return true when
+if numel(varargin) == 1
+    t = varargin{1};
+else
+    t = 'most';
+end
+
+% Identify stretches of elements in vec that return true when
 % func is applied to them
+% t: 'least': at least n elements
+% t: 'most': at most n elements
 
 idx = false(size(vec));
 i = 0;
@@ -12,19 +20,33 @@ while true
         break
     end
     if func(vec(i))
-        j = 0;
+        j = 0; % N. consecutive - 1
         while true
             j = j + 1;
             if i + j > numel(vec)
-                if j - 1 <= n
-                    idx(i:(i+j-1)) = true;
+                switch t
+                    case 'most'
+                        if j <= n
+                            idx(i:(i+j-1)) = true;
+                        end
+                    case 'least'
+                        if j >= n
+                            idx(i:(i+j-1)) = true;
+                        end
                 end
                 flag = true;
                 break
             end
             if ~func(vec(i + j))
-                if j <= n
-                    idx(i:(i+j-1)) = true;
+                switch t
+                    case 'most'
+                        if j <= n
+                            idx(i:(i+j-1)) = true;
+                        end
+                    case 'least'
+                        if j >= n
+                            idx(i:(i+j-1)) = true;
+                        end
                 end
                 i = i + j;
                 break

@@ -1,6 +1,8 @@
 
 function outStructArray = loadtobiiexcel(varargin)
 
+outStructArray = struct([]);
+
 p = inputParser;
 addParameter(p, 'filename', [])
 addParameter(p, 'directory', '.')
@@ -20,7 +22,6 @@ else
 end
 filename = cellstr(filename);
 
-outStructArray = struct([]);
 for fileIdx = 1:numel(filename)
     
     [~, name] = fileparts(filename{fileIdx});
@@ -115,8 +116,7 @@ for fileIdx = 1:numel(filename)
     
     currStruct.event = event;
     
-    outStructArray = [outStructArray
-        currStruct];
+    outStructArray = cat(2, outStructArray, currStruct);
     
 end
 

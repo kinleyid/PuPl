@@ -150,7 +150,7 @@ axes(findobj(f, 'Type', 'axes', 'Tag', 'scatter'));
 cla; hold on
 s = scatter(y(~badIdx), d(~badIdx), 5, 'k', 'filled');
 try
-    alpha(a, 0.1);
+    alpha(s, 0.1);
 end
 newLine = polyval(detrendParams, sort(y(~badIdx)));
 % newLine = [[min(y(~badIdx)); max(y(~badIdx))] ones(2, 1)] * detrendParams;

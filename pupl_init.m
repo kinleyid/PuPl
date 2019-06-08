@@ -53,10 +53,15 @@ if ~any(strcmpi(varargin, 'noAddOns'))
     folderContents = dir;
     for currFolder = reshape(folderContents([folderContents.isdir]), 1, [])
         if ~any(strcmp(currFolder.name, {'.' '..'}))
-            fprintf('\t%s...\n', currFolder.name)
+            fprintf('\t%s...', currFolder.name)
             cd(currFolder.name)
             addpath(genpath(pwd));
-            run('./init.m');
+            try
+                run('./init.m');
+            catch
+                fprintf('no init.m file found');
+            end
+            fprintf('\n')
             cd('..');
         end
     end

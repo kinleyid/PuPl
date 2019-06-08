@@ -49,7 +49,7 @@ end
 
 function [filterType, smoothN] = UI_getfilterinfo
 
-filterOptions = {'Median' 'Mean' 'Gaussian kernel'};
+filterOptions = {'Median' 'Mean'}; % 'Gaussian kernel'};
 
 q = 'Which type of moving average?';
 filterType = questdlg(q, q, filterOptions{:}, 'Median');
@@ -73,14 +73,6 @@ function tempData = applyeyefilter(EYE, dataType, filterType, smoothN)
 % filterType
 % smoothN
 
-if strcmpi(filterType, 'Median')
-    filtfunc = @eyemedian;
-elseif strcmpi(filterType, 'Mean')
-    filtfunc = @eyemean;
-elseif strcmpi(filterType, 'Gaussian kernel')
-    filtfunc = @gaussiankernel;
-end
-
 switch dataType
     case 'Dilation'
         [permData, tempData] = deal(EYE.diam);
@@ -88,31 +80,50 @@ switch dataType
         [permData, tempData] = deal(EYE.gaze);
 end
 
-for stream = reshape(fieldnames(tempData), 1, [])
-    for latIdx = 1:numel(permData.(stream{:}))
-        if ~isnan(tempData.(stream{:})(latIdx))
-            sLat = max(latIdx - smoothN, 1);
-            eLat = min(latIdx + smoothN, numel(tempData.(stream{:})));
-            tempData.(stream{:})(latIdx) = filtfunc(permData.(stream{:})(sLat:eLat),...
-                sLat, eLat, latIdx);
+switch lower(filterType)
+    case {'median' 'mean'}
+        switch lower(filterType)
+            case 'median'
+                try
+                    median(1, 'omitnan');
+                    filtfunc = @(v) median(v, 'omitnan');
+                catch
+                    filtfunc = @nanmedian;
+                end
+            case 'mean'
+                try
+                    median(1, 'omitnan');
+                    filtfunc = @(v) mean(v, 'omitnan');
+                catch
+                    filtfunc = @nanmean;
+                end
         end
-    end
+        % Here's my attempt at optimizing a moving average filter
+        for stream = reshape(fieldnames(tempData), 1, [])
+            fprintf('\t\tFiltering %12s:%12.2f%%', stream{:}, 0);
+            currPrm = [nan(1, smoothN) permData.(stream{:}) nan(1, smoothN)]';
+            currTmp = tempData.(stream{:})';
+            nd = numel(currTmp);
+            currWin = [nan; currPrm(1:2*smoothN)];
+            replidx = repmat((1:2*smoothN+1)', ceil(nd/(2*smoothN+1)), 1);
+            replidx = replidx(1:nd);
+            for latidx = 1:nd
+                fprintf('\b\b\b\b\b\b\b%06.2f%%', 100 * latidx / nd);
+                currWin(replidx(latidx)) = currPrm(latidx + smoothN);
+                if ~isnan(currTmp(latidx))
+                    currTmp(latidx) = filtfunc(currWin);
+                end
+            end
+            tempData.(stream{:}) = currTmp';
+            fprintf('\n');
+        end
+    case 'gaussian kernel'
+        filtfunc = @gaussiankernel;
+        % Not implemented--too slow
 end
 
 end
-
-function y = eyemean(v, varargin)
-
-y = nanmean_bc(v);
-
-end
-
-function y = eyemedian(v, varargin)
-
-y = nanmedian_bc(v);
-
-end
-
+%{
 function y = gaussiankernel(v, sLat, eLat, latIdx)
 
 if numel(v) > 1
@@ -124,3 +135,4 @@ if numel(v) > 1
 end
 
 end
+%}
