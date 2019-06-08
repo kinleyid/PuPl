@@ -423,11 +423,11 @@ classdef Edf2Mat < handle
             % file ...
             header  = obj.Header;
             samples = obj.Samples;
-            events  = obj.Events;
+            evs  = obj.Events;
             edf     = obj.RawEdf;
             thisobj = obj;
             vname   = @(x) inputname(1);
-            builtin('save', obj.matFilename, vname(header), vname(samples), vname(events), vname(edf), vname(thisobj));
+            builtin('save', obj.matFilename, vname(header), vname(samples), vname(evs), vname(edf), vname(thisobj));
         end    
         
         function [timeline, offset] = getTimeline(obj)

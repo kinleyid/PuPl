@@ -98,23 +98,9 @@ switch lower(filterType)
                     filtfunc = @nanmean;
                 end
         end
-        % Here's my attempt at optimizing a moving average filter
         for stream = reshape(fieldnames(tempData), 1, [])
-            fprintf('\t\tFiltering %12s:%12.2f%%', stream{:}, 0);
-            currPrm = [nan(1, smoothN) permData.(stream{:}) nan(1, smoothN)]';
-            currTmp = tempData.(stream{:})';
-            nd = numel(currTmp);
-            currWin = [nan; currPrm(1:2*smoothN)];
-            replidx = repmat((1:2*smoothN+1)', ceil(nd/(2*smoothN+1)), 1);
-            replidx = replidx(1:nd);
-            for latidx = 1:nd
-                fprintf('\b\b\b\b\b\b\b%06.2f%%', 100 * latidx / nd);
-                currWin(replidx(latidx)) = currPrm(latidx + smoothN);
-                if ~isnan(currTmp(latidx))
-                    currTmp(latidx) = filtfunc(currWin);
-                end
-            end
-            tempData.(stream{:}) = currTmp';
+            fprintf('\t\tFiltering %s: %5s', stream{:}, '');
+            tempData.(stream{:}) = mvavfilt(permData.(stream{:}), smoothN, filtfunc);
             fprintf('\n');
         end
     case 'gaussian kernel'

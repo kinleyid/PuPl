@@ -18,7 +18,7 @@ filename = cellstr(filename);
 fprintf('Importing EDF...\n');
 for fileidx = 1:numel(filename)
     fprintf('\t%s: ', filename{fileidx});
-    currStruct = loadEDF(sprintf('%s\\%s', directory, filename{fileidx}));
+    currStruct = load_edf(sprintf('%s/%s', directory, filename{fileidx}));
     outStruct = cat(2, outStruct, currStruct);
 end
 fprintf('Done\n');
