@@ -20,9 +20,9 @@ callStr = sprintf('%s''leftLims'', %s, ''rightLims'', %s)', callStr, all2str(lef
 
 % Convert string limits to numerical limits
 leftLims = [strlim2numlim(leftLims{1}, EYE.diam.left, 'Lower')...
-    strlim2numlim(leftLims{1}, EYE.diam.left, 'Upper')];
+    strlim2numlim(leftLims{2}, EYE.diam.left, 'Upper')];
 rightLims = [strlim2numlim(rightLims{1}, EYE.diam.right, 'Lower')...
-    strlim2numlim(rightLims{1}, EYE.diam.right, 'Upper')];
+    strlim2numlim(rightLims{2}, EYE.diam.right, 'Upper')];
 
 fprintf('Trimming extreme pupil diameter values...\n')
 fprintf('Trimming points where\n')

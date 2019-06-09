@@ -18,6 +18,7 @@ defaults = {
     'datalabel' @(x)repmat(' ', 1, getndata(x) - 1)
     'ndata' @(x)getndata(x)
     'aoi' @(x)struct([])
+    'aoiset' @(x)struct([])
 };
 for defidx = 1:size(defaults, 1)
     currfield = defaults{defidx, 1};
