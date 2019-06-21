@@ -11,9 +11,9 @@ currVersion = '0.9';
 fprintf('Version %s\n', currVersion);
 % Check for updates
 try
-    newestVersion = urlread('https://raw.githubusercontent.com/kinleyid/pupillometry-pipeline/newest.txt');
+    newestVersion = urlread('https://kinleyid.github.io/newest.txt');
     if ~strcmp(newestVersion, currVersion)
-        fprintf('A new version (%s) is out, go to github.com/kinleyid/pupillometry-pipeline to get it\n', newestVersion);
+        fprintf('! A new version (%s) is out, go to github.com/kinleyid/pupillometry-pipeline to get it\n', newestVersion);
     end
 catch
     fprintf('Error checking the web for a new version\n');
