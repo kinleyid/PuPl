@@ -14,7 +14,6 @@ outStructArray = struct([]);
 p = inputParser;
 addParameter(p, 'filename', [])
 addParameter(p, 'directory', '.')
-addParameter(p, 'as', 'eye data')
 parse(p, varargin{:});
 
 directory = p.Results.directory;
@@ -38,26 +37,24 @@ for fileIdx = 1:numel(filename)
     [~, name] = fileparts(filename{fileIdx});
     currStruct = struct(...
         'name', name,...
-        'loadsrc', sprintf('%s\\%s', directory, filename{fileIdx}),...
-        'loadstr', sprintf('%s(''filename'', %s, ''directory'', %s, ''as'', %s)',...
-                mfilename, filename{fileIdx}, directory, p.Results.as));
+        'src', sprintf('%s\\%s', directory, filename{fileIdx}));
     fprintf('Loading %s...\n', filename{fileIdx});
     streams = load_xdf([directory '\\' filename{fileIdx}]);
     streamTypes = cellfun(@(x) x.info.type, streams, 'un', 0);
-    if strcmpi(p.Results.as, 'eye data')
-        if ~exist('eyeDataStreamType', 'var')
-            eyeDataStreamType = streamTypes(listdlg(...
-                'PromptString', 'Which stream contains the eye data?',...
-                'ListString', streamTypes,...
-                'SelectionMode', 'single',...
-                'ListSize', listSize));
-            if isempty(eyeDataStreamType)
-                outStructArray = struct([]);
-                return
-            end
+    if ~exist('eyeDataStreamType', 'var')
+        persistent eyeDataStreamType;
+        eyeDataStreamType = streamTypes(listdlg(...
+            'PromptString', 'Which stream contains the eye data?',...
+            'ListString', streamTypes,...
+            'SelectionMode', 'single',...
+            'ListSize', listSize));
+        if isempty(eyeDataStreamType)
+            outStructArray = struct([]);
+            return
         end
     end
     if ~exist('eventsStreamType', 'var')
+        persistent eventsStreamType;
         eventsStreamTypeOpts = [streamTypes 'none of the above'];
         eventsStreamType = eventsStreamTypeOpts(listdlg(...
             'PromptString', 'Which stream contains the event markers?',...
@@ -89,74 +86,72 @@ for fileIdx = 1:numel(filename)
         event = [];
     end
     
-    if strcmpi(p.Results.as, 'eye data')
-        eyeDataStruct = streams{strcmpi(streamTypes, eyeDataStreamType)};
-        fprintf('\tNominal sample rate: %s Hz\n', eyeDataStruct.info.nominal_srate);
-        srate = eyeDataStruct.info.effective_srate;
-        fprintf('\tEffective sample rate: %f Hz\n', srate);
-        if isempty(eyeDataStruct)
-            fprintf('No eye data in %s\n', filename{fileIdx});
-        else
-            srate = str2double(eyeDataStruct.info.nominal_srate);
-            fprintf('\tReplacing 0s with NaNs\n')
-            eyeDataStruct.time_series(eyeDataStruct.time_series == 0) = NaN;
-            fprintf('\tFound %s channels\n', eyeDataStruct.info.channel_count)
-            channelNames = cellfun(@(x) lower(x.label), eyeDataStruct.info.desc.channels.channel, 'un', 0);
-            data = [];
-            for currField1 = {'diameter' 'gaze'}
-                for currField2 = {'left' 'right'}
-                    for currField3 = {'x' 'y'}
-                        if ~idxSelected
-                            currIdx = listdlg(...
-                                'PromptString', sprintf('Which channel is %s %s %s?', currField2{:}, currField3{:}, currField1{:}),...
-                                'ListString', channelNames,...
-                                'SelectionMode', 'single',...
-                                'ListSize', listSize);
-                            if isempty(currIdx)
-                                outStructArray = struct([]);
-                                return;
-                            else
-                                idx.(currField1{:}).(currField2{:}).(currField3{:}) = currIdx; 
-                            end
+    eyeDataStruct = streams{strcmpi(streamTypes, eyeDataStreamType)};
+    fprintf('\tNominal sample rate: %s Hz\n', eyeDataStruct.info.nominal_srate);
+    srate = eyeDataStruct.info.effective_srate;
+    fprintf('\tEffective sample rate: %f Hz\n', srate);
+    if isempty(eyeDataStruct)
+        fprintf('No eye data in %s\n', filename{fileIdx});
+    else
+        srate = str2double(eyeDataStruct.info.nominal_srate);
+        fprintf('\tReplacing 0s with NaNs\n')
+        eyeDataStruct.time_series(eyeDataStruct.time_series == 0) = NaN;
+        fprintf('\tFound %s channels\n', eyeDataStruct.info.channel_count)
+        channelNames = cellfun(@(x) lower(x.label), eyeDataStruct.info.desc.channels.channel, 'un', 0);
+        data = [];
+        for currField1 = {'diameter' 'gaze'}
+            for currField2 = {'left' 'right'}
+                for currField3 = {'x' 'y'}
+                    if ~idxSelected
+                        currIdx = listdlg(...
+                            'PromptString', sprintf('Which channel is %s %s %s?', currField2{:}, currField3{:}, currField1{:}),...
+                            'ListString', channelNames,...
+                            'SelectionMode', 'single',...
+                            'ListSize', listSize);
+                        if isempty(currIdx)
+                            outStructArray = struct([]);
+                            return;
+                        else
+                            idx.(currField1{:}).(currField2{:}).(currField3{:}) = currIdx; 
                         end
-                        fprintf('\tTreating channel %s as %s %s %s\n',...
-                            channelNames{idx.(currField1{:}).(currField2{:}).(currField3{:})},...
-                            currField2{:},...
-                            currField1{:},...
-                            currField3{:});
-                        if strcmpi(currField1{:}, 'diameter')
-                            data.(currField1{:}).(currField2{:}).(currField3{:}) =...
-                                double(eyeDataStruct.time_series(idx.(currField1{:}).(currField2{:}).(currField3{:}), :));
-                        elseif strcmpi(currField1{:}, 'gaze')
-                            data.(currField1{:}).(currField3{:}).(currField2{:}) =...
-                                double(eyeDataStruct.time_series(idx.(currField1{:}).(currField2{:}).(currField3{:}), :));
-                        end
+                    end
+                    fprintf('\tTreating channel %s as %s %s %s\n',...
+                        channelNames{idx.(currField1{:}).(currField2{:}).(currField3{:})},...
+                        currField2{:},...
+                        currField1{:},...
+                        currField3{:});
+                    if strcmpi(currField1{:}, 'diameter')
+                        data.(currField1{:}).(currField2{:}).(currField3{:}) =...
+                            double(eyeDataStruct.time_series(idx.(currField1{:}).(currField2{:}).(currField3{:}), :));
+                    elseif strcmpi(currField1{:}, 'gaze')
+                        data.(currField1{:}).(currField3{:}).(currField2{:}) =...
+                            double(eyeDataStruct.time_series(idx.(currField1{:}).(currField2{:}).(currField3{:}), :));
                     end
                 end
             end
-            idxSelected = true;
-            if ~isempty(event)
-                % Add latencies to event markers and adjust their time
-                % stamps so that time 0 is the first data sample from the
-                % eye data.
-                times = [event.time] - eyeDataStruct.time_stamps(1);
-                [~, latencies] = min(abs(bsxfun(@minus,...
-                    reshape(eyeDataStruct.time_stamps,...
-                        [], 1),...
-                    reshape([event.time],...
-                        1, []))));
-                % latencies = round(times*srate + 1);
-                times = num2cell(times);
-                latencies = num2cell(latencies);
-                [event.time] = times{:};
-                [event.latency] = latencies{:};
-            end
-            currStruct.diam = data.diameter;
-            currStruct.urDiam = data.diameter;
-            currStruct.srate = srate;
-            currStruct.gaze = data.gaze;
-            currStruct.urGaze = data.gaze;
         end
+        idxSelected = true;
+        if ~isempty(event)
+            % Add latencies to event markers and adjust their time
+            % stamps so that time 0 is the first data sample from the
+            % eye data.
+            times = [event.time] - eyeDataStruct.time_stamps(1);
+            [~, latencies] = min(abs(bsxfun(@minus,...
+                reshape(eyeDataStruct.time_stamps,...
+                    [], 1),...
+                reshape([event.time],...
+                    1, []))));
+            % latencies = round(times*srate + 1);
+            times = num2cell(times);
+            latencies = num2cell(latencies);
+            [event.time] = times{:};
+            [event.latency] = latencies{:};
+        end
+        currStruct.diam = data.diameter;
+        currStruct.urDiam = data.diameter;
+        currStruct.srate = srate;
+        currStruct.gaze = data.gaze;
+        currStruct.urGaze = data.gaze;
     end
     currStruct.event = event;
     fprintf('\tMerging left and right gaze streams\n')

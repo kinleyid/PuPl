@@ -1,5 +1,8 @@
 function EYE = PFEdetrend(EYE, varargin)
 
+% To do:
+% Add 'auto' option
+
 p = inputParser;
 addParameter(p, 'axis', 'y');
 addParameter(p, 'detrendParams', []);

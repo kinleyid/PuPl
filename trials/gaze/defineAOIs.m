@@ -14,6 +14,7 @@ function EYE = defineAOIs(EYE, varargin)
 callstr = sprintf('eyeData = %s(eyeData, ', mfilename);
 p = inputParser;
 addParameter(p, 'type', 'rect');
+addParameter(p, 'moving', false);
 addParameter(p, 'aoidescs', []);
 parse(p, varargin{:});
 
@@ -27,7 +28,7 @@ else
 end
 callstr = sprintf('%s''aoidescs'', %s)', callstr, all2str(aoidescs));
 
-fprintf('Defining areas of interest (AOIs)...\n')
+fprintf('Defining AOIs...\n')
 for dataidx = 1:numel(EYE)
     fprintf('\t%s...', EYE(dataidx).name);
     for aoiidx = 1:numel(aoidescs)
@@ -90,11 +91,10 @@ for dataidx = 1:numel(EYE)
                         'members', {currAOI.name}));
         end
     EYE(dataidx).history = cat(1, EYE(dataidx).history, callstr);
+    fprintf('done\n');
     end
-fprintf('Done\n');
-
 end
-
+fprintf('Done\n');
 end
 
 function aoidescs = UI_getaoidescs(EYE, type)

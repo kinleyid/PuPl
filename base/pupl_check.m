@@ -7,7 +7,8 @@ function outStruct = pupl_check(outStruct)
 defaults = {
     'name', @(x)''
     'srate', @(x)[]
-    'src', @(x)[] 
+    'src', @(x)[]
+    'rawloader', @(x)''
     'epoch' @(x)struct([])
     'bin' @(x)struct([])
     'cond' @(x)[]
@@ -15,10 +16,11 @@ defaults = {
     'isBlink' @(x)false(1, getndata(x))
     'history' @(x){}
     'eventlog' @(x)struct([])
-    'datalabel' @(x)repmat(' ', 1, getndata(x) - 1)
+    'datalabel' @(x)[]
     'ndata' @(x)getndata(x)
     'aoi' @(x)struct([])
     'aoiset' @(x)struct([])
+    'BIDS', @(x)struct('sub', x.name)
 };
 for defidx = 1:size(defaults, 1)
     currfield = defaults{defidx, 1};

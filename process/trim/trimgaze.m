@@ -86,7 +86,7 @@ uicontrol(p1,...
     'Units', 'normalized',...
     'Position', [0.01 0.01 0.18 0.13]);
 axes(ax);
-scatter(x, y);
+scatter(x, y, 5, 'k', 'filled');
 xlimits = xlim;
 ylimits = ylim;
 UserData = get(f, 'UserData');

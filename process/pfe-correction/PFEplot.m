@@ -53,7 +53,7 @@ for xi = 1:numel(ranges.x)
         currIdx = abs(EYE.gaze.x - ranges.x(xi)) <= widths.x...
             & abs(EYE.gaze.y - ranges.y(yi)) <= widths.y...
             & ~EYE.isBlink;
-        averages(yi, xi) = nanmean_bc(dataVector(currIdx));
+        averages(yi, xi) = nanmedian_bc(dataVector(currIdx));
         densities(yi, xi) = nnz(currIdx);
     end
 end

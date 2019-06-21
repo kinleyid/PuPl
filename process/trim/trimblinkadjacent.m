@@ -1,5 +1,5 @@
 
-function EYE = trimblinkadjascent(EYE, varargin)
+function EYE = trimblinkadjacent(EYE, varargin)
 
 p = inputParser;
 addParameter(p, 'blinkParams', []);
@@ -31,7 +31,7 @@ callstr = sprintf('%s''trimLen'', %s)', callstr, all2str(trimLen));
 
 fprintf('Trimming blink-adjascent points\n');
 for dataidx = 1:numel(EYE)
-    fprintf('\t%s...\n', EYE(dataidx).name);
+    fprintf('\tFinding blinks in %s...\n', EYE(dataidx).name);
     currMinBlinkLen = parsetimestr(blinkParams{1}, EYE(dataidx).srate) * EYE(dataidx).srate;
     currMaxBlinkLen = parsetimestr(blinkParams{2}, EYE(dataidx).srate) * EYE(dataidx).srate;
     isblinkmin = ...
@@ -52,7 +52,8 @@ for dataidx = 1:numel(EYE)
         blinkEnds = [blinkEnds EYE(dataidx).ndata];
     end
     nblinks = numel(blinkStarts);
-    fprintf('\t\t%d blinks in %0.2f minutes of recording\n', nblinks, EYE(dataidx).ndata / EYE(dataidx).srate / 60)
+    nmins = EYE(dataidx).ndata / EYE(dataidx).srate / 60;
+    fprintf('\t\t%d blinks in %0.2f minutes of recording (%.2f blinks/min)\n', nblinks, nmins, nblinks/nmins)
     for blinkidx = 1:nblinks
         for stream = reshape(fieldnames(EYE(dataidx).diam), 1, [])
             EYE(dataidx).diam.(stream{:})(...
@@ -63,5 +64,6 @@ for dataidx = 1:numel(EYE)
     end
     EYE(dataidx).history = cat(1, EYE(dataidx).history, callstr);
 end
+fprintf('Done\n');
 
 end

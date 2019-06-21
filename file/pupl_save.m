@@ -41,7 +41,7 @@ if p.Results.batch
     for dataidx = 1:numel(structArray)
         data = structArray(dataidx);
         fprintf('Saving %s\n', data.name);
-        save(sprintf('%s', path, data.name, fileExt), 'data', '-ascii');
+        save(sprintf('%s', path, data.name, fileExt), 'data', '-v6');
     end
 else
     path = '';

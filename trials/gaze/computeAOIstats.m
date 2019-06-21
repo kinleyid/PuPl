@@ -28,9 +28,9 @@ else
 end
 callstr = sprintf('%s''stats'', %s)', callstr, all2str(stats));
 
+fprintf('Computing AOI stats...\n');
 for dataidx = 1:numel(EYE)
-    x = EYE(dataidx).gaze.x;
-    y = EYE(dataidx).gaze.y;
+    fprintf('\t%s...', EYE(dataidx).name);
     srate = EYE(dataidx).srate;
     for aoiidx = 1:numel(EYE(dataidx).aoi)
         aoi = EYE(dataidx).aoi(aoiidx);
@@ -53,14 +53,16 @@ for dataidx = 1:numel(EYE)
             EYE(dataidx).aoi(aoiidx).stats = cat(2, EYE(dataidx).aoi(aoiidx).stats,...
                 struct(...
                     'name', statOptions{statidx, 1},...
-                    'stat', feval(statOptions{statidx, 2},...
+                    'value', feval(statOptions{statidx, 2},...
                                     isinaoi,...
                                     srate,...
                                     EYE(dataidx).datalabel(aoi.absLatencies(1:end-1)))));
         end
     end
     EYE(dataidx).history = cat(1, EYE(dataidx).history, callstr);
+    fprintf('done\n');
 end
+fprintf('Done\n');
 
 end
 

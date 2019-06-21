@@ -99,7 +99,7 @@ switch lower(filterType)
                 end
         end
         for stream = reshape(fieldnames(tempData), 1, [])
-            fprintf('\t\tFiltering %s: %5s', stream{:}, '');
+            fprintf('\t\tFiltering %10s: ', stream{:});
             tempData.(stream{:}) = mvavfilt(permData.(stream{:}), smoothN, filtfunc);
             fprintf('\n');
         end

@@ -40,11 +40,14 @@ for dataidx = 1:numel(EYE)
     s = 1; % window start
     w = round(minFixationMs / 1000 * EYE.srate) - 1; % window size
     e = s + w;
+    fprintf('%6.2f%%', 0);
     while true
         if e > EYE(dataidx).ndata
             EYE(dataidx).datalabel(s:e - 2) = 'f';
+            fprintf('\n');
             break
         else
+            fprintf('\b\b\b\b\b\b\b%6.2f%%', 100 * e / EYE(dataidx).ndata);
             currDispersion =...
                 max(EYE(dataidx).gaze.x(s:e)) - min(EYE(dataidx).gaze.x(s:e)) +...
                 max(EYE(dataidx).gaze.y(s:e)) - max(EYE(dataidx).gaze.y(s:e));
@@ -62,5 +65,49 @@ for dataidx = 1:numel(EYE)
     EYE(dataidx).history = cat(1, EYE(dataidx).history, callstr);
 end
 fprintf('Done\n');
+
+end
+
+function idx = I_DT(x, y, w, thresh)
+
+s = 1; % window start
+w = round(minFixationMs / 1000 * EYE.srate) - 1; % window size
+e = s + w;
+nd = numel(x);
+idx = false(nd - 1, 1);
+fprintf('%6.2f%%', 0);
+currx = x(s:e);
+curry = y(s:e);
+maxx = max(currx);
+minx = min(curry);
+maxy = max(curry);
+miny = min(curry);
+while true
+    currdisp = maxx - minx + maxy - miny;
+    if e > nd
+        idx(s:e - 2) = true;
+        fprintf('\n');
+        break
+    else
+        fprintf('\b\b\b\b\b\b\b%6.2f%%', 100 * e / EYE(dataidx).ndata);
+        if currdisp < thresh
+            e = e + 1; % expand window
+            if x(e) > maxx
+                maxx = x(e);
+            elseif x(e) < minx
+                minx = x(e);
+            end
+            if y(e) > maxy
+                maxy = y(e);
+            elseif y(e) < miny
+                miny = y(e);
+            end
+        else
+            idx(s:e - 2) = true; % Label previous window as fixation
+            s = e;
+            e = s + w;
+        end
+    end
+end
 
 end

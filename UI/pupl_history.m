@@ -1,15 +1,25 @@
 
 function pupl_history(varargin)
 
-if numel(varargin) > 0
-    fid = fopen(sprintf('%s', varargin{:}), 'wt');
+if numel(varargin) > 0 % Save to script file
+    if strcmp(varargin{1}, 'wt') % Manually select 
+        [f, p] = uiputfile('*.m', 'Save pipeline script');
+        if f == 0
+            return
+        else
+            fullpath = sprintf('%s', p, f);
+        end
+    else
+        fullpath = [varargin{:}];
+    end
+    fid = fopen(fullpath, 'wt');
 else
     fid = 1;
 end
 
 global eyeData
 
-fprintf(fid, 'Command history:\n\n');
+fprintf(fid, '%% Command history:\n\n');
 
 if numel(eyeData) > 1
     if ~isequal(eyeData.history)

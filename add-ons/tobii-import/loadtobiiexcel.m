@@ -1,13 +1,6 @@
 
 function outStruct = loadtobiiexcel(fullpath)
 
-outStruct = struct([]);
-
-[~, name] = fileparts(fullpath);
-fprintf('Importing %s\n', name)
-currStruct = struct(...
-    'name', name,...
-    'src', fullpath);
 [~ , ~, R] = xlsread(fullpath);
 
 timestamps = R(2:end, strcmp(R(1, :), 'RecordingTimestamp'));
@@ -41,11 +34,13 @@ for field = {'left' 'right'}
     diam.(field{:}) = reshape(cell2mat(diam.(field{:})), 1, []);
 end
 
-urDiam = [];
-urDiam.left.x = diam.left;
-urDiam.left.y = diam.left;
-urDiam.right.x = diam.right;
-urDiam.right.y = diam.right;
+urDiam = struct(...
+    'left', struct(...
+        'x', diam.left,...
+        'y', diam.left),...
+    'right', struct(...
+        'x', diam.right,...
+        'y', diam.right));
 
 [~, latencies] = min(abs(bsxfun(@minus,...
     reshape(timestamps,...
@@ -69,24 +64,22 @@ for ax = {'x' 'y'}
     end
 end
 
-gaze = [];
-gaze.x = mean([
-    urGaze.x.left
-    urGaze.x.right]);
-gaze.y = mean([
-    urGaze.y.left
-    urGaze.y.right]);
+gaze = struct(...
+    'x', mean([
+            urGaze.x.left
+            urGaze.x.right]),...
+    'y', mean([
+            urGaze.y.left
+            urGaze.y.right]));
 
-currStruct.diam = diam;
-currStruct.urDiam = urDiam;
-currStruct.srate = srate;
-currStruct.gaze = gaze;
-currStruct.urGaze = urGaze;
-
-currStruct.event = event;
+outStruct = struct(...
+    'diam', diam,...
+    'urDiam', urDiam,...
+    'srate', srate,...
+    'gaze', gaze,...
+    'urGaze', urGaze,...
+    'event', event);
 
 outStruct = pupl_check(outStruct);
-
-fprintf('done\n')
 
 end
