@@ -14,6 +14,8 @@ try
     newestVersion = urlread('https://kinleyid.github.io/newest.txt');
     if ~strcmp(newestVersion, currVersion)
         fprintf('! A new version (%s) is out, go to github.com/kinleyid/pupillometry-pipeline to get it\n', newestVersion);
+    else
+        fprintf('You are using the latest version\n');
     end
 catch
     fprintf('Error checking the web for a new version\n');
@@ -26,7 +28,7 @@ addpath(pwd)
 
 % Add built-in subdirectories
 fprintf('Loading source');
-for subdir = {'base' 'UI' 'file' 'process' 'trials' 'experiment' 'plot' 'stats' 'dev'}
+for subdir = {'base' 'UI' 'file' 'process' 'trials' 'experiment' 'plot' 'stats' 'BIDS' 'dev'}
     cd(subdir{:})
     addpath(genpath(pwd)) % Add folder and subfolders
     fprintf('.');

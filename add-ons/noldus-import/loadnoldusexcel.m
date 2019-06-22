@@ -18,7 +18,7 @@ end
 filename = cellstr(filename);
 
 for fileIdx = 1
-    fprintf('Importing %s...\n', filename{fileIdx});
+    % fprintf('Importing %s...\n', filename{fileIdx});
     [~, ~, R] = xlsread([directory '\\' filename{fileIdx}]);
     eventTypes = R(2:end, strcmp(R(1, :), 'Behavior'));
     modifiers = find(~cellfun(@isempty, (regexp(R(1, :), 'Modifier*'))));
@@ -30,7 +30,7 @@ for fileIdx = 1
     end
     eventTimes = cell2mat(R(2:end, strcmp(R(1,:), 'Time_Relative_sf'))); % Time is in seconds
     
-    fprintf('\t%d events found\n', numel(eventTypes));
+    fprintf('%d events found', numel(eventTypes));
     
     eventLogsArray = [
         eventLogsArray
@@ -41,7 +41,7 @@ for fileIdx = 1
                 struct('time', num2cell(eventTimes),...
                        'type', eventTypes))
     ];
-    fprintf('\tdone\n')
+    % fprintf('\tdone\n')
 end
 
 end

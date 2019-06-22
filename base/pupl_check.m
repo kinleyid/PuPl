@@ -8,7 +8,7 @@ defaults = {
     'name', @(x)''
     'srate', @(x)[]
     'src', @(x)[]
-    'rawloader', @(x)''
+    'getraw', @(x)''
     'epoch' @(x)struct([])
     'bin' @(x)struct([])
     'cond' @(x)[]
@@ -32,7 +32,7 @@ for defidx = 1:size(defaults, 1)
 end
 
 % Ensure event labels are strings
-if ~isempty(outStruct.event)
+if ~isempty([outStruct.event])
     for dataidx = 1:numel(outStruct)
         newEvents = cellfun(@num2str, {outStruct(dataidx).event.type}, 'un', 0);
         [outStruct(dataidx).event.type] = newEvents{:};

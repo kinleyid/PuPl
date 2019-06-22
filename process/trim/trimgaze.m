@@ -17,31 +17,32 @@ end
 callStr = sprintf('eyeData = %s(eyeData, ''lims'', %s)', mfilename, all2str(lims));
 
 % Convert string to numerical limits
-lims = [
-    strlim2numlim(lims{1}, EYE.gaze.x, 'Lower')
-    strlim2numlim(lims{2}, EYE.gaze.x, 'Upper')
-    strlim2numlim(lims{3}, EYE.gaze.y, 'Lower')
-    strlim2numlim(lims{4}, EYE.gaze.y, 'Upper')
-];
+
 
 fprintf('Trimming extreme gaze values...\n')
-fprintf('Trimming points where:\n')
-fprintf('x < %0.1f\n', lims(1))
-fprintf('x > %0.1f\n', lims(2))
-fprintf('y < %0.1f\n', lims(3))
-fprintf('y > %0.1f\n', lims(4))
-for dataIdx = 1:numel(EYE)
-    badIdx = EYE(dataIdx).gaze.x < lims(1) |...
-        EYE(dataIdx).gaze.x > lims(2) |...
-        EYE(dataIdx).gaze.y < lims(3) |...
-        EYE(dataIdx).gaze.y > lims(4);
+for dataidx = 1:numel(EYE)
+    numlims = [
+        strlim2numlim(lims{1}, EYE(dataidx).gaze.x, 'Lower')
+        strlim2numlim(lims{2}, EYE(dataidx).gaze.x, 'Upper')
+        strlim2numlim(lims{3}, EYE(dataidx).gaze.y, 'Lower')
+        strlim2numlim(lims{4}, EYE(dataidx).gaze.y, 'Upper')
+    ];
+    fprintf('\t%s: trimming points where:\n', EYE(dataidx).name)
+    fprintf('\t\tx < %0.1f\n', numlims(1))
+    fprintf('\t\tx > %0.1f\n', numlims(2))
+    fprintf('\t\ty < %0.1f\n', numlims(3))
+    fprintf('\t\ty > %0.1f\n', numlims(4))
+    badIdx = EYE(dataidx).gaze.x < numlims(1) |...
+        EYE(dataidx).gaze.x > numlims(2) |...
+        EYE(dataidx).gaze.y < numlims(3) |...
+        EYE(dataidx).gaze.y > numlims(4);
     for field1 = {'gaze' 'diam'} 
-        for field2 = reshape(fieldnames(EYE(dataIdx).(field1{:})), 1, [])
-            EYE(dataIdx).(field1{:}).(field2{:})(badIdx) = nan; 
+        for field2 = reshape(fieldnames(EYE(dataidx).(field1{:})), 1, [])
+            EYE(dataidx).(field1{:}).(field2{:})(badIdx) = nan; 
         end
     end
-    fprintf('\t%s: %0.2f%% of data removed\n', EYE(dataIdx).name, 100*nnz(badIdx)/numel(EYE(dataIdx).isBlink))
-    EYE(dataIdx).history = cat(1, EYE(dataIdx).history, callStr);
+    fprintf('\t%s: %0.2f%% of data removed\n', EYE(dataidx).name, 100*nnz(badIdx)/numel(EYE(dataidx).isBlink))
+    EYE(dataidx).history = cat(1, EYE(dataidx).history, callStr);
 end
 fprintf('done\n')
 
