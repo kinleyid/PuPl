@@ -44,7 +44,7 @@ else
 end 
 callStr = sprintf('%s''eventstoattach'', %s, ''namestoattach'', %s, ', callStr, all2str(eventsToAttach), all2str(namesToAttach));
 
-if p.Results.namestoattach == 0
+if isempty(p.Results.namestoattach)
     namesToAttach = eventsToAttach;
 end
 

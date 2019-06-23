@@ -19,19 +19,24 @@ switch a
             EYE(idx).eventlog = eventlogs(dataidx);
         end
     case 'No'
-        path = '';
+        currpath = '';
+        fullpaths = cell(1, numel(EYE));
         for dataidx = 1:numel(EYE)
-            [file, path] = uigetfile(sprintf('%s*', path), sprintf('Event log for %s', EYE(dataidx).name));
+            [file, currpath] = uigetfile(sprintf('%s*', currpath), sprintf('Event log for %s', EYE(dataidx).name));
             if file == 0
                 return
             end
-            fullpath = sprintf('%s', path, file);
-            fprintf('Attaching %s to %s\n', file, EYE(dataidx).name);
+            fullpath = sprintf('%s', currpath, file);
+            fprintf('Attaching [[%s]] to [[%s]]...', file, EYE(dataidx).name);
             eventlog = feval(loadfunc, fullpath);
             eventlog.src = fullpath;
             EYE(dataidx).eventlog = eventlog;
+            fprintf('done\n');
         end
-        fprintf('Done\n');
+        for dataidx = 1:numel(EYE)
+            
+        end
+        fprintf('\nDone\n');
     otherwise
         return
 end

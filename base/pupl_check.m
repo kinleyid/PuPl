@@ -5,9 +5,9 @@ function outStruct = pupl_check(outStruct)
 
 % Fill in default values
 defaults = {
-    'name', @(x)''
     'srate', @(x)[]
     'src', @(x)[]
+    'name', @(x) getname(x)
     'getraw', @(x)''
     'epoch' @(x)struct([])
     'bin' @(x)struct([])
@@ -77,5 +77,12 @@ elseif ~isempty(EYE.gaze.x)
 elseif ~isempty(EYE.gaze.y)
     ndata = numel(EYE.gaze.y);
 end
+
+end
+
+function name = getname(EYE)
+
+[~, n, x] = fileparts(EYE.src);
+name = [n x];
 
 end

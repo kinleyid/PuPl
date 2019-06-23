@@ -27,5 +27,5 @@ for dataidx = 1:numel(EYE)
     run(scriptpath);
     EYE(dataidx) = eyeData; % Collect result from pipeline
 end
-fprinf('Done\n');
+fprintf('Done\n');
 end

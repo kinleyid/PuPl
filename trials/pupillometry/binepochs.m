@@ -36,9 +36,9 @@ if isempty(p.Results.binDescriptions)
     if isempty(binDescriptions)
         return
     else
-        % A little code duct tape
-        binDescriptions.epochs = binDescriptions.members;
-        rmfield(binDescriptions, 'members');
+        % A little duct tape ~~
+        [binDescriptions(1:numel(binDescriptions)).epochs] = binDescriptions.members;
+        binDescriptions = rmfield(binDescriptions, 'members');
     end
 else
     binDescriptions = p.Results.binDescriptions;

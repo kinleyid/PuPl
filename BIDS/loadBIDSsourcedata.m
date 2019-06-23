@@ -20,9 +20,9 @@ for dataidx = 1:numel(parsed)
     currdata.BIDS = parsed(dataidx).info;
     % Check for event log
     contents = dir(parsed(dataidx).path);
-    eventlogidx = strcmp({contents.name}, [parsed(dataidx).head '_events.tsv']);
+    eventlogidx = strcmp({contents.name}, [stripmod(parsed(dataidx).full) '_events.tsv']);
     if any(eventlogidx)
-        currdata.eventlog = tsv2eventlog(fullfile(currpath, contents(eventlogidx).name));
+        currdata.eventlog = tsv2eventlog(fullfile(parsed(dataidx).path, contents(eventlogidx).name));
     end
     out = [out currdata];
 end

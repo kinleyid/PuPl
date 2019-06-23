@@ -12,6 +12,7 @@ if numel(varargin) > 0 % Save to script file
     else
         fullpath = [varargin{:}];
     end
+    fprintf('Saving processing history to %s...', fullpath);
     fid = fopen(fullpath, 'wt');
 else
     fid = 1;
@@ -29,14 +30,15 @@ if numel(eyeData) > 1
             cellfun(@(x) fprintf(fid, '%s;\n', x), eyeData(idx).history);
         end
     else
-        cellfun(@(x) fprintf(fid, '%s\n', x), eyeData(1).history);
+        cellfun(@(x) fprintf(fid, '%s;\n', x), eyeData(1).history);
     end
 else
-    cellfun(@(x) fprintf(fid, '%s\n', x), eyeData.history);
+    cellfun(@(x) fprintf(fid, '%s;\n', x), eyeData.history);
 end
 
 if fid ~= 1
     fclose(fid);
+    fprintf('done\n');
 end
 
 end

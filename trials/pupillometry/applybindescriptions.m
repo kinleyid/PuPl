@@ -15,7 +15,9 @@ for dataidx = 1:numel(EYE)
     if ~isfield(EYE(dataidx), 'bin')
         EYE(dataidx).bin = [];
     else
-        EYE(dataidx).bin = EYE(dataidx).bin(:)';
+        if ~isempty(EYE(dataidx).bin)
+            EYE(dataidx).bin = EYE(dataidx).bin(:)';
+        end
     end
     for binIdx = 1:numel(binDescriptions)
         binMembers = find(ismember({EYE(dataidx).epoch.name},...

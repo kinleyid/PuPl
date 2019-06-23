@@ -1,43 +1,89 @@
 
-function out = pupl_importraw(loadfunc, varargin)
+function EYE = pupl_importraw(varargin)
 
-% Varargin{1}: true if loading from BIDS raw data
-out = struct([]);
+p = inputParser;
+addParameter(p, 'eyedata', struct([])); % optional
+addParameter(p, 'loadfunc', []); % required
+addParameter(p, 'fullpath', []); % optional
+addParameter(p, 'type', []); % eye or event, required
+parse(p, varargin{:});
 
-q = 'Load BIDS raw data?';
-a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'No');
-switch a
-    case 'Yes'
+EYE = p.Results.eyedata;
+
+if isempty(p.Results.fullpath) % Get path
+    q = 'Load BIDS raw data?';
+    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'No');
+    switch a
+        case 'Yes'
+            usebids = true;
+        case 'No'
+            usebids = false;
+        otherwise
+            return
+    end
+    if usebids
         rawdatapath = uigetdir(pwd, 'Select raw data folder');
         if isnumeric(rawdatapath)
             return
         end
-        out = importBIDSraw(rawdatapath, loadfunc, '_eyetrack.', true);
-    case 'No'
-        [filenames, directory] = uigetfile('*.*',...
-            'MultiSelect', 'on');
-        if isnumeric(filenames)
-            return
+        switch p.Results.type
+            case 'eye'
+                fmt = '_eyetrack.';
+            case 'event'
+                fmt = '_events.';
         end
-        filenames = cellstr(filenames);
-        fprintf('Importing raw data...\n')
-        for dataidx = 1:numel(filenames)
-            fprintf('\t%s...\n', filenames{dataidx});
-            currsrc = fullfile(directory, filenames{dataidx});
-            [~, n, x] = fileparts(currsrc);
-            currdata.name = [n x];
-            currdata = loadfunc(currsrc);
-            currdata.src = currsrc;
-            out = cat(2, out, currdata);
+        parsed = parseBIDS(rawdatapath, fmt);
+        fullpath = {parsed.full};
+    else
+        switch p.Results.type
+            case 'eye'
+                [filenames, directory] = uigetfile('*.*',...
+                    'MultiSelect', 'on');
+                if isnumeric(filenames)
+                    return
+                end
+                fullpath = strcat(directory, cellstr(filenames));
+            case 'event'
+                fullpath = {};
+                for dataidx = 1:numel(EYE)
+                    [filename, directory] = uigetfile('*.*',...
+                        sprintf('Event log for %s', EYE(dataidx).name),...
+                        'MultiSelect', 'off');
+                    if isnumeric(filename)
+                        return
+                    end
+                    fullpath = [fullpath fullfile(directory, filename)];
+                end
         end
-        fprintf('Done\n');
-    otherwise
-        return
+    end
+else
+    fullpath = p.Results.fullpath;
 end
 
-for dataidx = 1:numel(out)
-    out(dataidx).getraw = str2func(sprintf('@()%s(''%s'')', func2str(loadfunc), out(dataidx).src));
-    out(dataidx) = pupl_check(out(dataidx));
+for dataidx = 1:numel(fullpath)
+    fprintf('Loading %s...', fullpath{dataidx});
+    curr = rawloader(p.Results.loadfunc, fullpath{dataidx}); % Get bare data
+    switch p.Results.type
+        case 'eye'
+            curr.getraw = str2func(sprintf('@()pupl_check(rawloader(@%s, ''%s''))', func2str(p.Results.loadfunc), curr.src));
+            if usebids
+                [~, filehead] = fileparts(curr.src);
+                curr.BIDS = parseBIDSfilename(filehead);
+            end
+            EYE = [EYE pupl_check(curr)];
+        case 'event'
+            if usebids
+                matchidx = strcmp(...
+                    stripmod(fullpath{dataidx}),...
+                    cellfun(@stripmod, {EYE.src}, 'un', 0));
+                if any(matchidx)
+                    EYE(matchidx).eventlog = curr;
+                end
+            else
+                EYE(dataidx).eventlog = curr;
+            end
+    end
+    fprintf('done\n');
 end
 
 end

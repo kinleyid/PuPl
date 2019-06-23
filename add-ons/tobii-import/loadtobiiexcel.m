@@ -80,6 +80,4 @@ outStruct = struct(...
     'urGaze', urGaze,...
     'event', event);
 
-outStruct = pupl_check(outStruct);
-
 end

@@ -13,6 +13,7 @@ p = inputParser;
 addParameter(p, 'correctionType', []);
 addParameter(p, 'event', []);
 addParameter(p, 'lims', []);
+addParameter(p, 'mapping', []);
 parse(p, varargin{:});
 
 callStr = sprintf('eyeData = %s(eyeData, ', mfilename);
@@ -32,7 +33,7 @@ else
 end
 callStr = sprintf('%s''correctionType'', %s, ', callStr, all2str(correctionType));
 
-if isempty(p.Results.event) || isempty(p.Results.lims)
+if isempty(p.Results.event) || isempty(p.Results.lims) || isempty(p.Results.mapping)
     mappingOptions = {'one:one'
         'one:all'
         'one:some'};
@@ -50,7 +51,7 @@ if isempty(p.Results.event) || isempty(p.Results.lims)
             if isempty(lims)
                 return
             end
-            event = [];
+            event = 0;
         case 'one:all'
             eventTypes = unique(mergefields(EYE, 'event', 'type'));
             event = eventTypes(listdlgregexp('PromptString', 'Baseline is defined relative to which event?',...
@@ -80,13 +81,15 @@ if isempty(p.Results.event) || isempty(p.Results.lims)
 else
     event = p.Results.event;
     lims = p.Results.lims;
+    mapping = p.Results.mapping;
 end
-callStr = sprintf('%s''event'', %s, ''lims'', %s)', callStr, all2str(event), all2str(lims));
+callStr = sprintf('%s''event'', %s, ''lims'', %s, ''mapping'', %s)', callStr, all2str(event), all2str(lims), all2str(mapping));
 
+fprintf('Baseline correcting using method %s...\n', correctionType);
 for dataidx = 1:numel(EYE)
-    fprintf('Baseline correcting %s using method %s...', EYE(dataidx).name, correctionType);
+    fprintf('\t%s...', EYE(dataidx).name);
     currLims = EYE(dataidx).srate*[parsetimestr(lims{1}, EYE(dataidx).srate) parsetimestr(lims{2}, EYE(dataidx).srate)];
-    if isempty(event) % Baselines defined relative to each epoch-defining event
+    if isnumeric(event) % Baselines defined relative to each epoch-defining event
         for epochidx = 1:numel(EYE(dataidx).epoch)
             baselineLats = EYE(dataidx).epoch(epochidx).eventLat + currLims;
             for stream = reshape(fieldnames(EYE(dataidx).diam), 1, [])

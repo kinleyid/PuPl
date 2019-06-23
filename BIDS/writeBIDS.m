@@ -112,12 +112,11 @@ currpath = sprintf('sub-%s/', EYE.BIDS.sub);
 % Session-specific data?
 if isfield(EYE.BIDS, 'ses')
     sespath = fullfile(currpath, sprintf('ses-%s', EYE.BIDS.ses));
-    mkdir(sespath);
     currpath = sespath;
 end
 currpath = fullfile(currpath, 'eyetrack');
 filehead = fullfile(currpath, sprintf('sub-%s', EYE.BIDS.sub));
-for field = {'ses' 'acq' 'ce' 'task' 'run'}
+for field = {'ses' 'task' 'acq'  'run' 'recording' 'proc'}
     if isfield(EYE.BIDS, field{:})
         if ~isempty(EYE.BIDS.(field{:}))
             filehead = sprintf('%s_%s-%s', filehead, field{:}, EYE.BIDS.(field{:}));

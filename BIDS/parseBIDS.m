@@ -28,18 +28,10 @@ for subidx = 1:numel(subjects)
     iseyedata = ~cellfun(@isempty, regexp({contents.name}, [fmt '.*']));
     for dataidx = find(iseyedata)
         % Get file head
-        filehead = contents(dataidx).name(1:regexp(contents(dataidx).name, [fmt '.*']) - 1);
-        % Get BIDS info
-        currbidsinfo = [];
-        fields = strsplit(filehead, '_');
-        for field = fields
-            currfield = field{:};
-            currbidsinfo.(currfield(1:find(currfield == '-', 1) - 1)) =...
-                currfield(find(currfield == '-', 1) + 1:end);
-        end
+        [~, filehead] = fileparts(contents(dataidx).name);
         parsed = [parsed
             struct(...
-                'info', currbidsinfo,...
+                'info', parseBIDSfilename(filehead),...
                 'full', fullfile(currpath, contents(dataidx).name),...
                 'path', currpath,...
                 'head', filehead);
