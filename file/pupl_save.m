@@ -55,6 +55,7 @@ else
             end
             return
         end
+        [~, file] = fileparts(file);
         fprintf('Saving %s\n', data.name);
         save(sprintf('%s', path, file, fileExt), 'data', '-v6');
         %{

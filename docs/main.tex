@@ -1,0 +1,108 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{manual}
+\author{Isaac Kinley}
+\date{June 2019}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\section{Getting started}
+pupillometry-pipeline is a library of Matlab/Octave functions for processing eye tracking data and a user interface that runs these functions with a click.
+
+\subsection{Initializing}
+Change Matlab's working directory to the pupillometry-pipeline folder (which should contain \texttt{pupl\_init.m}, \texttt{LICENSE.md}, etc.). You can do this either using the ``Current Folder'' panel or from the Command Window using the \texttt{cd} function.
+
+Run \texttt{pupl\_init} in the Command Window to add the source code to Matlab's path, initialize the global \texttt{eyeData} variable, initialize the user interface, and load whatever add-ons are in the add-ons/ folder. Any of these last 3 steps can be skipped by adding \texttt{noGlobals}, \texttt{noUI}, and/or \texttt{noAddOns} as command-line arguments to \texttt{pupl\_init}.
+
+\subsection{Importing raw data}
+Under \texttt{File > Import}, you will see options for importing raw data. Note: if you import raw data from a BIDS-formatted folder, event logs will not also be imported.
+
+\subsection{Manipulating data}
+Loaded data will appear on the user interface. Unselected data is ignored by functions run using the user interface. To delete data from Matlab's workspace, go to \texttt{File > Remove datasets}. Data is also accessible in the Command Window through the global variable \texttt{eyeData}. If you process data in the command window and want to update the user interface, run \texttt{pupl\_init noglobals}.
+
+\subsection{Importing raw event logs}
+After you have loaded some data, you will be able to attach event logs to it. Go to \texttt{Trials > Event logs > Import} to see your options for importing raw event logs.
+
+\subsection{Synchronizing event logs and eye tracker data}
+When raw eye tracker data is loaded, event onsets are recomputed such that an event coinciding with the first data sample will be assigned an onset of zero. This means that timestamps in event logs cannot be directly copied to eye data. Furthermore, the clock used to measure timestamps in the event log and the clock used to measure timestamps in the eye data may drift relative to one another. To solve this problem, we use regression to find a linear mapping between timestamps the two records. To begin, go to \texttt{Trials > Event logs > Synchronize with eye data}. A window will open for you to specify a mapping between event types in the two records (for example, there may be sync markers sent by stimulus presentation software to both the eye tracker and an event log). After this, you will be able to select which events from the event logs should be copied to the eye data, whether they should be copied under different names, and whether the pre-existing events in the eye data should be deleted.
+
+\section{Visualizing data}
+\subsection{Plotting continuous datastreams}
+It is a good idea to visualize data throughout processing to understand how it is being altered. Under \texttt{Plot > Plot continuous} there are tools for plotting continuous datastreams. The unprocessed data are plotted using dotted lines while the processed data are plotted using solid lines. For pupil diameter, data from the left eye are plotted in blue, data from the right in red, and merged data from both eyes in black. For gaze data, the gaze x coordinates are plotted in blue, the y coordinates in red.
+
+\subsection{Plotting trials from event-related pupillometry}
+Once epochs have been extracted for event-related pupillometry, they can be plotted using \texttt{Plot > Plot trials}. The meanings of the line colours are the same as in the continuous pupil diameter plots.
+
+\subsection{Plotting trial sets from event-related pupillometry}
+Once epochs have been merged into trial sets for event-related pupillometry, they can be plotted using \texttt{Plot > Plot trial sets}. The meanings of the line colours are the same as in the continuous pupil diameter plots. The shaded error bars represent one standard error of the mean.
+
+\subsection{Visualizing pupil foreshortening error}
+To examine whether there is a systematic relationship between gaze location and measured pupil size, go to \texttt{Plot > Pupil foreshortening error surface}. This divides the gaze field into a grid and computes the mean pupil size for points falling within a square centered on each node.
+
+\section{Processing raw data}
+\subsection{Trimming data}
+\subsubsection{Trimming extreme pupil diameter measurements}
+Go to \texttt{Process > Trim data > Trim extreme dilation values} to remove pupil size measurements that are too high or low. In the window that opens, you can specify cutoff points for each eye separately as either absolute values or as percentages using a percentage sign. Note: the gaze measurements corresponding to rejected pupil size measurements will also be removed. If you plan to run the same pipeline on multiple participants, it is best to create relative cutoffs since different participants will likely have different average pupil size measurements.
+\subsubsection{Trimming extreme gaze measurements}
+Go to \texttt{Process > Trim data > Trim extreme gaze values} to remove gaze measurements that are too extreme (e.g. off-screen or too far from a fixation cross). Note: the pupil size measurements corresponding to rejected gaze measurements will also be removed. If you plan to run the same pipeline on multiple participants, it is best to create absolute gaze cutoffs since screen x and y values are likely to have the same meaning across participants.
+\subsection{Trimming isolated samples}
+Go to \texttt{Process > Trim data > Trim isolated samples} to remove little blips of data that are unlikely to be meaningful or accurate measurements. See below to understand how to specify the max length of these islands of isolated data.
+\subsubsection{A note on specifying durations} \label{timestr_explanation}
+You may use units and arithmetic to specify lengths of time. For example, \texttt{1s + 2 dp - 100 ms - 2d} translates to one second plus two datapoints minus 100 milliseconds minus two datapoints.
+\subsection{Trimming blink-adjacent samples}
+The pupil is partially obstructed shortly before and after the eye fully closes during blinks. On eye trackers with high sample rates, this results in datapoints recorded near blinks being unreliable. To trim these unreliable points, go to \texttt{Process > Trim blink-adjacent samples}. See \ref{timestr_explanation} for an explanation of how to specify durations in the dialog boxes that appear.
+\subsection{Filtering data}
+To apply a moving mean or median (recommended) filter to pupil size or gaze data, go to \texttt{Process > Moving average filter}.
+\subsection{Saccades and fixations}
+\subsubsection{Identifying}
+Algorithms available for identifying saccades and fixations can be found under \texttt{Process > Identify saccades and fixations}. Note: data points themselves are not labelled as saccades or fixations, only the periods of time between them. The justification for this is as follows: if gaze samples 1, 2, and 3 are all at the same coordinates and gaze samples 4, 5, and 6 are at a far-away coordinate, which point ought to be labelled as a saccade? Clearly the participant was fixating at points 1, 2, and 3 and then again at points 4, 5, and 6, and the saccade took place between points 3 and 4.
+\subsubsection{Mapping to fixations}
+After identifying fixation periods, the data during these periods can be reassigned to their centroids (spatial means) using \texttt{Process > Map gaze data to fixation centroids}.
+\subsection{Pupil foreshortening error correction}
+The pupil subtends smaller and smaller areas of the eye tracker's recording field as it turns away. Thus, often if the eye tracker is placed below a computer screen, the pupil will tend to be measured as smaller when looking at the top of the screen and either side. This will appear as a (roughly) linear trend in a plot of pupil size vs gaze y coordinate and as a (roughly) quadratic trend in a plot of pupil size vs gaze x coordinate. These trends can be corrected using the options under \texttt{Process > Pupil foreshortening error correction}.
+\subsection{Interpolating missing data}
+To linearly interpolate missing pupil size and gaze data, go to \texttt{Process > Interpolate missing data}. Note: care must be taken when interpolating gaze data since, if saccades take place during long periods of missing data, linear interpolation will make these appear to be periods of smooth pursuit.
+\subsection{Merging left and right pupil diameter}
+To analyze pupil diameter, it is necessary to average the left and right data streams. This can be done using \texttt{Process > Merge left and right diameter streams}.
+\subsection{Adding BIDS information}
+To add subject, session, task, and acquisition information for saving data to the BIDS format, go to \texttt{BIDS > Add BIDS info}.
+
+\section{Saving data}
+To save data, go to \texttt{File > Save}. A separate filesave dialog will open for each active recording. The \texttt{.eyedata} extension on saved recordings is merely an alias for version 6 \texttt{.mat} files.
+\subsection{Batch saving data}
+To save all active data to the same folder using filenames corresponding to recording names, go to \texttt{File > Batch save}. This will open a single folder selection dialog.
+\subsection{Saving data to BIDS format}
+If you have data loaded and active, you can save it in a BIDS-formatted project directory.
+\subsubsection{Saving raw}
+To create and populate the raw/ folder in your BIDS-formatted project directory, go to \texttt{BIDS > Save > Save raw from current data}.
+\subsubsection{Saving sourcedata}
+To create and populate the sourcedata/ folder in your BIDS-formatted project directory, go to \texttt{BIDS > Save > Save sourcedata of current data}. Note: this re-loads the raw data using the \texttt{getraw} method of the data structure, which can be slow depending on the format of the raw data.
+\subsubsection{Saving derivatives} \label{saving_derivatives}
+To save processed data in a folder withing the derivatives/ folder of your BIDS-formatted project directory, go to \texttt{BIDS > Save > Save current data as derivative}. Note: this folder will have the same internal structure and filenames as the sourcedata/ folder and can be loaded using the function explained in \ref{load_sourcedata}.
+\subsection{Loading BIDS sourcedata} \label{load_sourcedata}
+Under \texttt{BIDS > Load sourcedata}, you will have the option to load sourcedata from a BIDS-formatted directory. Note: if you use this option, any event logs corresponding to the data will be imported as well. You can also use this menu option to load data from a derivatives/ subfolder that was saved using the function explained in \ref{saving_derivatives}. Simply provide said subfolder as the sourcedata folder.
+\section{Event-related pupillometry}
+\subsection{Extracting trials}
+To extract trial data, go to \texttt{Trials > Event-related pupillometry > Fragment continuous data into trials}. Trials are defined and extracted relative to events in the eye data. For example, if you wanted to examine pupillary response to an event called \texttt{showImage}, you would select this event name in the window that appears next. The durations of trials can be specified in the next dialog window. For example, to extract data from 200 milliseconds before the occurrence of events until 2 seconds after, you would enter \texttt{-200ms} and \texttt{2s} in the next dialog window. These durations can be specified as explained in \ref{timestr_explanation}.
+\subsection{Baseline-correcting trials}
+Due to variability in pupil size measurements, it is necessary to baseline correct trial data, either by subtracting the baseline mean or by computing the percentage change from baseline duration. To do this, go to \texttt{Trials > Event-related pupillometry > Baseline correction}. 
+\subsection{Rejecting trials}
+\subsection{Mergin trials into sets}
+\subsection{Calculating statistics}
+
+\section{Gaze tracking}
+
+\section{Automating processing pipelines}
+To export the processing history to a Matlab script, go to \texttt{File > Save processing script}. When a processing function is run, it saves the equivalent command as a string to the \texttt{history} field of the data. All of these commands together constitute a processing pipeline.
+\subsection{Running pipeline on BIDS sourcedata}
+
+\section{Contributing}
+\subsection{Raw data loader}
+\subsection{Raw event log loader}
+\subsection{Adding to the user interface}
+
+\end{document}

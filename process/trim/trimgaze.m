@@ -22,10 +22,10 @@ callStr = sprintf('eyeData = %s(eyeData, ''lims'', %s)', mfilename, all2str(lims
 fprintf('Trimming extreme gaze values...\n')
 for dataidx = 1:numel(EYE)
     numlims = [
-        strlim2numlim(lims{1}, EYE(dataidx).gaze.x, 'Lower')
-        strlim2numlim(lims{2}, EYE(dataidx).gaze.x, 'Upper')
-        strlim2numlim(lims{3}, EYE(dataidx).gaze.y, 'Lower')
-        strlim2numlim(lims{4}, EYE(dataidx).gaze.y, 'Upper')
+        parsedatastr(lims{1}, EYE(dataidx).gaze.x)
+        parsedatastr(lims{2}, EYE(dataidx).gaze.x)
+        parsedatastr(lims{3}, EYE(dataidx).gaze.y)
+        parsedatastr(lims{4}, EYE(dataidx).gaze.y)
     ];
     fprintf('\t%s: trimming points where:\n', EYE(dataidx).name)
     fprintf('\t\tx < %0.1f\n', numlims(1))
@@ -225,6 +225,6 @@ UserData = get(f, 'UserData');
 side = cellstr(side);
 limType = cellstr(limType);
 currStr = get(findobj(f, 'Tag', [side{:} limType{:}]), 'String');
-currLim = strlim2numlim(currStr, UserData.(side{:}), limType);
+currLim = parsedatastr(currStr, UserData.(side{:}));
 
 end

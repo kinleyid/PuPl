@@ -19,30 +19,34 @@ end
 callStr = sprintf('%s''leftLims'', %s, ''rightLims'', %s)', callStr, all2str(leftLims), all2str(rightLims));
 
 % Convert string limits to numerical limits
-leftLims = [strlim2numlim(leftLims{1}, EYE.diam.left, 'Lower')...
-    strlim2numlim(leftLims{2}, EYE.diam.left, 'Upper')];
-rightLims = [strlim2numlim(rightLims{1}, EYE.diam.right, 'Lower')...
-    strlim2numlim(rightLims{2}, EYE.diam.right, 'Upper')];
+
+lims = [leftLims(:)' rightLims(:)'];
+fs([1 3]) = {@lt};
+fs([2 4]) = {@gt};
+sides([1 3]) = {'left'};
+sides([2 4]) = {'right'};
 
 fprintf('Trimming extreme pupil diameter values...\n')
 fprintf('Trimming points where\n')
-fprintf('Left < %0.1f\n', leftLims(1));
-fprintf('Left > %0.1f\n', leftLims(2));
-fprintf('Right  < %0.1f\n', rightLims(1));
-fprintf('Right > %0.1f\n', rightLims(2));
+fprintf('Left < %s\n', lims{1});
+fprintf('Left > %s\n', lims{2});
+fprintf('Right  < %s\n', lims{3});
+fprintf('Right > %s\n', lims{4});
 
-for dataIdx = 1:numel(EYE)
-    badIdx = EYE(dataIdx).diam.left < leftLims(1) |...
-        EYE(dataIdx).diam.left > leftLims(2) |...
-        EYE(dataIdx).diam.right < rightLims(1) |...
-        EYE(dataIdx).diam.right > rightLims(2);
+for dataidx = 1:numel(EYE)
+    badidx = false(1, EYE(dataidx).ndata);
+    for ii = 1:4
+        data = EYE(dataidx).diam.(sides{ii});
+        lim = parsedatastr(lims{ii}, data);
+        badidx = badidx | fs{ii}(data, lim);
+    end
     for field1 = {'gaze' 'diam'} 
-        for field2 = reshape(fieldnames(EYE(dataIdx).(field1{:})), 1, [])
-            EYE(dataIdx).(field1{:}).(field2{:})(badIdx) = nan; 
+        for field2 = reshape(fieldnames(EYE(dataidx).(field1{:})), 1, [])
+            EYE(dataidx).(field1{:}).(field2{:})(badidx) = nan; 
         end
     end
-    fprintf('\t%s: %0.2f%% of data removed\n', EYE(dataIdx).name, 100*nnz(badIdx)/numel(EYE(dataIdx).isBlink))
-    EYE(dataIdx).history = cat(1, EYE(dataIdx).history, callStr);
+    fprintf('\t%s: %0.2f%% of data removed\n', EYE(dataidx).name, 100*nnz(badidx)/numel(EYE(dataidx).isBlink))
+    EYE(dataidx).history = cat(1, EYE(dataidx).history, callStr);
 end
 fprintf('Done\n')
 
@@ -193,6 +197,6 @@ UserData = get(f, 'UserData');
 side = cellstr(side);
 limType = cellstr(limType);
 currStr = get(findobj(f, 'Tag', [side{:} limType{:}]), 'String');
-currLim = strlim2numlim(currStr, UserData.(side{:}), limType);
+currLim = parsedatastr(currStr, UserData.(side{:}));
 
 end

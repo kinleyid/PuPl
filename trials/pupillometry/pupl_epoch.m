@@ -72,7 +72,7 @@ for dataidx = 1:numel(EYE)
         EYE(dataidx).history
         callStr
     ];
-    fprintf('done\n')
+    fprintf('%d trials extracted\n', numel(EYE(dataidx).epoch));
 end
 fprintf('Done\n');
 

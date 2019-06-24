@@ -83,8 +83,7 @@ for dataidx = 1:numel(EYE) % Populate
         fprintf('\t\tSaving sourcedata...');
         currfilehead = sprintf('%s/sourcedata/%s', projectpath, masterfilehead);
         mkdir(fileparts(currfilehead)); % Create folder
-        data = EYE(dataidx).getraw();
-        save(sprintf('%s_eyetrack.eyedata', currfilehead), 'data', '-v6');
+        saveeyedata(EYE(dataidx).getraw(), sprintf('%s_eyetrack.eyedata', currfilehead));
         curreventlog = EYE(dataidx).eventlog;
         if ~isempty(curreventlog)
             eventlog2tsv(curreventlog, sprintf('%s_events.tsv', currfilehead));
@@ -97,8 +96,7 @@ for dataidx = 1:numel(EYE) % Populate
         fprintf('\t\tSaving derivatives: %s...', deriv{:});
         currfilehead = sprintf('%s/derivatives/%s/%s', projectpath, deriv{:}, masterfilehead);
         mkdir(fileparts(currfilehead)); % Create folder
-        data = EYE(dataidx);
-        save(sprintf('%s_eyetrack.eyedata', currfilehead), 'data', '-v6');
+        saveeyedata(EYE(dataidx), sprintf('%s_eyetrack.eyedata', currfilehead));
         fprintf('done\n');
     end
 end

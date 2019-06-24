@@ -22,7 +22,7 @@ if isempty(p.Results.fullpath) % Get path
             return
     end
     if usebids
-        rawdatapath = uigetdir(pwd, 'Select raw data folder');
+        rawdatapath = uigetdir(pwd, 'Select project folder');
         if isnumeric(rawdatapath)
             return
         end
@@ -31,6 +31,11 @@ if isempty(p.Results.fullpath) % Get path
                 fmt = '_eyetrack.';
             case 'event'
                 fmt = '_events.';
+        end
+        contents = dir(rawdatapath);
+        rawidx = strcmp({contents.name}, 'raw');
+        if any(rawidx)
+            rawdatapath = fullfile(rawdatapath, contents(rawidx).name);
         end
         parsed = parseBIDS(rawdatapath, fmt);
         fullpath = {parsed.full};

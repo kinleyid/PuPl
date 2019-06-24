@@ -21,18 +21,14 @@ catch
     fprintf('Error checking the web for a new version\n');
 end
 
-% Navigate to directory containing this very function
-previousDir = pwd;
-cd(fileparts(which('pupl_init.m')))
-addpath(pwd)
+pdir = fileparts(which(mfilename));
+addpath(pdir)
 
 % Add built-in subdirectories
 fprintf('Loading source');
 for subdir = {'base' 'UI' 'file' 'process' 'trials' 'experiment' 'plot' 'stats' 'BIDS' 'dev'}
-    cd(subdir{:})
-    addpath(genpath(pwd)) % Add folder and subfolders
+    addpath(genpath(fullfile(pdir, subdir{:}))) % Add folder and subfolders
     fprintf('.');
-    cd('..')
 end
 fprintf('\n');
 
@@ -59,24 +55,21 @@ if ~any(strcmpi(varargin, 'noUI'))
 end
 
 if ~any(strcmpi(varargin, 'noAddOns'))
-    cd add-ons
     fprintf('Loading add-ons:\n');
-    folderContents = dir;
+    addonsfolder = fullfile(pdir, 'add-ons');
+    folderContents = dir(addonsfolder);
     for currFolder = reshape(folderContents([folderContents.isdir]), 1, [])
         if ~any(strcmp(currFolder.name, {'.' '..'}))
-            fprintf('\t%s...', currFolder.name)
-            cd(currFolder.name)
-            addpath(genpath(pwd));
+            fprintf('\t%s...', currFolder.name);
+            addpath(genpath(fullfile(addonsfolder, currFolder.name)));
             try
-                run('./init.m');
+                run(fullfile(addonsfolder, currFolder.name, 'init.m'));
             catch
                 fprintf('no init.m file found');
             end
-            fprintf('\n')
-            cd('..');
+            fprintf('\n');
         end
     end
-    cd('..');
 end
 
 % Is octave?
@@ -84,9 +77,6 @@ if exist('OCTAVE_VERSION', 'builtin') ~= 0
     fprintf('Octave detected. Loading packages\n');
     pkg load statistics
 end
-
-% Navigate back to the user's directory
-cd(previousDir)
 
 fprintf('done\n')
 end
