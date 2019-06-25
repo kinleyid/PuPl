@@ -1,18 +1,18 @@
 function [surface, density, x, y] = computePFEsurface(EYE, gridN, trimPpn, inputRange, boxcar)
 
 if isempty(inputRange)
-    sorteds = structfun(@(v) sort(v(~isnan(v))), EYE.gaze, 'un', 0);
+    sorteds = structfun(@(v) sort(v(~isnan(v))), EYE.gaze, 'UniformOutput', 0);
     ranges = structfun(@(v)...
                 linspace(v(max(round(trimPpn*numel(v)), 1)),...
                          v(min(round((1 - trimPpn)*numel(v)), numel(v))),...
                          gridN),...
-        sorteds, 'un', 0);
+        sorteds, 'UniformOutput', 0);
 else
     ranges = struct(...
         'x', linspace(inputRange(1), inputRange(2), gridN),...
         'y', linspace(inputRange(3), inputRange(4), gridN));
 end
-widths = structfun(@(x) (x(2) - x(1))*boxcar, ranges, 'un', 0);
+widths = structfun(@(x) (x(2) - x(1))*boxcar, ranges, 'UniformOutput', 0);
 
 idx = false(numel(ranges.x), numel(ranges.y), numel(EYE.diam.left));
 

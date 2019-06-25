@@ -25,12 +25,8 @@ if strcmpi(type, 'dilation')
         plotinfo(dataIdx).data = {
             EYE(dataIdx).diam.left
             EYE(dataIdx).diam.right
-            mean([
-                EYE(dataIdx).urDiam.left.x
-                EYE(dataIdx).urDiam.left.y])
-            mean([
-                EYE(dataIdx).urDiam.right.x
-                EYE(dataIdx).urDiam.right.y])};
+            getfield(getfromur(EYE(dataIdx), 'diam'), 'left')
+            getfield(getfromur(EYE(dataIdx), 'diam'), 'right')};
         plotinfo(dataIdx).colours = {
             'b'
             'r'
@@ -42,9 +38,9 @@ if strcmpi(type, 'dilation')
             false
             false];
         if isfield(EYE(dataIdx).diam, 'both')
-            plotinfo(dataIdx).data = [plotinfo(dataIdx).data; EYE(dataIdx).diam.both];
-            plotinfo(dataIdx).colours = [plotinfo(dataIdx).colours; 'k'];
-            plotinfo(dataIdx).greyblinks = [plotinfo(dataIdx).greyblinks; true];
+            plotinfo(dataIdx).data{end + 1} = EYE(dataIdx).diam.both;
+            plotinfo(dataIdx).colours{end + 1} = 'k';
+            plotinfo(dataIdx).greyblinks{end + 1} = true;
         end
         plotinfo(dataIdx).ylim = [min(structfun(@min, EYE(dataIdx).diam)) max(structfun(@max, EYE(dataIdx).diam))];
     end
@@ -53,12 +49,8 @@ elseif strcmpi(type, 'gaze')
         plotinfo(dataIdx).data = {
             EYE(dataIdx).gaze.x
             EYE(dataIdx).gaze.y
-            mean([
-                EYE(dataIdx).urGaze.x.left
-                EYE(dataIdx).urGaze.x.right])
-            mean([
-                EYE(dataIdx).urGaze.y.left
-                EYE(dataIdx).urGaze.y.right])};
+            getfield(getfromur(EYE(dataIdx), 'gaze'), 'x')
+            getfield(getfromur(EYE(dataIdx), 'gaze'), 'y')};
         plotinfo(dataIdx).colours = {
             'b'
             'r'
@@ -84,7 +76,7 @@ end
 nSeconds = 5;
 x = 1:(nSeconds*srate);
 
-f = figure('Name', 'Use H J K L keys to scroll',...
+f = figure('Name', 'Use arrow and page/h j k l keys to scroll',...
     'NumberTitle', 'off',...
     'Toolbar', 'none',...
     'MenuBar', 'none',...
@@ -96,7 +88,7 @@ f = figure('Name', 'Use H J K L keys to scroll',...
         'srate', srate,...
         'axes', []));
 
-plotdata(f)
+initialplot(f)
 
 end
 
@@ -107,9 +99,9 @@ switch e.Key
         change = -5;
     case {'l', 'pagedown'}
         change = 5;
-    case {'k', 'rightarrow'}
+    case {'k', 'rightarrow', 'right'}
         change = 1;
-    case {'j', 'leftarrow'}
+    case {'j', 'leftarrow', 'left'}
         change = -1;
     otherwise
         return
@@ -121,11 +113,11 @@ if any(UserData.x < 1)
 end
 set(h, 'UserData', UserData);
 
-plotdata(h);
+initialplot(h);
 
 end
 
-function plotdata(f)
+function initialplot(f)
 
 figure(f);
 
@@ -135,33 +127,22 @@ EYE = UserData.EYE;
 x = UserData.x;
 srate = UserData.srate;
 xtimes = (x - 1)/srate;
-%{
-for dataIdx = 1:numel(EYE)
-    if any(x > numel(plotinfo(dataIdx).data))
-        return
-    end
-end
-%}
+
 for plotIdx = 1:numel(plotinfo)
     cla(subplot(numel(plotinfo), 1, plotIdx)); hold on
-    blinkIdx = EYE(plotIdx).isBlink(x);
+    % Display data
     for dataIdx = 1:numel(plotinfo(plotIdx).data)
         currData = plotinfo(plotIdx).data{dataIdx};
         currData = currData(x);
         plot(xtimes, currData, plotinfo(plotIdx).colours{dataIdx});
-        if plotinfo(plotIdx).greyblinks(dataIdx)
-            currData(~blinkIdx) = nan;
-            plot(xtimes, currData,...
-                'color', [0.5 0.5 0.5],...
-                'linewidth', 2);
-        end
     end
     xlim([xtimes(1) xtimes(end)]);
     if plotIdx ~= numel(plotinfo)
-        xticks('');
+        xticks([]); % XTicks only on the bottom plot
     else
         xlabel('Time (s)');
     end
+    % Display events
     if ~isempty(EYE(plotIdx).event)
         for eventIdx = find(ismember([EYE(plotIdx).event.latency], x))
             t = (EYE(plotIdx).event(eventIdx).latency - 1)/EYE(plotIdx).srate;
@@ -178,7 +159,10 @@ for plotIdx = 1:numel(plotinfo)
         'HorizontalAlignment', 'right',...
         'Rotation', 45,...
         'Units', 'normalized');
-    % title(EYE(plotIdx).name, 'Interpreter', 'none');
 end
+
+end
+
+function updateplot(f)
 
 end

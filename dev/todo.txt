@@ -1,11 +1,9 @@
 little tasks
 
-Create getfromur function in case structure of urGaze and urDiam ever changes
 Create dummy eye data for testing
 Test one:all and one:some mappings for baseline correction
 Double check that rejectbyextremediam rejects according to presence of a single extreme value
 Change rejectbyextremediam to plot only the most extreme value in each trial
 *Create a video player window with gaze, events, time, and pupil diameter
-Make eye data selectable on UI with enter button
 *Add option to reload raw data from src
 *If multiple datasets are passed into trimdiam, reset the average of each stream to the grand average of all streams

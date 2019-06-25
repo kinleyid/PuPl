@@ -1,5 +1,8 @@
 
-function pupilsizehist(f, l, r)
+function pupilsizehist(f, EYE)
+
+l = EYE.diam.left;
+r = EYE.diam.right;
 
 a = 0.4;
 axes(f); hold on;

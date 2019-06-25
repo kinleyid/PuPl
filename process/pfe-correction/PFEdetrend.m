@@ -21,12 +21,7 @@ switch vis
 end
 
 if vis
-    for dataidx = 1:numel(EYE)
-        approval = displaydetrend(EYE(dataidx), ax);
-        if isempty(approval)
-            return
-        end
-    end
+    plotforeach(EYE, @plotPFEtrend, ax);
 end
 
 if ~strcmp(p.Results.proc, 'no')

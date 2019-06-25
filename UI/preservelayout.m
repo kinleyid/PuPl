@@ -27,11 +27,24 @@ for i = 1:numel(currData)
         'String', currData(i).name,...
         'Value', value,...
         'FontSize', 10,...
+        'KeyPressFcn', @(h, e) enterdo(e, {
+            @() set(h, 'Value', switch01(get(h, 'Value')))
+            @update_UI}),...
         'Callback', @(h, e) update_UI);
 end
 
 UserData = get(userInterface, 'UserData');
 UserData.activeEyeDataIdx = activeIdx;
 set(userInterface, 'UserData', UserData);
+
+end
+
+function out = switch01(in)
+
+if in == 1
+  out = 0;
+elseif in == 0
+  out = 1;
+end
 
 end
