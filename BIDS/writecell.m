@@ -29,4 +29,6 @@ for row = 1:nrows
     end
 end
 
+fclose(fid);
+
 end

@@ -10,11 +10,14 @@ function outtime = parsetimestr(timestr, srate)
 cmd = lower(timestr);
 cmd = strrep(cmd,' ','');
 
-for x = {'ms' 'm'}
+for x = {'ms'}
     cmd = strsubconstval(cmd, x{:}, '(1/1000)');
 end
 for x = {'s'}
     cmd = strsubconstval(cmd, x{:}, '1');
+end
+for x = {'m'}
+    cmd = strsubconstval(cmd, x{:}, '60');
 end
 for x = {'dp' 'd'}
     cmd = strsubconstval(cmd, x{:}, sprintf('%f', 1/srate));

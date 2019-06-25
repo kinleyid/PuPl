@@ -48,11 +48,16 @@ data = EYE(dataIdx).bin(strcmp({EYE(dataIdx).bin.name}, bin)).data.both;
 latencies = 1:size(data, 2);
 times = (latencies - 1)/EYE(dataIdx).srate;
 figure;
-image(times, 1:size(data, 1), data,'CDataMapping','scaled','AlphaData',~isnan(data));
+ii = image(times, 1:size(data, 1), data,'CDataMapping','scaled');
+try
+    set(ii, 'AlphaData', ~isnan(data));
+catch
+    '';
+end
 ylabel('Trial')
 xlabel('Time (s)')
 cb = colorbar;
 ylabel(cb, 'Pupil diameter')
-title([EYE(dataIdx).name ' ' EYE(dataIdx).bin.name]);
+title([EYE(dataIdx).name ' ' bin], 'Interpreter', 'none');
 
 end

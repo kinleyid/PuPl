@@ -66,19 +66,22 @@ end
 callStr = sprintf('%s''trialwise'', %s, ', callStr, all2str(trialwise));
 
 if isempty(p.Results.path)
-    [file, dir] = uiputfile('*');
+    [file, dir] = uiputfile('*.csv');
+    if isnumeric(file)
+        return
+    end
     fullpath = sprintf('%s', dir, file);
 else
     fullpath = p.Results.path;
 end
 callStr = sprintf('%s''path'', %s)', callStr, all2str(fullpath));
 
-statidx = find(ismember(statOptions(:, 1), stats));
+statidx = reshape(find(ismember(statOptions(:, 1), stats)), 1, []);
 colNames = {'Dataset' 'TrialType'};
 if strcmp(trialwise, 'Compute stats per trial')
     colNames = [colNames 'Trial'];
 end
-colNames = [colNames reshape(statOptions(statidx, 3), [], 1)];
+colNames = [colNames reshape(statOptions(statidx, 3), 1, [])];
 
 statsTable = colNames;
 
@@ -116,7 +119,7 @@ for dataidx = 1:numel(EYE)
         end
         
         if strcmp(trialwise, 'Compute average of trial stats')
-            currStats = nanmean_bc(currStats);
+            currStats = num2cell(nanmean_bc(currStats));
         end
         if strcmp(trialwise, 'Compute stats per trial')
             statsTable = [
@@ -132,7 +135,7 @@ for dataidx = 1:numel(EYE)
             statsTable = [
                 statsTable
                 [
-                    cellstr(EYE(dataidx).name)
+                    cellstr(EYE(dataidx).name)...
                     cellstr(EYE(dataidx).bin(binidx).name)...
                     currStats
                 ];
@@ -144,7 +147,7 @@ for dataidx = 1:numel(EYE)
 end
 
 fprintf('Writing to table...\n');
-writecell(fullpath, statsTable, '\t');
+writecell(fullpath, statsTable, ',');
 fprintf('Done\n');
 
 end

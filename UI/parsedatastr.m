@@ -2,7 +2,7 @@
 function lim = parsedatastr(str, data)
 
 %   Inputs
-% str--something with %, m, sd, dp, or d
+% str--something with %, m, sd
 
 cmd = lower(str);
 cmd = strrep(cmd,' ','');
