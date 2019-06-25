@@ -38,7 +38,7 @@ for dataidx = 1:numel(EYE)
     for ii = 1:4
         data = EYE(dataidx).diam.(sides{ii});
         lim = parsedatastr(lims{ii}, data);
-        badidx = badidx | fs{ii}(data, lim);
+        badidx = badidx | feval(fs{ii}, data, lim);
     end
     for field1 = {'gaze' 'diam'} 
         for field2 = reshape(fieldnames(EYE(dataidx).(field1{:})), 1, [])
