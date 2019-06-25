@@ -142,8 +142,11 @@ for dataidx = 1:numel(EYE)
             ];
         end
     end
-    EYE(dataidx).history = cat(1, EYE(dataidx).history, callStr);
     fprintf('done\n');
+end
+
+if ~isempty(gcbf)
+    fprintf('Equivalent command: %s\n', callStr);
 end
 
 fprintf('Writing to table...\n');
