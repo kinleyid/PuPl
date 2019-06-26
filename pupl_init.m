@@ -8,12 +8,12 @@ function pupl_init(varargin)
 % >> pupl_init noui noaddons
 
 availableargs = {'noui' 'noglobals' 'noaddons'};
-badcmdidx = ~ismember(lower(varargin), availableargs);
-if any(badcmdidx)
-    for ii = find(badcmdidx)
+badargidx = ~ismember(lower(varargin), availableargs);
+if any(badargidx)
+    for ii = find(badargidx)
         fprintf('Error: unrecognized command line argument ''%s''\n', varargin{ii});
     end
-    fprintf('Available command line arguments:\n');
+    fprintf('Available arguments:\n');
     fprintf('\t''%s''\n', availableargs{:});
     return
 end

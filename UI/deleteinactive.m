@@ -16,7 +16,7 @@ switch dataType
         end
         % currIdx = ~UserData.activeEyeDataIdx;
         fprintf('Removing data...\n');
-        for curridx = reshape(find(rmidx), 1, [])
+        for curridx = reshape(rmidx, 1, [])
             fprintf('\t%s\n', eyeData(curridx).name);
         end
         fprintf('Done\n');

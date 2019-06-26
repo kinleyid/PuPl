@@ -50,8 +50,9 @@ if isempty(p.Results.fullpath) % Get path
                 fullpath = strcat(directory, cellstr(filenames));
             case 'event'
                 fullpath = {};
+                directory = '';
                 for dataidx = 1:numel(EYE)
-                    [filename, directory] = uigetfile('*.*',...
+                    [filename, directory] = uigetfile([directory '*.*'],...
                         sprintf('Event log for %s', EYE(dataidx).name),...
                         'MultiSelect', 'off');
                     if isnumeric(filename)
