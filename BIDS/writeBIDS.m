@@ -97,6 +97,10 @@ for dataidx = 1:numel(EYE) % Populate
         currfilehead = sprintf('%s/derivatives/%s/%s', projectpath, deriv{:}, masterfilehead);
         mkdir(fileparts(currfilehead)); % Create folder
         saveeyedata(EYE(dataidx), sprintf('%s_eyetrack.eyedata', currfilehead));
+        curreventlog = EYE(dataidx).eventlog;
+        if ~isempty(curreventlog)
+            eventlog2tsv(curreventlog, sprintf('%s_events.tsv', currfilehead));
+        end
         fprintf('done\n');
     end
 end

@@ -19,7 +19,8 @@ end
 events = cellfun(@num2str, events, 'un', 0);
 event = struct(...
     'type', events(:)',...
-    'time', times(:)');
+    'time', times(:)',...
+    'rt', repmat({NaN}, size(events(:)')));
 [~, I] = sort([event.time]);
 event = event(I);
 

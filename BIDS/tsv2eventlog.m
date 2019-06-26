@@ -15,11 +15,23 @@ for othername = names(~ismember(names, {'onset' 'trial_type' 'response_time'}))
     [events.(othername{:})] = raw{2:end, strcmp(names, othername{:})};
 end
 
+events = structfun(@natonan, events);
+
 [~, n] = fileparts(fullpath);
 
 eventlog = struct(...
     'name', n,...
     'src', src,...
     'event', events);
+
+end
+
+function c = natonan(c)
+
+for ii = 1:numel(c)
+    if strcmp(c{ii}, 'n/a')
+        c{ii} = NaN;
+    end
+end
 
 end

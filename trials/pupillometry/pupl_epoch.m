@@ -59,7 +59,8 @@ for dataidx = 1:numel(EYE)
                 'relLatencies', relLatencies,...
                 'absLatencies', EYE(dataidx).event(eventidx).latency + relLatencies,...
                 'name', EYE(dataidx).event(eventidx).type,...
-                'eventLat', EYE(dataidx).event(eventidx).latency);
+                'eventLat', EYE(dataidx).event(eventidx).latency,... Redundant with event field--maybe remove at some point
+                'event', EYE(dataidx).event(eventidx));
             for datatype = {'diam' 'gaze'}
                 for stream = reshape(fieldnames(EYE(dataidx).(datatype{:})), 1, [])
                     currEpoch.(datatype{:}).(stream{:}) = EYE(dataidx).(datatype{:}).(stream{:})(currEpoch.absLatencies);

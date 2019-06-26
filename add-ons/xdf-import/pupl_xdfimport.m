@@ -80,7 +80,8 @@ for fileIdx = 1:numel(filename)
             fprintf('\t%d events found\n', numel(events));
             event = struct(...
                 'type', events,...
-                'time', num2cell(times));
+                'time', num2cell(times),...
+                'rt', repmat({NaN}, size(events)));
         end
     else
         event = [];
