@@ -5,7 +5,7 @@ p = inputParser;
 addParameter(p, 'eyedata', struct([])); % optional
 addParameter(p, 'loadfunc', []); % required
 addParameter(p, 'fullpath', []); % optional
-addParameter(p, 'type', []); % eye or event, required
+addParameter(p, 'type', 'eye'); % eye or event, required
 parse(p, varargin{:});
 
 EYE = p.Results.eyedata;

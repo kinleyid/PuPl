@@ -1,4 +1,4 @@
-function idx = listdlgregexp(varargin)
+function [idx, names] = listdlgregexp(varargin)
 
 p = inputParser;
 addParameter(p, 'ListString', []);
@@ -33,38 +33,25 @@ panel = uipanel(f,...
     'Units', 'normalized',...
     'Position', [0.01 0.11 0.98 0.78]);
 listboxregexp(panel, listString);
-set(findobj(f, 'Style', 'listbox'), 'KeyPressFcn', @enterkeyuiresume);
+set(findobj(f, 'Style', 'listbox'), 'KeyPressFcn', @(h, e) enterdo(e, @() uiresume(f)));
 uicontrol(f,...
     'Style', 'pushbutton',...
     'String', 'Done',...
     'Units', 'normalized',...
     'Position', [0.01 0.01 0.98 0.08],...
-    'KeyPressFcn', @enterkeyuiresume,...
-    'Callback', @buttonpressresume);
+    'KeyPressFcn', @(h, e) enterdo(e, @() uiresume(f)),...
+    'Callback', @(h, e) uiresume(f));
 
-uicontrol(findobj(f, 'Style', 'edit'))
+uicontrol(findobj(f, 'Style', 'listbox'))
 
 uiwait(f);
 if isgraphics(f)
     listBox = findobj(panel, 'Style', 'listbox');
     idx = get(listBox, 'Value');
+    names = listString(idx);
     close(f);
 else
     idx = [];
-end
-
-end
-
-function buttonpressresume(h,e)
-
-uiresume(gcbf)
-
-end
-
-function enterkeyuiresume(h,e)
-
-if strcmp(e.Key, 'return')
-    uiresume(gcbf)
 end
 
 end

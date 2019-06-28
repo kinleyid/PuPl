@@ -15,7 +15,11 @@ for othername = names(~ismember(names, {'onset' 'trial_type' 'response_time'}))
     [events.(othername{:})] = raw{2:end, strcmp(names, othername{:})};
 end
 
-events = structfun(@natonan, events);
+for eventidx = 1:numel(events)
+    for field = reshape(fieldnames(events(eventidx)), 1, [])
+        events(eventidx).(field{:}) = natonan(events(eventidx).(field{:}));
+    end
+end
 
 [~, n] = fileparts(fullpath);
 
@@ -28,10 +32,8 @@ end
 
 function c = natonan(c)
 
-for ii = 1:numel(c)
-    if strcmp(c{ii}, 'n/a')
-        c{ii} = NaN;
-    end
+if strcmp(c, 'n/a')
+    c = NaN;
 end
 
 end

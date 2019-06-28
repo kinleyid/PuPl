@@ -85,50 +85,50 @@ else
 end
 callStr = sprintf('%s''event'', %s, ''lims'', %s, ''mapping'', %s)', callStr, all2str(event), all2str(lims), all2str(mapping));
 
+
+
 fprintf('Baseline correcting using method %s...\n', correctionType);
 for dataidx = 1:numel(EYE)
     fprintf('\t%s...', EYE(dataidx).name);
+    
     currLims = EYE(dataidx).srate*[parsetimestr(lims{1}, EYE(dataidx).srate) parsetimestr(lims{2}, EYE(dataidx).srate)];
     if isnumeric(event) % Baselines defined relative to each epoch-defining event
-        for epochidx = 1:numel(EYE(dataidx).epoch)
-            baselineLats = EYE(dataidx).epoch(epochidx).eventLat + currLims;
-            for stream = reshape(fieldnames(EYE(dataidx).diam), 1, [])
-                EYE(dataidx).epoch(epochidx).diam.(stream{:}) = correctionfunc(...
-                    EYE(dataidx).epoch(epochidx).diam.(stream{:}),... trialvec
-                    EYE(dataidx).diam.(stream{:})(baselineLats),... basevec
-                    correctionType);
-            end
-        end
+        baselineLats = num2cell(bsxfun(@plus, [EYE(dataidx).epoch.eventLat], currLims(:)), 2);
+        epochsToCorrect = 1:numel(EYE(dataidx).epoch);
     else % Baselines defined relative to their own events
-        epochlats = [EYE(dataidx).epoch.eventLat]; % Central latencies for epochs
-        switch mapping{:}
-            case 'one:all'
-                baselineEventLats = [EYE(dataidx).event(...
-                    find(ismember({EYE(dataidx).event.type}, event), 1)).eventLat]; % Central latencies for baselines
-            case 'one:some'
-                baselineEventLats = [EYE(dataidx).event(...
-                    ismember({EYE(dataidx).event.type}, event)).eventLat]; % Central latencies for baselines
+        epochlats = [EYE(dataidx).epoch.eventLat]; % Event latencies for epochs
+        baselineEventLats = [EYE(dataidx).event(...
+            ismember({EYE(dataidx).event.type}, event)).eventLat];
+        if strcmp(mapping, 'one:all')
+            baselineEventLats = baselineEventLats(1);
         end
+        % Figure out which baselines correspond to which epochs
+        baselineLats = {};
+        epochsToCorrect = [];
         for baselineidx = 1:numel(baselineEventLats)
-            baselineLats = baselineEventLats(baselineidx) + currLims;
+            currBaselineLats = baselineEventLats(baselineidx) + currLims;
             if baselineidx == 1 && any(epochlats < baselineEventLats(baselineidx))
                 error('Some epochs occur before the first baseline period')
             end
-            if baselineidx == numel(baselineEventLats)
-                epochsToCorrectIdx = find(epochlats >= baselineEventLats(baselineidx));
-            else
-                epochsToCorrectIdx = find(...
-                    epochlats > baselineEventLats(baselineidx) &...
-                    epochlats < baselineEventLats(baselineidx + 1));
+            currEpochsToCorrect = epochlats >= baselineEventLats(baselineidx);
+            if baselineidx < numel(baselineEventLats)
+                currEpochsToCorrect = currEpochsToCorrect & ...
+                    epochlats < baselineEventLats(baselineidx + 1);
             end
-            for epochidx = 1:numel(epochsToCorrectIdx)
-                for stream = reshape(fieldnames(EYE(dataidx).diam), 1, [])
-                EYE(dataidx).epoch(epochidx).diam.(stream{:}) = correctionfunc(...
-                    EYE(dataidx).epoch(epochidx).diam.(stream{:}),... trialvec
-                    EYE(dataidx).diam.(stream{:})(baselineLats),... basevec
-                    correctionType);
-                end
-            end
+            currEpochsToCorrect = find(currEpochsToCorrect);
+            baselineLats = [
+                baselineLats
+                repmmat({currBaselineLats}, numel(currEpochsToCorrect), 1)
+            ];
+            epochsToCorrect = [epochsToCorrect currEpochsToCorrect];
+        end
+    end
+    for correctionidx = 1:numel(epochsToCorrect)
+        for stream = reshape(fieldnames(EYE(dataidx).diam), 1, [])
+            EYE(dataidx).epoch(epochidx).diam.(stream{:}) = correctionfunc(...
+                EYE(dataidx).epoch(epochsToCorrect(correctionidx)).diam.(stream{:}),... trialvec
+                EYE(dataidx).diam.(stream{:})(baselineLats{correctionidx}),... basevec
+                correctionType);
         end
     end
     EYE(dataidx).history = [EYE(dataidx).history

@@ -40,7 +40,7 @@ if strcmpi(type, 'dilation')
         if isfield(EYE(dataIdx).diam, 'both')
             plotinfo(dataIdx).data{end + 1} = EYE(dataIdx).diam.both;
             plotinfo(dataIdx).colours{end + 1} = 'k';
-            plotinfo(dataIdx).greyblinks{end + 1} = true;
+            plotinfo(dataIdx).greyblinks(end + 1) = true;
         end
         plotinfo(dataIdx).ylim = [min(structfun(@min, EYE(dataIdx).diam)) max(structfun(@max, EYE(dataIdx).diam))];
     end
@@ -160,9 +160,5 @@ for plotIdx = 1:numel(plotinfo)
         'Rotation', 45,...
         'Units', 'normalized');
 end
-
-end
-
-function updateplot(f)
 
 end

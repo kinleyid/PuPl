@@ -4,6 +4,7 @@ function EYE = load_edf(fullpath)
 [~, filename] = fileparts(fullpath);
 
 % edf = edfImport(fullpath, [1 1 1], '');
+edf = edfimporter(fullpath);
 edf = Edf2Mat(fullpath);
 
 ASSUMED_SRATE = 1000; % Hz

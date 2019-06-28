@@ -18,7 +18,7 @@ if any(badargidx)
     return
 end
 
-currVersion = '0.9';
+currVersion = '0.9.1';
 fprintf('Version %s\n', currVersion);
 % Check for updates
 try

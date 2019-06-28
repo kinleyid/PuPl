@@ -77,11 +77,11 @@ end
 callStr = sprintf('%s''path'', %s)', callStr, all2str(fullpath));
 
 statidx = reshape(find(ismember(statOptions(:, 1), stats)), 1, []);
-colNames = {'Dataset' 'TrialType'};
+colNames = {'Dataset' 'TrialSet'};
 if strcmp(trialwise, 'Compute stats per trial')
-    colNames = [colNames 'Trial'];
+    colNames = [colNames 'TrialType'];
 end
-colNames = [colNames reshape(statOptions(statidx, 3), 1, [])];
+colNames = [colNames 'rt' reshape(statOptions(statidx, 3), 1, [])];
 
 statsTable = colNames;
 
@@ -94,20 +94,21 @@ for dataidx = 1:numel(EYE)
         currwin = win;
     end
     currwin = currwin(:)'*EYE(dataidx).srate; % Window in latencies
-    for binidx = 1:numel(EYE(dataidx).bin)
-        relLats = EYE(dataidx).bin(binidx).relLatencies;
+    for setidx = 1:numel(EYE(dataidx).trialset)
+        relLats = EYE(dataidx).trialset(setidx).relLatencies;
         if isempty(relLats)
             warning('You have combined epochs into a bin that do not all begin and end at the same time relative to their events');
             relLats = 0:size(bin.data.left, 2) - 1;
         end
         latidx = find(relLats == currwin(1)):find(relLats == currwin(2));
         
+        data = gettrialsetdatamatrix(EYE(dataidx), setidx);
+        data = data(:, latidx);
         if strcmp(trialwise, 'Compute stat of trial average')
             nRows = 1;
-            data = nanmean_bc(EYE(dataidx).bin(binidx).data.both(:, latidx));
+            data = nanmean_bc(data);
         else
-            nRows = size(EYE(dataidx).bin(binidx).data.both, 1);
-            data = EYE(dataidx).bin(binidx).data.both(:, latidx);
+            nRows = size(data, 1);
         end
         
         currStats = nan(nRows, numel(statidx));
@@ -126,8 +127,9 @@ for dataidx = 1:numel(EYE)
                 statsTable
                 [
                     cellstr(repmat(EYE(dataidx).name, nRows, 1))...
-                    cellstr(repmat(EYE(dataidx).bin(binidx).name, nRows, 1))...
-                    num2cell(1:nRows)'...
+                    cellstr(repmat(EYE(dataidx).trialset(setidx).name, nRows, 1))...
+                    cellstr(reshape({EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx).name}, [], 1))... repmat(EYE(dataidx).trialset(binidx).name, nRows, 1))...
+                    num2cell(reshape(mergefields(EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx), 'event', 'rt'), [], 1))...
                     num2cell(currStats)
                 ];
             ];
@@ -136,7 +138,8 @@ for dataidx = 1:numel(EYE)
                 statsTable
                 [
                     cellstr(EYE(dataidx).name)...
-                    cellstr(EYE(dataidx).bin(binidx).name)...
+                    cellstr(EYE(dataidx).trialset(setidx).name)...
+                    nanmean_bc(mergefields(EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx), 'event', 'rt'))...
                     currStats
                 ];
             ];
