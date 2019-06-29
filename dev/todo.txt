@@ -35,7 +35,7 @@ Curr version: 0.9
 				time lims: {str str}
 				presence or absence
 				events to check: {'' ''}
-	Add tool for calculating reaction times
+	DONE - Add tool for calculating reaction times
 		calcrts(eyeData, 'onsets', {'trialType1' 'trialType2'}, 'responses', {'response'})
 	Add tool for re-mapping sourcedata to raw (in case folders are transferred between computers)
     call strsplit something else

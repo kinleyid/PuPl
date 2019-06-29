@@ -91,9 +91,9 @@ fprintf('Baseline correcting using method %s...\n', correctionType);
 for dataidx = 1:numel(EYE)
     fprintf('\t%s...', EYE(dataidx).name);
     
-    currLims = EYE(dataidx).srate*[parsetimestr(lims{1}, EYE(dataidx).srate) parsetimestr(lims{2}, EYE(dataidx).srate)];
+    currLims = timestr2lat(EYE(dataidx), lims);
     if isnumeric(event) % Baselines defined relative to each epoch-defining event
-        baselineLats = num2cell(bsxfun(@plus, [EYE(dataidx).epoch.eventLat], currLims(:)), 2);
+        baselineLats = num2cell(bsxfun(@plus, [EYE(dataidx).epoch.eventLat], currLims(:)), 1);
         epochsToCorrect = 1:numel(EYE(dataidx).epoch);
     else % Baselines defined relative to their own events
         epochlats = [EYE(dataidx).epoch.eventLat]; % Event latencies for epochs
@@ -125,9 +125,10 @@ for dataidx = 1:numel(EYE)
     end
     for correctionidx = 1:numel(epochsToCorrect)
         for stream = reshape(fieldnames(EYE(dataidx).diam), 1, [])
-            EYE(dataidx).epoch(epochidx).diam.(stream{:}) = correctionfunc(...
+            EYE(dataidx).epoch(epochsToCorrect(correctionidx)).diam.(stream{:}) = correctionfunc(...
                 EYE(dataidx).epoch(epochsToCorrect(correctionidx)).diam.(stream{:}),... trialvec
-                EYE(dataidx).diam.(stream{:})(baselineLats{correctionidx}),... basevec
+                EYE(dataidx).diam.(stream{:})(...
+                    baselineLats{correctionidx}(1):baselineLats{correctionidx}(2)),... basevec
                 correctionType);
         end
     end

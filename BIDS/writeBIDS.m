@@ -81,7 +81,7 @@ for dataidx = 1:numel(EYE) % Populate
     if ismember('sourcedata', types)
         % Save source data
         fprintf('\t\tSaving sourcedata...');
-        currfilehead = sprintf('%s/sourcedata/%s', projectpath, masterfilehead);
+        currfilehead = fullfile(projectpath, 'sourcedata', masterfilehead);
         mkdir(fileparts(currfilehead)); % Create folder
         saveeyedata(EYE(dataidx).getraw(), sprintf('%s_eyetrack.eyedata', currfilehead));
         curreventlog = EYE(dataidx).eventlog;
@@ -93,8 +93,13 @@ for dataidx = 1:numel(EYE) % Populate
     
     for deriv = reshape(types(~ismember(types, {'raw' 'sourcedata'})), 1, [])
         % Save derived data
-        fprintf('\t\tSaving derivatives: %s...', deriv{:});
-        currfilehead = sprintf('%s/derivatives/%s/%s', projectpath, deriv{:}, masterfilehead);
+		if strcmp(deriv{:}, 'sourcedata-current')
+			fprintf('\t\tSaving current data as sourcedata');
+			currfilehead = fullfile(projectpath, 'sourcedata', masterfilehead);
+		else
+			fprintf('\t\tSaving derivatives: %s...', deriv{:});
+            currfilehead = fullfile(projectpath, 'derivatives', deriv{:}, masterfilehead);
+		end
         mkdir(fileparts(currfilehead)); % Create folder
         saveeyedata(EYE(dataidx), sprintf('%s_eyetrack.eyedata', currfilehead));
         curreventlog = EYE(dataidx).eventlog;
