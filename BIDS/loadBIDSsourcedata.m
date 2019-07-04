@@ -17,11 +17,10 @@ parsed = parseBIDS(sourcedatapath);
 fprintf('Loading from %s...\n', sourcedatapath);
 for dataidx = 1:numel(parsed)
     % Find eye data
-    [d, n, x] = fileparts(parsed(dataidx).full);
-    fprintf('\tLoading %s...', [n x]);
-    currdata = pupl_load('filenames', [n x], 'directory', d);
+    fprintf('\t');
+    currdata = sub_load(parsed(dataidx).full);
     currdata.BIDS = parsed(dataidx).info;
-    fprintf('done\n');
+    fprintf('\n');
     % Check for event log
     contents = dir(parsed(dataidx).path);
     eventlogidx = strcmp({contents.name}, [stripmod(parsed(dataidx).full) '_events.tsv']);

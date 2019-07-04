@@ -18,11 +18,11 @@ Curr version: 0.9
 	DONE - Add tool for rejecting trials on the basis of bad baselines (by missing data)
 		DONE - Integrate this with trial rejection tools
 	DONE - Add option to reload raw data from src
-	Create tool for writing and reading participants.tsv
+	SCRAPPED - Create tool for writing and reading participants.tsv
 		unique(mergefields(EYE, 'BIDS', 'sub'));
 		how to deal with additional info? How to add additional info?
 	If multiple datasets are passed into trimdiam, reset the average of each stream to the grand average of all streams
-	Write cond field to stats sheet
+	DONE - Write cond field to stats sheet
 		Where should the functionality to add a condition be put? Maybe just last under trials
 	DONE - Add tool for marking error trials
 		Combining conditions the normal way
@@ -41,8 +41,15 @@ Curr version: 0.9
     call strsplit something else
 	Finish Contibuting section of manual
 	Alter presentation event log readers to read reaction times
-	Create merged datasets using UI_getsets
+	SCRAPPED - Create merged datasets using UI_getsets
 		Find unique trial set descriptions (names?), then extract trial sets from merged data
+    Add tool to plot grand average on the basis of conditions
+    DONE - Decide what data loaders should print
+        What are the layers?
+            Lowest: loadfunc (take fullpath, return struct) - print nothing
+            Next: dataloader.m (take loadfunc, fullpath, return struct) - print nothing
+            Next: sub_*.m (take loadfunc, fullpath, return struct) - print "loading %s...done"
+            Next: pupl_*.m - print "\n" and whatever other pretty wrapper is needed
 0.9.4: Renaming files
 	Add the same prefix (e.g. pupl_) to all files called by the user interface
 	Add the same prefic (e.g. sub_) to all files called by the aforementioned

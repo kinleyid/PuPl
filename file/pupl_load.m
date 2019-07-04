@@ -35,15 +35,12 @@ else
 end
 
 for fileIdx = 1:numel(filenames)
-    fprintf('Loading %s\n', filenames{fileIdx});
-    data = dataloader(@loadeyedata, fullfile(directory, filenames{fileIdx}));
-    data = pupl_check(data);
+    data = sub_load(fullfile(directory, filenames{fileIdx}));
     structArray = fieldconsistency(structArray, data);
     structArray = cat(2, structArray, data);
+    fprintf('\n');
 end
 
 structArray = pupl_check(structArray);
-
-fprintf('Done\n');
 
 end
