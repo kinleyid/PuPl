@@ -17,9 +17,9 @@ parsed = parseBIDS(sourcedatapath);
 fprintf('Loading from %s...\n', sourcedatapath);
 for dataidx = 1:numel(parsed)
     % Find eye data
-    [~, n, x] = fileparts(parsed(dataidx).full);
+    [d, n, x] = fileparts(parsed(dataidx).full);
     fprintf('\tLoading %s...', [n x]);
-    currdata = loadeyedata(parsed(dataidx).full);
+    currdata = pupl_load('filenames', [n x], 'directory', d);
     currdata.BIDS = parsed(dataidx).info;
     fprintf('done\n');
     % Check for event log

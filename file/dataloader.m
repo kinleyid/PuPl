@@ -1,5 +1,5 @@
 
-function out = rawloader(loadfunc, fullpath)
+function out = dataloader(loadfunc, fullpath)
 
 out = loadfunc(fullpath);
 out.src = fullpath;

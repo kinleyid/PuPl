@@ -68,10 +68,10 @@ end
 
 for dataidx = 1:numel(fullpath)
     fprintf('Loading %s...', fullpath{dataidx});
-    curr = rawloader(p.Results.loadfunc, fullpath{dataidx}); % Get bare data
+    curr = dataloader(p.Results.loadfunc, fullpath{dataidx}); % Get bare data
     switch p.Results.type
         case 'eye'
-            curr.getraw = str2func(sprintf('@()pupl_check(rawloader(@%s, ''%s''))', func2str(p.Results.loadfunc), curr.src));
+            curr.getraw = str2func(sprintf('@()pupl_check(dataloader(@%s, ''%s''))', func2str(p.Results.loadfunc), curr.src));
             if usebids
                 [~, filehead] = fileparts(curr.src);
                 curr.BIDS = parseBIDSfilename(filehead);

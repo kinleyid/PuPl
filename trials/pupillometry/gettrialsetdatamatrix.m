@@ -1,7 +1,15 @@
 
-function matData = gettrialsetdatamatrix(EYE, setidx)
+function mat = gettrialsetdatamatrix(EYE, setname)
 
-vecData = mergefields(EYE.epoch(EYE.trialset(setidx).epochidx), 'diam', 'both');
-matData = reshape(vecData, numel(EYE.trialset(setidx).relLatencies), [])';
+mat = [];
+for dataidx = 1:numel(EYE)
+    setidx = strcmp({EYE(dataidx).trialset.name}, setname);
+    vecData = mergefields(EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx), 'diam', 'both');
+    matData = reshape(vecData, numel(EYE(dataidx).trialset(setidx).relLatencies), [])';
+    mat = [
+        mat
+        matData
+    ];
+end
 
 end

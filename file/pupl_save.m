@@ -20,6 +20,9 @@ if isempty(p.Results.type)
         'event logs'};
     dataType = dataTypeOptions{listdlg('PromptString', 'Data type',...
         'ListString', dataTypeOptions)};
+    if isempty(dataType)
+        return
+    end
 else
     dataType = p.Results.type;
 end
@@ -37,11 +40,15 @@ else
 end
 
 if p.Results.batch
-    path = [uigetdir '\\'];
-    for dataidx = 1:numel(structArray)
-        data = structArray(dataidx);
-        fprintf('Saving %s\n', data.name);
-        save(sprintf('%s', path, data.name, fileExt), 'data', '-v6');
+    path = uigetdir;
+    if isnumeric(path)
+        return
+    else
+        for dataidx = 1:numel(structArray)
+            data = structArray(dataidx);
+            fprintf('Saving %s\n', data.name);
+            saveeyedata(fullfile(path, [data.name fileExt]));
+        end
     end
 else
     path = '';
@@ -57,13 +64,7 @@ else
         end
         [~, file] = fileparts(file);
         fprintf('Saving %s\n', data.name);
-        save(sprintf('%s', path, file, fileExt), 'data', '-v6');
-        %{
-        fid = fopen(sprintf('%s', path, file, fileExt), 'w');
-        fprintf(fid, all2str(structArray));
-        fclose(fid);
-        %}
-        % save(sprintf('%s', path, file, fileExt), 'data', '-ascii');
+        saveeyedata(fullfile(path, [file fileExt]));
     end
 end
 

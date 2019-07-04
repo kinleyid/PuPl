@@ -8,8 +8,7 @@ parse(p, varargin{:});
 
 if isempty(p.Results.dataIdx)
     dataidx = listdlg('PromptString', 'Plot from which dataset?',...
-        'ListString', {EYE.name},...
-        'SelectionMode', 'single');
+        'ListString', {EYE.name});
     if isempty(dataidx)
         return
     end
@@ -30,10 +29,10 @@ else
     set = p.Results.set;
 end
 
-setidx = strcmp({EYE(dataidx).trialset.name}, set);
-data = gettrialsetdatamatrix(EYE(dataidx), setidx);
+data = gettrialsetdatamatrix(EYE(dataidx), set);
 
 if p.Results.byRT
+    setidx = strcmp({EYE(dataidx).trialset.name}, set);
     [~, I] = sort([EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx).rt]);
     data = data(I, :);
     xlab = 'RT rank (fastest to slowest)';
@@ -42,7 +41,7 @@ else
 end
 
 latencies = 1:size(data, 2);
-times = (latencies - 1)/EYE(dataidx).srate;
+times = (latencies - 1)/unique([EYE(dataidx).srate]);
 figure;
 ii = image(times, 1:size(data, 1), data,'CDataMapping','scaled');
 try

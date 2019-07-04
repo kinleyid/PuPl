@@ -14,8 +14,7 @@ legendentries = [];
 while true
     if isempty(p.Results.dataIdx)
         dataidx = listdlg('PromptString', 'Plot from which dataset?',...
-            'ListString', {EYE.name},...
-            'SelectionMode', 'single');
+            'ListString', {EYE.name});
         if isempty(dataidx)
             return
         end
@@ -36,18 +35,16 @@ while true
     end
     
     legendentries = [legendentries {[EYE(dataidx).name ' ' set]}];
-    
-    setidx = strcmp({EYE(dataidx).trialset.name}, set);
-    data = gettrialsetdatamatrix(EYE(dataidx), setidx);
-    
-    relLatencies = EYE(dataidx).trialset(setidx).relLatencies;
+    data = gettrialsetdatamatrix(EYE(dataidx), set);
+    setidx = strcmp({EYE(1).trialset.name}, set);
+    relLatencies = EYE(1).trialset(setidx).relLatencies;
     if ~isempty(relLatencies)
         x = relLatencies;
     else
-        warning('Bin contains epochs in which the relative positions of the events are different\nX-axis will begin at 0 seconds');
+        warning('Trial set contains epochs in which the relative positions of the events are different\nX-axis will begin at 0 seconds');
         x = 0:size(data, 2)-1;
     end
-    t = x /EYE(dataidx).srate;
+    t = x /unique([EYE(dataidx).srate]);
     figure(f);
     currplot = plot(t, nanmean_bc(data));
     x = [t t(end:-1:1)];

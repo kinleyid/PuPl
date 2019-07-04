@@ -9,8 +9,8 @@ function EYE = pupl_condition(EYE, varargin)
 %   are part of condition 2, condIdx would be [1 1 1 2 2].
 
 p = inputParser;
-addParameter(p, 'conditions', []);
-addParameter(p, 'condIdx', []);
+addParameter(p, 'condstruct', []);
+addParameter(p, 'overwrite', []);
 parse(p, varargin{:});
 
 if isempty(EYE)
@@ -18,41 +18,51 @@ if isempty(EYE)
     return
 end
 
-if isempty(p.Results.conditions)
-    nConditions = str2double(inputdlg('How many conditions?'));
-    if isempty(nConditions)
-        EYE = [];
-        return
-    end
-    conditions = UI_getnames(...
-        arrayfun(@(x) sprintf('Name of condition %d', x), 1:nConditions, 'un', 0),...
-        repmat({''}, nConditions, 1));
-    if isempty(conditions)
-        EYE = [];
+if isempty(p.Results.condstruct)
+    condstruct = UI_getsets({EYE.name}, 'Condition');
+    if isempty(condstruct)
         return
     end
 else
-    conditions = p.Results.conditions;
+    condstruct = p.Results.condstruct;
 end
 
-if isempty(p.Results.condIdx)
-    for condIdx = 1:length(conditions)
-        dataIdx = listdlg('PromptString', sprintf('Which datasets are in %s?', conditions{condIdx}),...
-            'ListString', {EYE.name});
-        for curridx = dataIdx
-            if ~isfield(EYE(dataIdx), 'cond')
-                EYE(dataIdx).cond = [];
-            end
-            EYE(curridx).cond = EYE(curridx).cond(:)';
-            EYE(curridx).cond = [EYE(curridx).cond conditions(condIdx)];
+if isempty(p.Results.overwrite)
+    if isnonemptyfield(EYE, 'cond')
+        q = 'Overwrite existing condition assignments?';
+        a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
+        switch a
+            case 'Yes'
+                overwrite = true;
+            case 'No'
+                overwrite = false;
+            otherwise
+                return
         end
-        fprintf('Condition %s includes:\n', conditions{condIdx})
-        fprintf('\t%s\n', EYE(dataIdx).name)
+    else
+        overwrite = false;
     end
 else
-    [EYE.cond] = conditions(p.Results.condIdx);
+    overwrite = p.Results.overwrite;
 end
 
-EYE = pupl_merge(EYE);
+callstr = getcallstr(p);
+
+if overwrite
+    [EYE.cond] = deal('');
+end
+
+for condidx = 1:numel(condstruct)
+    membersidx = ismember({EYE.name}, condstruct(condidx).members);
+    for dataidx = find(membersidx)
+        EYE(dataidx).cond = [EYE(dataidx).cond {condstruct(condidx).name}];
+    end
+    fprintf('Condition ''%s'' contains:\n', condstruct(condidx).name);
+    fprintf('\t%s\n', condstruct(condidx).members{:});
+end
+
+for dataidx = 1:numel(EYE)
+    EYE(dataidx).history{end + 1} = callstr;
+end
 
 end

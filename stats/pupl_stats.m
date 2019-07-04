@@ -77,7 +77,7 @@ end
 callStr = sprintf('%s''path'', %s)', callStr, all2str(fullpath));
 
 statidx = reshape(find(ismember(statOptions(:, 1), stats)), 1, []);
-colNames = {'Dataset' 'TrialSet'};
+colNames = {'Dataset' 'Cond' 'TrialSet'};
 if strcmp(trialwise, 'Compute stats per trial')
     colNames = [colNames 'TrialType'];
 end
@@ -102,7 +102,7 @@ for dataidx = 1:numel(EYE)
         end
         latidx = find(relLats == currwin(1)):find(relLats == currwin(2));
         
-        data = gettrialsetdatamatrix(EYE(dataidx), setidx);
+        data = gettrialsetdatamatrix(EYE(dataidx), EYE(dataidx).trialset(setidx).name);
         data = data(:, latidx);
         if strcmp(trialwise, 'Compute stat of trial average')
             nRows = 1;
@@ -127,6 +127,7 @@ for dataidx = 1:numel(EYE)
                 statsTable
                 [
                     cellstr(repmat(EYE(dataidx).name, nRows, 1))...
+                    cellstr(repmat(EYE(dataidx).cond, nRows, 1))...
                     cellstr(repmat(EYE(dataidx).trialset(setidx).name, nRows, 1))...
                     cellstr(reshape({EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx).name}, [], 1))... repmat(EYE(dataidx).trialset(binidx).name, nRows, 1))...
                     num2cell(reshape(mergefields(EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx), 'event', 'rt'), [], 1))...
@@ -138,6 +139,7 @@ for dataidx = 1:numel(EYE)
                 statsTable
                 [
                     cellstr(EYE(dataidx).name)...
+                    cellstr(EYE(dataidx).cond)...
                     cellstr(EYE(dataidx).trialset(setidx).name)...
                     nanmean_bc(mergefields(EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx), 'event', 'rt'))...
                     currStats

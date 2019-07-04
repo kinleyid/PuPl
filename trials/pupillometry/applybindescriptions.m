@@ -24,7 +24,7 @@ for dataidx = 1:numel(EYE)
             binDescriptions(binIdx).epochs));
         currBin = struct('name', binDescriptions(binIdx).name,...
             'data', [],...
-            'members', binDescriptions(binIdx).epochs,...
+            'members', {binDescriptions(binIdx).epochs},...
             'relLatencies', EYE(dataidx).epoch(binMembers(1)).relLatencies);
         dataStreams = fieldnames(EYE(dataidx).epoch(1).diam);
         for stream = dataStreams(:)'
@@ -32,7 +32,7 @@ for dataidx = 1:numel(EYE)
             for binMemberIdx = binMembers
                 % Same relative location of defining event?
                 if ~all(currBin.relLatencies == EYE(dataidx).epoch(binMemberIdx).relLatencies)
-                    warning('You are combining epochs into a bin that do not all begin and end at the same time relative to their events');
+                    warning('You are combining epochs into a trial set that do not all begin and end at the same time relative to their events');
                     currBin.relLatencies = [];
                 end
                 if ~EYE(dataidx).epoch(binMemberIdx).reject
@@ -42,7 +42,7 @@ for dataidx = 1:numel(EYE)
             end
         end
         fprintf('\tTrial set ''%s'' contains data from %d trials\n', binDescriptions(binIdx).name, nnz(~[EYE(dataidx).epoch(binMembers).reject]))
-        EYE(dataidx).bin = [EYE(dataidx).bin currBin];
+        EYE(dataidx).trialset = [EYE(dataidx).trialset currBin];
     end
 end
 

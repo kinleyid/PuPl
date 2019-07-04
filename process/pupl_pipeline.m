@@ -20,12 +20,8 @@ end
 callstr = sprintf('%% %s''scriptpath'', %s)', callstr, all2str(scriptpath)); % Make it a comment
 
 fprintf('Running pipeline %s\n', scriptpath);
-for dataidx = 1:numel(EYE)
-    fprintf('\t\t%s\n', EYE(dataidx).name);
-    EYE(dataidx).history = cat(1, EYE(dataidx).history, callstr);
-    eyeData = EYE(dataidx); % Processing scripts alter the variable "eyeData"
-    run(scriptpath);
-    EYE(dataidx) = eyeData; % Collect result from pipeline
-end
+eyeData = EYE;
+run(scriptpath);
+EYE = eyeData;
 fprintf('Done\n');
 end

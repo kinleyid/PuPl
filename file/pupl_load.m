@@ -9,30 +9,13 @@ function structArray = pupl_load(varargin)
 % structArray--struct array
 
 p = inputParser;
-addParameter(p, 'type', [])
 addParameter(p, 'filenames', [])
 addParameter(p, 'directory', [])
 parse(p, varargin{:});
 
 structArray = struct([]);
 
-if isempty(p.Results.type)
-    dataTypeOptions = {
-        'eye data'
-        'event logs'};
-    dataType = dataTypeOptions(listdlg('PromptString', 'Data type',...
-        'ListString', dataTypeOptions));
-    if isempty(dataType)
-        return
-    end
-else
-    dataType = p.Results.type;
-end
-if strcmp(dataType, 'eye data')
-    extFilter = '*.eyedata';
-elseif strcmp(dataType, 'event logs')
-    extFilter = '*.eventlog';
-end
+extFilter = '*.eyedata';
 
 if isempty(p.Results.filenames) || isempty(p.Results.filenames)
     [filenames, directory] = uigetfile(extFilter,...
@@ -53,10 +36,10 @@ end
 
 for fileIdx = 1:numel(filenames)
     fprintf('Loading %s\n', filenames{fileIdx});
-    data = load([directory '\\' filenames{fileIdx}], '-mat');
-    % run([directory '\\' filenames{fileIdx}]);
-    structArray = fieldconsistency(structArray, data.data);
-    structArray = cat(2, structArray, data.data);
+    data = dataloader(@loadeyedata, fullfile(directory, filenames{fileIdx}));
+    data = pupl_check(data);
+    structArray = fieldconsistency(structArray, data);
+    structArray = cat(2, structArray, data);
 end
 
 structArray = pupl_check(structArray);
