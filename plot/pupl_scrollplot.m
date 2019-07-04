@@ -114,10 +114,18 @@ for plotIdx = 1:numel(plotinfo)
     ylabel('Pupil size');
     % Display events
     if ~isempty(EYE(plotIdx).event)
-        for eventIdx = find(ismember([EYE(plotIdx).event.latency], x))
+        currevents = find(ismember([EYE(plotIdx).event.latency], x));
+        for idx = 1:numel(currevents)
+            eventIdx = currevents(idx);
             t = (EYE(plotIdx).event(eventIdx).latency - 1)/EYE(plotIdx).srate;
             plot(repmat(t, 1, 2), plotinfo(plotIdx).ylim, 'k');
-            text(t, mean(plotinfo(plotIdx).ylim), num2str(EYE(plotIdx).event(eventIdx).type),...
+            % Jitter Y location in case many events occur in rapid
+            % succession
+            n = 5;
+            spn = 0.6;
+            currYlims = plotinfo(plotIdx).ylim;
+            yLoc = currYlims(1) + abs(diff(currYlims)) * ((spn + (1 - spn)/2) - mod(idx, n) * spn / n);
+            text(t, yLoc, num2str(EYE(plotIdx).event(eventIdx).type),...
                 'FontSize', 8,...
                 'Rotation', 20);
         end

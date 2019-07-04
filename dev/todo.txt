@@ -21,7 +21,7 @@ Curr version: 0.9
 	SCRAPPED - Create tool for writing and reading participants.tsv
 		unique(mergefields(EYE, 'BIDS', 'sub'));
 		how to deal with additional info? How to add additional info?
-	If multiple datasets are passed into trimdiam, reset the average of each stream to the grand average of all streams
+	DONE - If multiple datasets are passed into trimdiam, reset the average of each stream to the grand average of all streams
 	DONE - Write cond field to stats sheet
 		Where should the functionality to add a condition be put? Maybe just last under trials
 	DONE - Add tool for marking error trials

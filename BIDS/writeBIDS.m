@@ -33,6 +33,7 @@ else
     types = p.Results.types;
 end
 types = cellstr(types);
+
 if ismember('derivatives', types)
     deriv = inputdlg('Name of derivative?');
     if isempty(deriv)
@@ -95,6 +96,11 @@ for dataidx = 1:numel(EYE) % Populate
         % Save derived data
 		if strcmp(deriv{:}, 'sourcedata-current')
 			fprintf('\t\tSaving current data as sourcedata');
+            % Check if src is in the raw folder
+            if ~all(arrayfun(@(x) isempty(strfind(x.src, 'raw')), EYE))
+                fprintf('\n');
+                error('src of current data is not the ''raw'' folder');
+            end
 			currfilehead = fullfile(projectpath, 'sourcedata', masterfilehead);
 		else
 			fprintf('\t\tSaving derivatives: %s...', deriv{:});

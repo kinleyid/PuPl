@@ -61,21 +61,20 @@ if numel(EYE) > 1
         'left', 0,...
         'right', 0);
     for dataidx = 1:numel(EYE)
-        for field = reshape(fieldames(EYE(dataidx).diam), 1, [])
+        for field = reshape(fieldnames(EYE(dataidx).diam), 1, [])
             means.(field{:}) = means.(field{:})...
                 + nanmean_bc(EYE(dataidx).diam.(field{:})) / numel(EYE);
         end
     end
     for dataidx = 1:numel(EYE)
-        for field = reshape(fieldames(EYE(dataidx).diam), 1, [])
+        for field = reshape(fieldnames(EYE(dataidx).diam), 1, [])
             EYE(dataidx).diam.(field{:}) = EYE(dataidx).diam.(field{:})...
                 + means.(field{:}) - nanmean_bc(EYE(dataidx).diam.(field{:}));
         end
     end
-else
-    left = mergefields(EYE, 'diam', 'left');
-    right = mergefields(EYE, 'diam', 'right');
 end
+left = mergefields(EYE, 'diam', 'left');
+right = mergefields(EYE, 'diam', 'right');
 
 f = figure(...
     'ToolBar', 'none',...
