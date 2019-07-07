@@ -19,7 +19,7 @@ if any(badargidx)
 end
 
 currVersion = '0.9.1';
-fprintf('Version %s\n', currVersion);
+fprintf('PuPL, version %s\n', currVersion);
 % Check for updates
 try
     newestVersion = urlread('https://kinleyid.github.io/newest.txt');

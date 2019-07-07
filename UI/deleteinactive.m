@@ -21,6 +21,9 @@ switch dataType
         end
         fprintf('Done\n');
         eyeData(rmidx) = [];
+        if isempty(eyeData)
+            eyeData = struct([]);
+        end
         UserData.activeEyeDataIdx(rmidx) = [];
     case 'event logs'
         global eventLogs

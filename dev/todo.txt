@@ -8,7 +8,8 @@ Curr version: 0.9
 	DONE - Add option to view heatmap of trials sorted by reaction time-ask Dr Watter
 	DONE - Write reaction time info to stats sheet-ask Dr Watter
 0.9.2: Handling raw data readers
-	Replace Tobii Excel with Tobii tsv
+	DONE - Replace Tobii Excel with Tobii tsv
+        Not replaced, but added
     DONE - Make xdf reader Octave-compatible
         init.m just needs to compile load_xdf_innerloop.c for Octave
         not working--do I need to specify that it's a C file?
@@ -16,7 +17,8 @@ Curr version: 0.9
     DONE - Make edf reader Octave-compatible
         read ascii rather than raw edf (or maybe add edf reader once I understand the ascii)
         written in Matlab--VERY SLOW. Needs to be done in C at some point
-    Write C code for reading ascii from EDF
+        Redone in Matlab to be faster
+    SCRAPPED - Write C code for reading ascii from EDF
 0.9.3: Odds and ends
 	DONE - Add scrollbar to interface
 	DONE - Add tool for rejecting trials on the basis of bad baselines (by missing data)
@@ -49,25 +51,34 @@ Curr version: 0.9
             Next: dataloader.m (take loadfunc, fullpath, return struct) - print nothing
             Next: sub_*.m (take loadfunc, fullpath, return struct) - print "Loading %s...done"
             Next: pupl_*.m - print "\n" and whatever other pretty wrapper is needed
-    Add tool for geometric PFE correction
-    Make sure the code doesn't break on monocular recordings
-    Add tool for re-mapping sourcedata to raw (in case folders are transferred between computers)
-    call strsplit something else
-	Finish Contibuting section of manual
-	Alter presentation event log readers to read reaction times
-    Add tool to plot grand average on the basis of conditions
-    Fix stats writing to account for multiple conditions
+    DONE - call strsplit something else
+    DONE - Add tool to plot grand average on the basis of conditions
+    DONE - Fix stats writing to account for multiple conditions
         cond1 & cond2 columns? 
         for now, just strcat cond names together
-    Make stats computible for multiple windows per trial
+    DONE - Make stats computible for multiple windows per trial
         E.g. define window--which stats to compute for this window?
             If window empty, use entire trial
             name of window
             mean, median, max, min
-    Add option to print raw trial data
-    Add option to include rejected trials
-    If eyeData is empty, make it struct([])
-    Include n. trials in plot trial sets
+    DONE - Add option to include rejected trials
+        Rejected trials are printed to stats sheet and marked
+    DONE - If eyeData is empty, make it struct([])
+    DONE - Include n. trials in plot trial sets
+    Finish Contibuting section of manual
+	Alter presentation event log readers to read reaction times
+    Fix xdf reader
+    Add tool for geometric PFE correction
+    Make sure the code doesn't break on monocular recordings
+    Add tool for re-mapping sourcedata to raw (in case folders are transferred between computers)
+    Add option to export binned/downsampled data
+        "Add option to print raw trial data" is a special case of this
+        Start time and step size would need to be specified.
+        How would you get just one datapoint per column?
+            Window width of 0 is the answer
+        Column names?
+            [n/p]<winstart>ms_[n/p]<winend>ms_Mean <- How to avoid decimal points in column names?
+            [n/p]<winstart>dp_[n/p]<winend>dp_Mean <- Better
 0.9.4: Renaming files
 	Add the same prefix (e.g. pupl_) to all files called by the user interface
 	Add the same prefic (e.g. sub_) to all files called by the aforementioned

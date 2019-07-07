@@ -6,6 +6,7 @@ addParameter(p, 'projectpath', []);
 addParameter(p, 'types', []);
 addParameter(p, 'move', []);
 parse(p, varargin{:});
+
 if isempty(p.Results.projectpath)
     projectpath = uigetdir(pwd, 'Select top-level folder');
     if projectpath == 0
@@ -42,21 +43,19 @@ if ismember('derivatives', types)
         types(strcmp(types, 'derivatives')) = deriv;
     end
 end
-if ismember('raw', types)
-    if isempty(p.Results.move)
-        q = 'Delete original raw data?';
-        a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'No');
-        switch a
-            case 'Yes'
-                move = true;
-            case 'No'
-                move = false;
-            otherwise
-                return
-        end
-    else
-        move = p.Results.move;
+if ismember('raw', types) && isempty(p.Results.move)
+    q = 'Delete original raw data?';
+    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'No');
+    switch a
+        case 'Yes'
+            move = true;
+        case 'No'
+            move = false;
+        otherwise
+            return
     end
+else
+    move = false;
 end
 
 fprintf('Saving to BIDS format...\n')
@@ -97,7 +96,7 @@ for dataidx = 1:numel(EYE) % Populate
 		if strcmp(deriv{:}, 'sourcedata-current')
 			fprintf('\t\tSaving current data as sourcedata');
             % Check if src is in the raw folder
-            if ~all(arrayfun(@(x) isempty(strfind(x.src, 'raw')), EYE))
+            if ~all(strcontains({EYE.src}, 'raw'))
                 fprintf('\n');
                 error('src of current data is not the ''raw'' folder');
             end
@@ -116,6 +115,10 @@ for dataidx = 1:numel(EYE) % Populate
     end
 end
 fprintf('Done\n');
+
+if isgraphics(gcbf)
+    fprintf('Equivalent command: %s\n', getcallstr(p, false));
+end
 
 end
 

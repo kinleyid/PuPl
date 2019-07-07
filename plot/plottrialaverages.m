@@ -1,40 +1,102 @@
 function plottrialaverages(EYE, varargin)
 
 p = inputParser;
-addParameter(p, 'dataidx', []);
-addParameter(p, 'set', []);
+addParameter(p, 'plotstruct', [])
+addParameter(p, 'bycond', false)
 parse(p, varargin{:});
 
+bycond = p.Results.bycond;
+
 f = figure('Visible', 'off'); hold on;
-xlabel('Time (s)');
-ylabel('Pupil diameter');
-legendentries = [];
 
-while true
-    if isempty(p.Results.dataidx)
-        dataidx = listdlg('PromptString', 'Plot from which dataset?',...
-            'ListString', {EYE.name});
-        if isempty(dataidx)
+if isempty(p.Results.plotstruct)
+    plotstruct = [];
+    while true
+        plotidx = numel(plotstruct) + 1;
+        if bycond
+            [~, cond] = listdlgregexp('PromptString', 'Plot from which dataset?',...
+                'ListString', unique(mergefields(EYE, 'cond')));
+            if isempty(cond)
+                return
+            end
+            dataidx = find(arrayfun(@(x) any(ismember(x.cond, cond)), EYE));
+        else
+            dataidx = listdlgregexp('PromptString', 'Plot from which dataset?',...
+                'ListString', {EYE.name});
+            if isempty(dataidx)
+                return
+            end
+        end
+        plotstruct(plotidx).dataidx = dataidx;
+        
+        setopts = unique(mergefields(EYE(dataidx), 'trialset', 'name'));
+        sel = listdlg('PromptString', 'Plot from which trial set?',...
+            'ListString', setopts,...
+            'SelectionMode', 'single');
+        if isempty(sel)
             return
         end
-    else
-        dataidx = p.Results.dataidx;
+        set = setopts{sel};
+        plotstruct(plotidx).set = set;
+        
+        q = 'Plot which trials?';
+        a = questdlg(q, q, 'Unrejected', 'All', 'Rejected', 'Unrejected');
+        if isempty(a)
+            return
+        end
+        plotstruct(plotidx).include = lower(a);
+        
+        applyplotargs(f, EYE, plotstruct, bycond);
+        
+        q = 'Add more data to this plot?';
+        a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
+        switch a
+            case 'Yes'
+                continue
+            case 'No'
+                break
+            otherwise
+                return
+        end
     end
+else
+    plotstruct = p.Results.plotstruct;
+    applyplotargs(f, EYE, plotstruct, bycond);
+end
 
-    if isempty(p.Results.set)
-        binNames = unique(mergefields(EYE, 'trialset', 'name'));
-        set = binNames{listdlg('PromptString', 'Plot from which trial set?',...
-            'ListString', binNames,...
-            'SelectionMode', 'single')};
-        if isempty(set)
-            return
-        end
-    else
-        set = p.Results.set;
+if isgraphics(gcbf)
+    fprintf('Equivalent command: %s\n', getcallstr(p, false));
+end
+
+end
+
+function applyplotargs(f, EYE, plotstruct, bycond)
+
+figure(f);
+clf; hold on;
+
+for plotidx = 1:numel(plotstruct)
+    dataidx = plotstruct(plotidx).dataidx;
+    set = plotstruct(plotidx).set;
+    [data, isrej] = gettrialsetdatamatrix(EYE(dataidx), set);
+    
+    switch plotstruct(plotidx).include
+        case 'all'
+            isrej = false(size(isrej));
+        case 'rejected'
+            isrej = ~isrej;
     end
     
-    legendentries = [legendentries {[EYE(dataidx).name ' ' set]}];
-    [data, isrej] = gettrialsetdatamatrix(EYE(dataidx), set);
+    if bycond
+        names = unique(mergefields(EYE(dataidx), 'cond'));
+    else
+        names = {EYE(dataidx).name};
+    end
+    names = sprintf('%s &', names{:});
+    names(end-numel(' &')+1:end) = [];
+    plotstruct(plotidx).legendentry = sprintf('%s %s n = %d trials (showing %s trials)',...
+        names, plotstruct(plotidx).set, nnz(~isrej), plotstruct(plotidx).include);
+    
     data = data(~isrej, :);
     setidx = strcmp({EYE(1).trialset.name}, set);
     relLatencies = EYE(1).trialset(setidx).relLatencies;
@@ -45,7 +107,6 @@ while true
         x = 0:size(data, 2)-1;
     end
     t = x /unique([EYE(dataidx).srate]);
-    figure(f);
     currplot = plot(t, nanmean_bc(data));
     x = [t t(end:-1:1)];
     y = [nanmean_bc(data) + nanstd_bc(data) ./ sqrt(sum(~isnan(data)))...
@@ -56,21 +117,11 @@ while true
         'EdgeAlpha', 0.1,...
         'HandleVisibility', 'off');
     xlim([t(1) t(end)]);
-    legend(legendentries, 'Interpreter', 'none');
-    q = 'Add more data to this plot?';
-    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
-    switch a
-        case 'Yes'
-            continue
-        case 'No'
-            break
-        otherwise
-            return
-    end
 end
 
-if isgraphics(gcbf)
-    fprintf('Equivalent command: %s\n', getcallstr(p, false));
-end
+xlabel('Time (s)');
+ylabel('Pupil diameter');
+
+legend(plotstruct.legendentry, 'Interpreter', 'none');
 
 end

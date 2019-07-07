@@ -8,11 +8,10 @@ function EYE = createtrialsets(EYE, varargin)
 
 p = inputParser;
 addParameter(p, 'setDescriptions', []);
+addParameter(p, 'overwrite', []);
 parse(p, varargin{:});
 
-callstr = sprintf('eyeData = %s(eyeData, ', mfilename);
-
-if any(arrayfun(@(x) ~isempty(x.bin), EYE))
+if any(arrayfun(@(x) ~isempty(x.trialset), EYE)) && isempty(p.Results.overwrite)
     q = 'Overwrite existing trial sets?';
     a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
     switch a
@@ -24,11 +23,11 @@ if any(arrayfun(@(x) ~isempty(x.bin), EYE))
             return
     end
 else
-    overwrite = false;
+    overwrite = true;
 end
 
 if overwrite
-    [EYE.bin] = deal([]);
+    [EYE.trialset] = deal([]);
 end
 
 if isempty(p.Results.setDescriptions)
@@ -39,7 +38,6 @@ if isempty(p.Results.setDescriptions)
 else
     setDescriptions = p.Results.setDescriptions;
 end
-callstr = sprintf('%s''setDescriptions'', %s)', callstr, all2str(setDescriptions));
 
 fprintf('Merging trials into sets...\n')
 for dataidx = 1:numel(EYE)
@@ -64,7 +62,7 @@ for dataidx = 1:numel(EYE)
         ];
         fprintf('\t\tSet %s contains %d trials\n', setDescriptions(setidx).name, nnz(epochidx));
     end
-    EYE(dataidx).history{end+1} = callstr;
+    EYE(dataidx).history{end+1} = getcallstr(p);
 end
 
 fprintf('Done\n');

@@ -1,5 +1,11 @@
 
-function [out, header] = readdelim2cell(fullpath, delim)
+function [out, header] = readdelim2cell(fullpath, delim, varargin)
+
+if numel(varargin) == 1
+    comment = varargin{1};
+else
+    comment = '#';
+end
 
 fid = fopen(fullpath);
 % Read header
@@ -7,7 +13,7 @@ header = {};
 while ~feof(fid)
     endofheader = ftell(fid);
     currline = fgetl(fid);
-    if strcmp(currline(1:2), '# ')
+    if strcmp(currline(1:numel(comment)), comment)
         header(end+1) = {currline(3:end)};
     else
         break
@@ -24,7 +30,10 @@ currline = strrep(currline, eol, d);
 currline = stringsplit(currline, delim);
 ncols = numel(currline);
 
-out = fastfileread(fullpath);
+% Read raw
+fseek(fid, endofheader, 'bof');
+out = fread(fid, 'uint8=>char')';
+fclose(fid);
 
 out = strrep(out, eol, d); % Get it all as one line, replacing newlines with delimiters
 out = stringsplit(out, d); % Get cell array

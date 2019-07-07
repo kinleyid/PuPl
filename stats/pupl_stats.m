@@ -185,7 +185,7 @@ for dataidx = 1:numel(EYE)
 end
 
 fprintf('Writing to table...\n');
-writecell(fullpath, statsTable, ',');
+writecell2delim(fullpath, statsTable, ',');
 fprintf('Done\n');
 
 if ~isempty(gcbf)

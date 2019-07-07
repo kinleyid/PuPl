@@ -22,6 +22,10 @@ defaults = {
     'aoiset' @(x)struct([])
     'BIDS', @(x)struct('sub', x.name)
 };
+
+% Ensure missing data is replaced with nan
+
+% Fill in defaults
 for defidx = 1:size(defaults, 1)
     currfield = defaults{defidx, 1};
     if ~isfield(outStruct, currfield)
@@ -86,18 +90,10 @@ function ndata = getndata(EYE)
 if isfield(EYE, 'ndata')
     ndata = EYE.ndata;
 else
-    for field = {'left' 'right'}
+    for field = reshape(fieldnames(EYE.urdiam), 1, [])
         if ~isempty(EYE.urdiam.(field{:}))
             ndata = numel(EYE.urdiam.(field{:}));
             return
-        end
-    end
-    for ax = {'x' 'y'}
-        for side = {'left' 'right'}
-            if ~isempty(EYE.urgaze.(ax{:}).(side{:}))
-                ndata = numel(EYE.urgaze.x.right);
-                return
-            end
         end
     end
 end

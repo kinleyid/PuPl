@@ -3,7 +3,8 @@ function eyeheatmap(EYE, varargin)
 p = inputParser;
 addParameter(p, 'dataidx', []);
 addParameter(p, 'set', []);
-addParameter(p, 'byRT', false);
+addParameter(p, 'byRT', []);
+addParameter(p, 'include', []);
 parse(p, varargin{:});
 
 if isempty(p.Results.dataidx)
@@ -29,18 +30,52 @@ else
     set = p.Results.set;
 end
 
+if isempty(p.Results.byRT)
+    q = 'Sort trials by reaction time?';
+    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'No');
+    switch a
+        case 'Yes'
+            byRT = true;
+        case 'No'
+            byRT = false;
+        otherwise
+            return
+    end
+else
+    byRT = p.Results.byRT;
+end
+
+if isempty(p.Results.include)
+    q = 'Plot which trials?';
+    a = questdlg(q, q, 'Unrejected', 'All', 'Rejected', 'Unrejected');
+    if isempty(a)
+        return
+    end
+    include = lower(a);
+else
+    include = p.Results.include;
+end
+
 [data, isrej] = gettrialsetdatamatrix(EYE(dataidx), set);
+
+switch include
+    case 'all'
+        isrej = false(size(isrej));
+    case 'rejected'
+        isrej = ~isrej;
+end
 data = data(~isrej, :);
 
-if p.Results.byRT
+if byRT
     setidx = strcmp({EYE(dataidx).trialset.name}, set);
-    [~, I] = sort([EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx).rt]);
+    RTs = mergefields(EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx), 'event', 'rt');
+    RTs = RTs(~isrej);
+    [~, I] = sort(RTs);
     data = data(I, :);
     xlab = 'RT rank (fastest to slowest)';
 else
     xlab = 'Trial';
 end
-byRT = p.Results.byRT;
 
 latencies = 1:size(data, 2);
 times = (latencies - 1)/unique([EYE(dataidx).srate]);
