@@ -25,9 +25,17 @@ end
 
 fprintf('\n\nLoading source data from %s\n\n', sourcedatapath);
 sourcedata = loadBIDSsourcedata(sourcedatapath);
+if isempty(sourcedata)
+    fprintf('Aborting\n');
+    return
+end
 [~, n, x] = fileparts(scriptpath);
 fprintf('\n\nRunning processing pipeline %s\n\n', [n x]);
 processed = pupl_pipeline(sourcedata, 'scriptpath', scriptpath);
+if isempty(processed)
+    fprintf('Aborting\n');
+    return
+end
 fprintf('\n\nSaving to %s\n\n', fullfile('derivatives', deriv{:}));
 writeBIDS(processed, 'projectpath', projectpath, 'types', deriv);
 fprintf('\n\nDone\n\n');

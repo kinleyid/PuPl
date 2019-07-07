@@ -69,10 +69,21 @@ for dataidx = 1:numel(EYE)
             EYE(dataidx).epoch = cat(1, EYE(dataidx).epoch, currEpoch);
         end
     end
-    EYE(dataidx).history = [
-        EYE(dataidx).history
-        callStr
-    ];
+    
+    % Sort epochs by event time
+    [~, I] = sort([EYE(dataidx).epoch.eventLat]);
+    EYE(dataidx).epoch = EYE(dataidx).epoch(I);
+    
+    % Set preliminary 1:1 trial set-to-trial relationship
+    trialnames = unique({EYE(dataidx).epoch.name});
+    trialsetdescriptions = struct(...
+        'name', trialnames,...
+        'members', cellfun(@cellstr, trialnames, 'UniformOutput', false));
+    EYE(dataidx) = createtrialsets(EYE(dataidx),...
+        'setDescriptions', trialsetdescriptions);
+    
+    EYE(dataidx).history{end + 1} = callStr;
+    
     fprintf('%d trials extracted\n', numel(EYE(dataidx).epoch));
 end
 fprintf('Done\n');

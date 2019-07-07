@@ -5,7 +5,9 @@ p = inputParser;
 addParameter(p, 'eyedata', struct([])); % optional
 addParameter(p, 'loadfunc', []); % required
 addParameter(p, 'fullpath', []); % optional
+addParameter(p, 'filefilt', '*.*'); % optional
 addParameter(p, 'type', 'eye'); % eye or event, required
+addParameter(p, 'args', {}); % cell array of extra args passed to loadfunc
 parse(p, varargin{:});
 
 EYE = p.Results.eyedata;
@@ -42,14 +44,14 @@ if isempty(p.Results.fullpath) % Get path
     else
         switch p.Results.type
             case 'eye'
-                [filenames, directory] = uigetfile('*.*',...
+                [filenames, directory] = uigetfile(p.Results.filefilt,...
                     'MultiSelect', 'on');
                 if isnumeric(filenames)
                     return
                 end
                 fullpath = strcat(directory, cellstr(filenames));
             case 'event'
-                fullpath = {};
+                fullpath = cell(1, numel(EYE));
                 directory = '';
                 for dataidx = 1:numel(EYE)
                     [filename, directory] = uigetfile([directory '*.*'],...
@@ -58,7 +60,7 @@ if isempty(p.Results.fullpath) % Get path
                     if isnumeric(filename)
                         return
                     end
-                    fullpath = [fullpath fullfile(directory, filename)];
+                    fullpath{dataidx} = fullfile(directory, filename);
                 end
         end
     end
@@ -67,16 +69,24 @@ else
 end
 
 for dataidx = 1:numel(fullpath)
-    fprintf('Loading %s...', fullpath{dataidx});
-    curr = dataloader(p.Results.loadfunc, fullpath{dataidx}); % Get bare data
+    [~, fname] = fileparts(fullpath{dataidx});
+    fprintf('Loading %s...', fname);
+    % Generate getraw function
+    args = '';
+    for ii = 1:numel(p.Results.args)
+        args = sprintf('%s, %s', args, all2str(p.Results.args{ii}));
+    end
+    getraw = str2func(sprintf('@()loader(''%s'',''%s'',@%s,''%s''%s)',...
+        'raw', p.Results.type, func2str(p.Results.loadfunc), fullpath{dataidx}, args));
+    curr = feval(getraw);
+    curr.getraw = getraw;
     switch p.Results.type
         case 'eye'
-            curr.getraw = str2func(sprintf('@()pupl_check(dataloader(@%s, ''%s''))', func2str(p.Results.loadfunc), curr.src));
             if usebids
                 [~, filehead] = fileparts(curr.src);
                 curr.BIDS = parseBIDSfilename(filehead);
             end
-            EYE = [EYE pupl_check(curr)];
+            EYE = [EYE curr];
         case 'event'
             if usebids
                 matchidx = strcmp(...

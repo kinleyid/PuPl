@@ -51,10 +51,7 @@ for dataIdx = 1:numel(EYE)
         nRej,...
         numel(EYE(dataIdx).epoch));
     fprintf('\t\t%d trials total marked for rejection\n', nnz([EYE(dataIdx).epoch.reject]));
-    EYE(dataIdx).history = [
-        EYE(dataIdx).history
-        callStr
-    ];
+    EYE(dataIdx).history{end + 1} = callStr;
 end
 
 fprintf('Done\n')

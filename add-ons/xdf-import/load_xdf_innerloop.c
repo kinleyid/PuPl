@@ -1,3 +1,4 @@
+#include <string.h>
 #include "mex.h"
 /*
  * [Values,Timestamps] = load_xdf_innerloop(Data, NumChannels, FormatString, SamplingInterval, LastTimestamp);
@@ -77,7 +78,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
     /* get inputs */
     data = (unsigned char*)mxGetData(prhs[0]);
     num_channels = (unsigned)(*((double*)mxGetData(prhs[1])));
-    mxGetNChars_700(prhs[2], format_string, mxGetNumberOfElements(prhs[2])+1);
+    // mxGetNChars_700(prhs[2], format_string, mxGetNumberOfElements(prhs[2])+1);
     sampling_interval = *((double*)mxGetData(prhs[3]));
     last_timestamp = *((double*)mxGetData(prhs[4]));
 

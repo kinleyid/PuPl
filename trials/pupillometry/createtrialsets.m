@@ -46,8 +46,7 @@ for dataidx = 1:numel(EYE)
     fprintf('\t%s...\n', EYE(dataidx).name);
     EYE(dataidx).trialset = struct([]);
     for setidx = 1:numel(setDescriptions)
-        epochidx = ismember({EYE(dataidx).epoch.name}, setDescriptions(setidx).members) &...
-            ~[EYE(dataidx).epoch.reject];
+        epochidx = find(ismember({EYE(dataidx).epoch.name}, setDescriptions(setidx).members));
         relLatencies = {EYE(dataidx).epoch(epochidx).relLatencies};
         if numel(unique(cellfun(@num2str, relLatencies, 'UniformOutput', 0))) > 1
             warning('You are combining epochs into a bin that do not all begin and end at the same time relative to their events');

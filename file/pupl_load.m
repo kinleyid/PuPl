@@ -34,12 +34,15 @@ else
     filenames = cellstr(filenames);
 end
 
+fprintf('Loading data...\n');
 for fileIdx = 1:numel(filenames)
+    fprintf('\t');
     data = sub_load(fullfile(directory, filenames{fileIdx}));
     structArray = fieldconsistency(structArray, data);
     structArray = cat(2, structArray, data);
     fprintf('\n');
 end
+fprintf('Done\n');
 
 structArray = pupl_check(structArray);
 

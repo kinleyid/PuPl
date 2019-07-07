@@ -25,47 +25,47 @@ end
 
 plotinfo = [];
 if strcmpi(type, 'diam')
-    for dataIdx = 1:numel(EYE)
-        plotinfo(dataIdx).data = {
-            EYE(dataIdx).diam.left
-            EYE(dataIdx).diam.right
-            getfield(getfromur(EYE(dataIdx), 'diam'), 'left')
-            getfield(getfromur(EYE(dataIdx), 'diam'), 'right')};
-        plotinfo(dataIdx).colours = {
+    for dataidx = 1:numel(EYE)
+        plotinfo(dataidx).data = {
+            EYE(dataidx).diam.left
+            EYE(dataidx).diam.right
+            getfield(getfromur(EYE(dataidx), 'diam'), 'left')
+            getfield(getfromur(EYE(dataidx), 'diam'), 'right')};
+        plotinfo(dataidx).colours = {
             'b'
             'r'
             'b:'
             'r:'};
-        plotinfo(dataIdx).greyblinks = [
+        plotinfo(dataidx).greyblinks = [
             true
             true
             false
             false];
-        if isfield(EYE(dataIdx).diam, 'both')
-            plotinfo(dataIdx).data{end + 1} = EYE(dataIdx).diam.both;
-            plotinfo(dataIdx).colours{end + 1} = 'k';
-            plotinfo(dataIdx).greyblinks(end + 1) = true;
+        if isfield(EYE(dataidx).diam, 'both')
+            plotinfo(dataidx).data{end + 1} = EYE(dataidx).diam.both;
+            plotinfo(dataidx).colours{end + 1} = 'k';
+            plotinfo(dataidx).greyblinks(end + 1) = true;
         end
-        plotinfo(dataIdx).ylim = [min(structfun(@min, EYE(dataIdx).diam)) max(structfun(@max, EYE(dataIdx).diam))];
+        plotinfo(dataidx).ylim = [min(structfun(@min, EYE(dataidx).diam)) max(structfun(@max, EYE(dataidx).diam))];
     end
 elseif strcmpi(type, 'gaze')
-    for dataIdx = 1:numel(EYE)
-        plotinfo(dataIdx).data = {
-            EYE(dataIdx).gaze.x
-            EYE(dataIdx).gaze.y
-            getfield(getfromur(EYE(dataIdx), 'gaze'), 'x')
-            getfield(getfromur(EYE(dataIdx), 'gaze'), 'y')};
-        plotinfo(dataIdx).colours = {
+    for dataidx = 1:numel(EYE)
+        plotinfo(dataidx).data = {
+            EYE(dataidx).gaze.x
+            EYE(dataidx).gaze.y
+            getfield(getfromur(EYE(dataidx), 'gaze'), 'x')
+            getfield(getfromur(EYE(dataidx), 'gaze'), 'y')};
+        plotinfo(dataidx).colours = {
             'b'
             'r'
             'b:'
             'r:'};
-        plotinfo(dataIdx).greyblinks = [
+        plotinfo(dataidx).greyblinks = [
             true
             true
             false
             false];
-        plotinfo(dataIdx).ylim = [min(structfun(@min, EYE(dataIdx).gaze)) max(structfun(@max, EYE(dataIdx).gaze))];
+        plotinfo(dataidx).ylim = [min(structfun(@min, EYE(dataidx).gaze)) max(structfun(@max, EYE(dataidx).gaze))];
     end
 end
 
@@ -121,10 +121,10 @@ for plotIdx = 1:numel(plotinfo)
             plot(repmat(t, 1, 2), plotinfo(plotIdx).ylim, 'k');
             % Jitter Y location in case many events occur in rapid
             % succession
-            n = 5;
-            spn = 0.6;
+            n = 10;
+            spn = 0.8;
             currYlims = plotinfo(plotIdx).ylim;
-            yLoc = currYlims(1) + abs(diff(currYlims)) * ((spn + (1 - spn)/2) - mod(idx, n) * spn / n);
+            yLoc = currYlims(1) + abs(diff(currYlims)) * (spn - mod(idx, n) * spn / n);
             text(t, yLoc, num2str(EYE(plotIdx).event(eventIdx).type),...
                 'FontSize', 8,...
                 'Rotation', 20);

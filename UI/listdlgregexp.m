@@ -51,7 +51,7 @@ if isgraphics(f)
     names = listString(idx);
     close(f);
 else
-    idx = [];
+    [idx, names] = deal([]);
 end
 
 end

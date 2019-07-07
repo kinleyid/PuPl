@@ -1,6 +1,7 @@
 function init
 
 global userInterface
+
 if isgraphics(userInterface)
     uimenu(findobj(userInterface, 'Tag', 'importEventLogsMenu'),...
         'Label', 'From &Noldus Excel file',...

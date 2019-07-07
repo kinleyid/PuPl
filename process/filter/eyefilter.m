@@ -41,7 +41,7 @@ for dataidx = 1:numel(EYE)
             field = 'gaze';
     end
     EYE(dataidx).(field) = applyeyefilter(EYE(dataidx), dataType, filterType, currN);
-    EYE(dataidx).history = cat(1, EYE(dataidx).history, callStr);
+    EYE(dataidx).history{end + 1} = callStr;
 end
 fprintf('done\n');
 
@@ -99,7 +99,7 @@ switch lower(filterType)
                 end
         end
         for stream = reshape(fieldnames(tempData), 1, [])
-            fprintf('\t\tFiltering %10s: ', stream{:});
+            fprintf('\t\tFiltering %s...', stream{:});
             tempData.(stream{:}) = mvavfilt(permData.(stream{:}), smoothN, filtfunc);
             fprintf('\n');
         end

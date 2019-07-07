@@ -19,7 +19,7 @@ else
     fstem=fname;
 end;
 
-rehash path
+rehash path % why
 if exist([fstem '.asc'])
     fname=[fstem '.asc'];
     fprintf('using existing asc file %s\n',fname);
@@ -50,9 +50,9 @@ line=0; trial=1; trialstart=0;
 nancount=0; maxnans=3000; %max 3 seconds blink recorded.
 if ~exist('readPos') readPos=1;end;
 try
-    skipToNextLineStartingWith(fid, 'START'); token='START';
+    skipToNextLineStartingWith(fid, 'START'); token='START'; % Run tape til next instance of "START"
     while ~feof(fid)
-        if strcmp(token,'MSG')
+        if strcmp(token,'MSG') % If a message:
             t = fscanf(fid, '%d',1);
             msg = fscanf(fid, '%s',1);
             val = fgets(fid); %remainder of line
@@ -69,17 +69,19 @@ try
             end;
             fn = removeNonalphanumericChars(msg);
             val(uint8(val)<31)=[]; % remove control characters from message
-            result(trial).([fn '_m']) = val;
-            result(trial).([fn '_t']) = t-trialstart;
+            try
+                result(trial).([fn '_m']) = val;
+                result(trial).([fn '_t']) = t-trialstart;
+            end
         elseif strcmp(token,'START')
             trial=trial+1;
             result(trial).pos=[]; result(trial).fixation=[]; result(trial).saccade=[];
             result(trial).blink=[];
             trialstart=fscanf(fid,'%d',1);
             fprintf('\rTrial %d   ',trial);
-        elseif readPos & any(token(1)=='0123456789') 
+        elseif readPos & any(token(1)=='0123456789') % If token contains a number,
             t=fscanf(fid,'%g',3)'; time=str2num(token)-trialstart ;
-            if length(t)==3
+            if length(t)==3 % How could it not be?
                 result(trial).pos = [result(trial).pos; time, t ] ;
                 nancount=0;
             else
@@ -112,7 +114,7 @@ try
         end
         %[z z kcode]=KbCheck;
         %if kcode(27) break;end;
-        token=fscanf(fid, '%s',1);
+        token=fscanf(fid, '%s',1); % Get next token
     end
     if~(prod(size(result(1).pos)))result(1)=[]; end;%remove single initial blank trial
     if isfield(result(1), 'VOID_TRIAL_t')
@@ -142,5 +144,20 @@ function skipToNextLineStartingWith(fid, str)
         if strcmp(token,str) pass=0; break;
         else fgets(fid);  %gobble
         end;
+    end;
+end
+
+function str=removeNonalphanumericChars(str)
+% Remove all characters that are not alphanumeric, . or _,  and remove 
+% any initial digits.
+% useful for making field names or variable names.
+    i=1;
+    while i<=length(str)
+        if any(str(i)=='_.') i=i+1;continue; end;
+        if str(i)<65 | (str(i)>90 & str(i)<97) | str(i)>122 ...
+                | (i==1 & str(i)>47 & str(i)<58)
+            str=[ str(1:i-1)  str(i+1:end) ];
+        else i=i+1;
+        end
     end;
 end

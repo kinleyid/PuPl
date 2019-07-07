@@ -1,5 +1,5 @@
 
-function writecell(fullpath, data, delim, varargin)
+function writecell2delim(fullpath, data, delim, varargin)
 
 % Write cell data to delimited text file
 

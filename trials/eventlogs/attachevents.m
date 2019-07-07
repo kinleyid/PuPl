@@ -33,20 +33,35 @@ else
 end
 callStr = sprintf('%s''eventlogeventstoalign'', %s, ''eyeeventstoalign'', %s, ', callStr, all2str(eventLogEventsToAlign), all2str(eyeEventsToAlign));
 
-if isempty(p.Results.eventstoattach) || isempty(p.Results.namestoattach)
-    [eventsToAttach, namesToAttach] = UI_geteventstoattach([EYE.eventlog]);
-    if isempty(eventsToAttach)
+if isempty(p.Results.eventstoattach)
+    eventOptions = unique(mergefields(EYE, 'eventlog', 'event', 'type'));
+    sel = listdlgregexp(...
+        'PromptString', 'Which events from the event log should be attached to the eye data?',...
+        'ListString', eventOptions);
+    if isempty(sel)
         return
     end
+    eventsToAttach = eventOptions(sel);
 else
     eventsToAttach = p.Results.eventstoattach;
-    namesToAttach = p.Results.namestoattach;
 end 
-callStr = sprintf('%s''eventstoattach'', %s, ''namestoattach'', %s, ', callStr, all2str(eventsToAttach), all2str(namesToAttach));
+callStr = sprintf('%s''eventstoattach'', %s, ', callStr, all2str(eventsToAttach));
 
 if isempty(p.Results.namestoattach)
-    namesToAttach = eventsToAttach;
+    q = 'Attach the events under different names?';
+    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'No');
+    switch a
+        case 'Yes'
+            namesToAttach = UI_getnames(eventsToAttach);
+        case 'No'
+            namesToAttach = eventsToAttach;
+        otherwise
+            return
+    end
+else
+    namesToAttach = p.Results.namestoattach;
 end
+callStr = sprintf('%s''namestoattach'', %s, ', callStr, all2str(namesToAttach));
 
 if isempty(p.Results.overwrite)
     q = 'Overwrite events already in eye data?';
@@ -63,8 +78,8 @@ else
     overwrite = p.Results.overwrite;
 end
 callStr = sprintf('%s''overwrite'', %s)', callStr, all2str(overwrite));
-% Find offset and attach events
 
+% Find offset and attach events
 for dataidx = 1:numel(EYE)
     offsetParams = findtimelineoffset(EYE(dataidx),...
         EYE(dataidx).eventlog,...
@@ -80,8 +95,8 @@ for dataidx = 1:numel(EYE)
         eventsToAttach,...
         namesToAttach,...
         overwrite);
-    EYE(dataidx) = pupl_check(EYE(dataidx));
-    EYE(dataidx).history = cat(1, EYE(dataidx).history, callStr);
+    EYE(dataidx) = pupl_check(EYE(dataidx)); % Add "start of recording" event in case it was overwritten
+    EYE(dataidx).history{end + 1} = callStr;
 end
 fprintf('Done\n');
 

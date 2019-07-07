@@ -132,8 +132,7 @@ for dataidx = 1:numel(EYE)
                 correctionType);
         end
     end
-    EYE(dataidx).history = [EYE(dataidx).history
-        callStr];
+    EYE(dataidx).history{end + 1} = callStr;
     fprintf('done\n');
 end
 fprintf('Done\n');

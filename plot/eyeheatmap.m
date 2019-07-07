@@ -1,19 +1,19 @@
 function eyeheatmap(EYE, varargin)
 
 p = inputParser;
-addParameter(p, 'dataIdx', []);
+addParameter(p, 'dataidx', []);
 addParameter(p, 'set', []);
 addParameter(p, 'byRT', false);
 parse(p, varargin{:});
 
-if isempty(p.Results.dataIdx)
+if isempty(p.Results.dataidx)
     dataidx = listdlg('PromptString', 'Plot from which dataset?',...
         'ListString', {EYE.name});
     if isempty(dataidx)
         return
     end
 else
-    dataidx = p.Results.dataIdx;
+    dataidx = p.Results.dataidx;
 end
 
 if isempty(p.Results.set)
@@ -29,7 +29,8 @@ else
     set = p.Results.set;
 end
 
-data = gettrialsetdatamatrix(EYE(dataidx), set);
+[data, isrej] = gettrialsetdatamatrix(EYE(dataidx), set);
+data = data(~isrej, :);
 
 if p.Results.byRT
     setidx = strcmp({EYE(dataidx).trialset.name}, set);
@@ -39,6 +40,7 @@ if p.Results.byRT
 else
     xlab = 'Trial';
 end
+byRT = p.Results.byRT;
 
 latencies = 1:size(data, 2);
 times = (latencies - 1)/unique([EYE(dataidx).srate]);
@@ -54,5 +56,9 @@ xlabel('Time (s)')
 cb = colorbar;
 ylabel(cb, 'Pupil diameter')
 title([EYE(dataidx).name ' ' set], 'Interpreter', 'none');
+
+if isgraphics(gcbf)
+    fprintf('Equivalent command: %s\n', getcallstr(p, false));
+end
 
 end

@@ -37,6 +37,9 @@ if isempty(p.Results.checkfor)
     [~, checkfor] = listdlgregexp(...
         'PromptString', 'Search for which events?',...
         'ListString', unique(mergefields(EYE, 'event', 'type')));
+    if isempty(checkfor)
+        return
+    end
 else
     checkfor = p.Results.checkfor;
 end
@@ -65,6 +68,9 @@ if isempty(p.Results.relindices)
         return
     else
         relindices = str2num(relindices{:});
+        if isempty(relindices)
+            relindices = 'none';
+        end
     end
 else
     relindices = p.Results.relindices;
@@ -88,7 +94,7 @@ presence = logical(presence);
 
 if isempty(p.Results.overwrite)
     q = 'Overwrite time-locking events?';
-    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
+    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'No');
     switch a
         case 'Yes'
             overwrite = true;
@@ -123,7 +129,7 @@ for dataidx = 1:numel(EYE)
                 rellats >= currlims(1) &...
                 rellats <= currlims(2);
         end
-        if ~isempty(relindices)
+        if ~ischar(relindices)
             relinds = (1:numel(EYE(dataidx).event)) - eventidx;
             windowidx = windowidx &...
                 ismember(relinds, relindices);
@@ -133,14 +139,11 @@ for dataidx = 1:numel(EYE)
         end
     end
     fprintf('%d higher-order events defined\n', nnz(foundidx));
-    newEvents = EYE(dataidx).event(foundidx);
-    [newEvents.type] = deal(name);
-    if overwrite
-        EYE(dataidx).event(foundidx) = [];
+    newnames = repmat(cellstr(name), 1, nnz(foundidx));
+    if ~overwrite
+        newnames = strcat({EYE(dataidx).event(foundidx).type}, newnames);
     end
-    EYE(dataidx).event = cat(2, EYE(dataidx).event(:)', newEvents);
-    [~, I] = sort([EYE(dataidx).event.latency]);
-    EYE(dataidx).event = EYE(dataidx).event(I);
+    [EYE(dataidx).event(foundidx).type] = newnames{:};
     EYE(dataidx).history{end+1} = callstr;
 end
 fprintf('Done\n');

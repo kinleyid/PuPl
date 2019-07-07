@@ -1,9 +1,8 @@
 function plottrialaverages(EYE, varargin)
 
 p = inputParser;
-addParameter(p, 'dataIdx', []);
+addParameter(p, 'dataidx', []);
 addParameter(p, 'set', []);
-addParameter(p, 'errorBars', []);
 parse(p, varargin{:});
 
 f = figure('Visible', 'off'); hold on;
@@ -12,14 +11,14 @@ ylabel('Pupil diameter');
 legendentries = [];
 
 while true
-    if isempty(p.Results.dataIdx)
+    if isempty(p.Results.dataidx)
         dataidx = listdlg('PromptString', 'Plot from which dataset?',...
             'ListString', {EYE.name});
         if isempty(dataidx)
             return
         end
     else
-        dataidx = p.Results.dataIdx;
+        dataidx = p.Results.dataidx;
     end
 
     if isempty(p.Results.set)
@@ -35,7 +34,8 @@ while true
     end
     
     legendentries = [legendentries {[EYE(dataidx).name ' ' set]}];
-    data = gettrialsetdatamatrix(EYE(dataidx), set);
+    [data, isrej] = gettrialsetdatamatrix(EYE(dataidx), set);
+    data = data(~isrej, :);
     setidx = strcmp({EYE(1).trialset.name}, set);
     relLatencies = EYE(1).trialset(setidx).relLatencies;
     if ~isempty(relLatencies)
@@ -53,15 +53,24 @@ while true
     fill(x, y, get(currplot, 'Color'),...
         'EdgeColor', get(currplot, 'Color'),...
         'FaceAlpha', 0.1,...
-        'EdgeAlpha', 0.5,...
+        'EdgeAlpha', 0.1,...
         'HandleVisibility', 'off');
     xlim([t(1) t(end)]);
     legend(legendentries, 'Interpreter', 'none');
     q = 'Add more data to this plot?';
-    a = questdlg(q, q, 'Yes', 'No', 'Yes');
-    if strcmp(a, 'No')
-        return
+    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
+    switch a
+        case 'Yes'
+            continue
+        case 'No'
+            break
+        otherwise
+            return
     end
+end
+
+if isgraphics(gcbf)
+    fprintf('Equivalent command: %s\n', getcallstr(p, false));
 end
 
 end

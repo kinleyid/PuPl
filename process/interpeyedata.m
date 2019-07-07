@@ -61,7 +61,7 @@ for dataidx = 1:numel(EYE)
         fprintf('\t\t%s (max jump %.2f):', field{:}, currm);
         EYE(dataidx).(data).(field{:}) = applyinterpolation(currv, currn, currm);
     end
-    EYE(dataidx).history = cat(1, EYE(dataidx).history, callStr);
+    EYE(dataidx).history{end + 1} = callStr;
 end
 fprintf('Done\n');
 

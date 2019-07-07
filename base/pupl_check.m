@@ -10,8 +10,8 @@ defaults = {
     'name', @(x) getname(x)
     'getraw', @(x)''
     'epoch' @(x)struct([])
-    'bin' @(x)struct([])
-    'cond' @(x)[]
+    'trialset' @(x)struct([])
+    'cond' @(x)''
     'event' @(x)struct([])
     'isBlink' @(x)false(1, getndata(x))
     'history' @(x){}
@@ -29,6 +29,18 @@ for defidx = 1:size(defaults, 1)
             outStruct(dataidx).(currfield) = feval(defaults{defidx, 2}, outStruct(dataidx));
         end
     end
+end
+
+% Ensure zero diameter measurements are set to nan
+for field = {'left' 'right'}
+    data = outStruct.urdiam.(field{:});
+    data(data < eps) = nan;
+    outStruct.urdiam.(field{:}) = data;
+end
+
+% Set event to row vector
+for dataidx = 1:numel(outStruct)
+    outStruct(dataidx).event = outStruct(dataidx).event(:)';
 end
 
 % Ensure event labels are strings
@@ -71,14 +83,23 @@ end
 
 function ndata = getndata(EYE)
 
-if ~isempty(EYE.diam.left)
-    ndata = numel(EYE.diam.left);
-elseif ~isempty(EYE.diam.right)
-    ndata = numel(EYE.diam.right);
-elseif ~isempty(EYE.gaze.x)
-    ndata = numel(EYE.gaze.x);
-elseif ~isempty(EYE.gaze.y)
-    ndata = numel(EYE.gaze.y);
+if isfield(EYE, 'ndata')
+    ndata = EYE.ndata;
+else
+    for field = {'left' 'right'}
+        if ~isempty(EYE.urdiam.(field{:}))
+            ndata = numel(EYE.urdiam.(field{:}));
+            return
+        end
+    end
+    for ax = {'x' 'y'}
+        for side = {'left' 'right'}
+            if ~isempty(EYE.urgaze.(ax{:}).(side{:}))
+                ndata = numel(EYE.urgaze.x.right);
+                return
+            end
+        end
+    end
 end
 
 end

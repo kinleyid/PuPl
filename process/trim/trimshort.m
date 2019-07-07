@@ -28,7 +28,7 @@ for dataidx = 1:numel(EYE)
         fprintf('\t\t%s: %0.2f%% removed\n', field{:}, 100*nnz(trimidx)/numel(trimidx));
         EYE(dataidx).diam.(field{:})(trimidx) = nan;
     end
-    EYE(dataidx).history = cat(1, EYE(dataidx).history, callStr);
+    EYE(dataidx).history{end + 1} = callStr;
 end
 fprintf('Done\n')
 

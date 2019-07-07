@@ -8,11 +8,15 @@ Curr version: 0.9
 	DONE - Add option to view heatmap of trials sorted by reaction time-ask Dr Watter
 	DONE - Write reaction time info to stats sheet-ask Dr Watter
 0.9.2: Handling raw data readers
-	IN PROGRESS - Make read edf Octave-compatible
-	Add tool for reading non-excel Tobii
-    Make xdf reader Octave-compatible
-    Add tools for reading other formats:
-        1.
+	Replace Tobii Excel with Tobii tsv
+    DONE - Make xdf reader Octave-compatible
+        init.m just needs to compile load_xdf_innerloop.c for Octave
+        not working--do I need to specify that it's a C file?
+        load_xdf uses plain Matlab if the mex file isn't there
+    DONE - Make edf reader Octave-compatible
+        read ascii rather than raw edf (or maybe add edf reader once I understand the ascii)
+        written in Matlab--VERY SLOW. Needs to be done in C at some point
+    Write C code for reading ascii from EDF
 0.9.3: Odds and ends
 	DONE - Add scrollbar to interface
 	DONE - Add tool for rejecting trials on the basis of bad baselines (by missing data)
@@ -37,19 +41,33 @@ Curr version: 0.9
 				events to check: {'' ''}
 	DONE - Add tool for calculating reaction times
 		calcrts(eyeData, 'onsets', {'trialType1' 'trialType2'}, 'responses', {'response'})
-	Add tool for re-mapping sourcedata to raw (in case folders are transferred between computers)
-    call strsplit something else
-	Finish Contibuting section of manual
-	Alter presentation event log readers to read reaction times
 	SCRAPPED - Create merged datasets using UI_getsets
 		Find unique trial set descriptions (names?), then extract trial sets from merged data
-    Add tool to plot grand average on the basis of conditions
     DONE - Decide what data loaders should print
         What are the layers?
             Lowest: loadfunc (take fullpath, return struct) - print nothing
             Next: dataloader.m (take loadfunc, fullpath, return struct) - print nothing
-            Next: sub_*.m (take loadfunc, fullpath, return struct) - print "loading %s...done"
+            Next: sub_*.m (take loadfunc, fullpath, return struct) - print "Loading %s...done"
             Next: pupl_*.m - print "\n" and whatever other pretty wrapper is needed
+    Add tool for geometric PFE correction
+    Make sure the code doesn't break on monocular recordings
+    Add tool for re-mapping sourcedata to raw (in case folders are transferred between computers)
+    call strsplit something else
+	Finish Contibuting section of manual
+	Alter presentation event log readers to read reaction times
+    Add tool to plot grand average on the basis of conditions
+    Fix stats writing to account for multiple conditions
+        cond1 & cond2 columns? 
+        for now, just strcat cond names together
+    Make stats computible for multiple windows per trial
+        E.g. define window--which stats to compute for this window?
+            If window empty, use entire trial
+            name of window
+            mean, median, max, min
+    Add option to print raw trial data
+    Add option to include rejected trials
+    If eyeData is empty, make it struct([])
+    Include n. trials in plot trial sets
 0.9.4: Renaming files
 	Add the same prefix (e.g. pupl_) to all files called by the user interface
 	Add the same prefic (e.g. sub_) to all files called by the aforementioned

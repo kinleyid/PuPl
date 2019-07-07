@@ -23,5 +23,5 @@ fprintf('Running pipeline %s\n', scriptpath);
 eyeData = EYE;
 run(scriptpath);
 EYE = eyeData;
-fprintf('Done\n');
+fprintf('\nDone\n');
 end

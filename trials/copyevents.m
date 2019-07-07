@@ -19,6 +19,9 @@ fprintf('\tWriting events from %s to %s...', eventLog.name, EYE.name);
 
 for typeIdx = 1:numel(eventsToAttach)
     matchIdx = strcmpi({eventLog.event.type}, eventsToAttach(typeIdx));
+    if ~any(matchIdx)
+        continue
+    end
     times = [
         reshape([eventLog.event(matchIdx).time], [], 1)...
         ones(nnz(matchIdx), 1)]*offsetParams;
