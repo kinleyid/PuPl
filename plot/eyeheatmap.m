@@ -8,7 +8,7 @@ addParameter(p, 'include', []);
 parse(p, varargin{:});
 
 if isempty(p.Results.dataidx)
-    dataidx = listdlg('PromptString', 'Plot from which dataset?',...
+    dataidx = listdlgregexp('PromptString', 'Plot from which dataset?',...
         'ListString', {EYE.name});
     if isempty(dataidx)
         return
@@ -19,13 +19,14 @@ end
 
 if isempty(p.Results.set)
     % setNames = unique(mergefields(EYE, 'set', 'name'));
-    setNames = unique(mergefields(EYE, 'trialset', 'name'));
-    set = setNames{listdlg('PromptString', 'Plot from which trial set?',...
-        'ListString', setNames,...
-        'SelectionMode', 'single')};
-    if isempty(set)
+    setOpts = unique(mergefields(EYE, 'trialset', 'name'));
+    sel = listdlg('PromptString', 'Plot from which trial set?',...
+        'ListString', setOpts,...
+        'SelectionMode', 'single');
+    if isempty(sel)
         return
     end
+    set = setOpts{sel};
 else
     set = p.Results.set;
 end

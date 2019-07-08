@@ -65,9 +65,9 @@ Curr version: 0.9
         Rejected trials are printed to stats sheet and marked
     DONE - If eyeData is empty, make it struct([])
     DONE - Include n. trials in plot trial sets
+    DONE - Fix xdf reader
     Finish Contibuting section of manual
 	Alter presentation event log readers to read reaction times
-    Fix xdf reader
     Add tool for geometric PFE correction
     Make sure the code doesn't break on monocular recordings
     Add tool for re-mapping sourcedata to raw (in case folders are transferred between computers)
@@ -79,6 +79,11 @@ Curr version: 0.9
         Column names?
             [n/p]<winstart>ms_[n/p]<winend>ms_Mean <- How to avoid decimal points in column names?
             [n/p]<winstart>dp_[n/p]<winend>dp_Mean <- Better
+        How to define when steps start and end?
+            Option 1: define n. steps
+            Option 2: define end time
+                What if end time doesn't line up with last window end?
+                    Make that one the last window
 0.9.4: Renaming files
 	Add the same prefix (e.g. pupl_) to all files called by the user interface
 	Add the same prefic (e.g. sub_) to all files called by the aforementioned

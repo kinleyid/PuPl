@@ -19,10 +19,10 @@ switch(type)
         out = struct(...
             'x', mean([
                 EYE.urgaze.x.left
-                EYE.urgaze.y.left]),...
+                EYE.urgaze.x.right]),...
             'y', mean([
-                EYE.urgaze.x.right
-                EYE.urgaze.y.left]));
+                EYE.urgaze.y.left
+                EYE.urgaze.y.right]));
         %{
         out = struct(...
             'x', mean([

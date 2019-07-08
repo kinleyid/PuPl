@@ -1,5 +1,5 @@
 
-function outStruct = pupl_check(outStruct)
+function EYE = pupl_check(EYE)
 
 % Ensures that the EYE struct array conforms to this code's expectations
 
@@ -28,57 +28,59 @@ defaults = {
 % Fill in defaults
 for defidx = 1:size(defaults, 1)
     currfield = defaults{defidx, 1};
-    if ~isfield(outStruct, currfield)
-        for dataidx = 1:numel(outStruct)
-            outStruct(dataidx).(currfield) = feval(defaults{defidx, 2}, outStruct(dataidx));
+    if ~isfield(EYE, currfield)
+        for dataidx = 1:numel(EYE)
+            EYE(dataidx).(currfield) = feval(defaults{defidx, 2}, EYE(dataidx));
         end
     end
 end
 
 % Ensure zero diameter measurements are set to nan
 for field = {'left' 'right'}
-    data = outStruct.urdiam.(field{:});
+    data = EYE.urdiam.(field{:});
     data(data < eps) = nan;
-    outStruct.urdiam.(field{:}) = data;
+    EYE.urdiam.(field{:}) = data;
 end
 
 % Set event to row vector
-for dataidx = 1:numel(outStruct)
-    outStruct(dataidx).event = outStruct(dataidx).event(:)';
+for dataidx = 1:numel(EYE)
+    EYE(dataidx).event = EYE(dataidx).event(:)';
 end
 
 % Ensure event labels are strings
-if ~isempty([outStruct.event])
-    for dataidx = 1:numel(outStruct)
-        newEvents = cellfun(@num2str, {outStruct(dataidx).event.type}, 'un', 0);
-        [outStruct(dataidx).event.type] = newEvents{:};
+if ~isempty([EYE.event])
+    for dataidx = 1:numel(EYE)
+        newEvents = cellfun(@num2str, {EYE(dataidx).event.type}, 'un', 0);
+        [EYE(dataidx).event.type] = newEvents{:};
     end
 end
 
 % Sorts events by time
-for dataidx = 1:numel(outStruct)
-    [~, I] = sort([outStruct(dataidx).event.latency]);
-    outStruct(dataidx).event = outStruct(dataidx).event(I);
+for dataidx = 1:numel(EYE)
+    if ~isempty(EYE(dataidx).event)
+        [~, I] = sort([EYE(dataidx).event.latency]);
+        EYE(dataidx).event = EYE(dataidx).event(I);
+    end
 end
 
 % Adds "beginning of recording" and "end of recording" as events if they
 % don't exist
-for dataidx = 1:numel(outStruct)
-    if ~strcmp(outStruct(dataidx).event(1).type, 'Start of recording')
-        outStruct(dataidx).event = cat(2,...
+for dataidx = 1:numel(EYE)
+    if ~strcmp(EYE(dataidx).event(1).type, 'Start of recording')
+        EYE(dataidx).event = cat(2,...
             struct('type', 'Start of recording',...
                 'time', 0,...
                 'latency', 1,...
                 'rt', NaN),...
-            reshape(outStruct(dataidx).event, 1, []));
+            reshape(EYE(dataidx).event, 1, []));
                 
     end
-    if ~strcmp(outStruct(dataidx).event(end).type, 'End of recording')
-        outStruct(dataidx).event(end+1) = ...
+    if ~strcmp(EYE(dataidx).event(end).type, 'End of recording')
+        EYE(dataidx).event(end+1) = ...
             struct(...
                 'type', 'End of recording',...
-                'time', (outStruct(dataidx).ndata - 1) / outStruct(dataidx).srate,...
-                'latency', outStruct(dataidx).ndata,...
+                'time', (EYE(dataidx).ndata - 1) / EYE(dataidx).srate,...
+                'latency', EYE(dataidx).ndata,...
                 'rt', NaN);
     end
 end

@@ -121,13 +121,20 @@ for plotIdx = 1:numel(plotinfo)
             plot(repmat(t, 1, 2), plotinfo(plotIdx).ylim, 'k');
             % Jitter Y location in case many events occur in rapid
             % succession
-            n = 10;
+            n = 30;
             spn = 0.8;
             currYlims = plotinfo(plotIdx).ylim;
             yLoc = currYlims(1) + abs(diff(currYlims)) * (spn - mod(idx, n) * spn / n);
-            text(t, yLoc, num2str(EYE(plotIdx).event(eventIdx).type),...
-                'FontSize', 8,...
-                'Rotation', 20);
+            try
+                text(t, yLoc, num2str(EYE(plotIdx).event(eventIdx).type),...
+                    'FontSize', 8,...
+                    'Rotation', 10,...
+                    'Interpreter', 'none');
+            catch
+                text(t, yLoc, num2str(EYE(plotIdx).event(eventIdx).type),...
+                    'FontSize', 8,...
+                    'Rotation', 10);
+            end
         end
     end
     ylim(plotinfo(plotIdx).ylim);
