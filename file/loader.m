@@ -9,10 +9,27 @@ out.name = n;
 if strcmp(rawindicator, 'raw')
     out.src = fullpath;
     if strcmp(type, 'eye')
+        % Fix monocular recordings
+        sides = {'left' 'right'};
+        fields = {
+            {'urdiam'}
+            {'urgaze' 'x'}
+            {'urgaze' 'y'}
+        };
+        for ii1 = 1:numel(sides)
+            otherside = sides{~strcmp(sides, sides{ii1})};
+            for ii2 = 1:numel(fields)
+                if ~isnonemptyfield(out, fields{ii2}{:}, sides{ii1})
+                    out = setfield(out, fields{ii2}{:}, sides{ii1}, getfield(out, fields{ii2}{:}, otherside));
+                end
+            end
+        end
         out = pupl_check(out);
         for field = {'gaze' 'diam'}
             out.(field{:}) = getfromur(out, field{:});
         end
+    else
+        out.event = out.event(:);
     end
 end
 

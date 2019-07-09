@@ -28,7 +28,7 @@ switch a
             end
             fullpath = sprintf('%s', currpath, file);
             fprintf('Attaching [[%s]] to [[%s]]...', file, EYE(dataidx).name);
-            eventlog = feval(loadfunc, fullpath);
+            eventlog = loadfunc(fullpath);
             eventlog.src = fullpath;
             EYE(dataidx).eventlog = eventlog;
             fprintf('done\n');

@@ -98,6 +98,7 @@ for dataidx = 1:numel(fullpath)
             else
                 EYE(dataidx).eventlog = curr;
             end
+            EYE(dataidx) = pupl_check(EYE(dataidx));
     end
     fprintf('done\n');
 end

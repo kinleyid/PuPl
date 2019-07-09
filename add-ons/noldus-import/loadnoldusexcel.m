@@ -42,7 +42,6 @@ for fileIdx = 1
                        'type', eventTypes,...
                        'rt', repmat({NaN}, size(eventTimes))));
     ];
-    % fprintf('\tdone\n')
 end
 
 end

@@ -1,12 +1,17 @@
 
 function plotforeach(EYE, plotfunc, varargin)
 
-f = figure('UserData', true);
+f = figure(...
+    'UserData', struct(...
+        'dataidx', 0,...
+        'data', EYE,...
+        'plotfunc', plotfunc,...
+        'varargin', {varargin}));
 p1 = uipanel(f,...
     'Tag', 'plotpanel',...
     'Units', 'normalized',...
     'Position', [0.01 0.11 0.98 0.88]);
-a = axes(p1, 'Tag', 'scatter');
+a = axes(p1, 'Tag', 'ax');
 p = uipanel(f,...
     'Units', 'normalized',...
     'Position', [0.01 0.01 0.98 0.08]);
@@ -19,44 +24,37 @@ uicontrol(p,...
 uicontrol(p,...
     'String', '<< Previous <<',...
     'Units', 'normalized',...
-    'Callback', @(h,e) pm1(f, 0),...
-    'KeyPressFcn', @(h,e) enterdo(e, @() pm1(f, 0)),...
+    'Callback', @(h,e) dataidc(f, -1),...
+    'KeyPressFcn', @(h,e) enterdo(e, @() datainc(f, -1)),...
     'Position', [0.21 0.01 0.38 0.98]);
 uicontrol(p,...
     'String', '>> Next >>',...
     'Units', 'normalized',...
-    'Callback', @(h,e) pm1(f, 1),...
-    'KeyPressFcn', @(h,e) enterdo(e, @() pm1(f, 1)),...
+    'Callback', @(h,e) datainc(f, 1),...
+    'KeyPressFcn', @(h,e) enterdo(e, @() datainc(f, 1)),...
     'Position', [0.61 0.01 0.38 0.98]);
-dataidx = 1;
-while true
-    cla(a);
-    plotfunc(a, EYE(dataidx), varargin{:});
-    title(EYE(dataidx).name, 'Interpreter', 'none');
-    uiwait(f);
-    if isgraphics(f)
-        if get(f, 'UserData')
-            dataidx = dataidx + 1;
-            if dataidx > numel(EYE)
-                dataidx = 1;
-            end
-        else
-            dataidx = dataidx - 1;
-            if dataidx < 1
-                dataidx = numel(EYE);
-            end
-        end
-    else
-        return
-    end
-end
+
+datainc(f, 1);
 
 end
 
-function pm1(f, v)
+function datainc(f, n)
 
-set(f, 'UserData', logical(v));
+ud = get(f, 'UserData');
+ii = ud.dataidx + n;
+data = ud.data;
+if ii > numel(data)
+    ii = 1;
+elseif ii < 1
+    ii = numel(data);    
+end
+ud.dataidx = ii;
 
-uiresume(f);
+set(f, 'UserData', ud);
+
+a = findobj(f, 'Tag', 'ax');
+cla(a);
+ud.plotfunc(a, data(ii), ud.varargin{:});
+title(data(ii).name, 'Interpreter', 'none');
 
 end

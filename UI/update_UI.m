@@ -14,6 +14,8 @@ if UserData.dataCount ~= numel(eyeData)
 end
 set(userInterface, 'UserData', UserData);
 
+%% Set activeidx to checkbox values
+
 UserData = get(userInterface, 'UserData');
 children = get(activeEyeDataPanel, 'Children');
 for i = 1:numel(children)
@@ -22,7 +24,7 @@ for i = 1:numel(children)
 end
 set(userInterface, 'UserData', UserData);
 
-% Inactivate or activate UI menu elements
+%% Inactivate or activate UI menu elements on the basis of whether
 
 allMenus = findobj('parent', userInterface);
 

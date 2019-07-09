@@ -1,59 +1,26 @@
 
-function eventLogsArray = loadpresentationlog(varargin)
+function eventlog = loadpresentationlog(fullpath)
 
 % Input: full path to file
 
-eventLogsArray = [];
+tab = sprintf('\t');
 
-if nargin ~= 1
-    [filename, directory] = uigetfile('*.*',...
-        'MultiSelect', 'off');
-    if isnumeric(filename)
-        return
-    end
-else
-    [directory, name, ext] = fileparts(file);
-    filename = sprintf('%s', name, ext);
-end
-filename = cellstr(filename);
+raw = fastfileread(fullpath);
+lines = regexp(raw, sprintf('\n'), 'split');
+halfstarts = find(strcontains(lines, 'Event Type'));
+secondhalfstart = halfstarts(2);
+colnames = regexp(lines{secondhalfstart}, tab, 'split');
+contents = strrep([lines{secondhalfstart+2:end}], sprintf('\r'), tab);
+contents = reshape(regexp(contents(1:end-1), tab, 'split'), numel(colnames), [])';
 
-for fileIdx = 1 % God this is a lazy solution
-    [~, name] = fileparts(filename{fileIdx});
-    fID = fopen([directory '\\' filename{fileIdx}]);
-    nCols = NaN;
-    eventTimes = [];
-    eventTypes = [];
-    while true
-        currLine = strsplit(fgetl(fID), '\t');
-        if any(strcmpi(currLine, 'Event Type'))
-            if ~isnan(nCols) % We're at the second half of the file
-                break % So exit
-            end
-            nCols = length(currLine);
-            timeIdx = strcmpi(currLine, 'Time');
-            typeIdx = [
-                find(strcmpi(currLine, 'Event Type'))...
-                find(strcmpi(currLine, 'Code'))...
-                find(strcmpi(currLine, 'Stim Type'))];
-            continue
-        end
-        if length(currLine) ~= 1
-            eventTimes = cat(2, eventTimes, str2double(currLine{timeIdx})/10/1000); % Presentation records time in 10ths of milliseconds
-            eventTypes = cat(2, eventTypes, {strcat(currLine{typeIdx(typeIdx <= length(currLine))})});
-        end
-    end
-    eventLogsArray = [
-        eventLogsArray...
-        struct(...
-            'name', name,...
-            'src', sprintf('%s/%s', directory, filename{fileIdx}),...
-            'event', struct(...
-                'time', num2cell(eventTimes),...
-                'type', eventTypes,...
-                'rt', repmat({NaN}, size(eventTimes))))
-    ];
-end
+eventtypes = cellfun(@(x) [x{:}], num2cell(contents(:, 1:4), 2), 'UniformOutput', false);
+RTs = str2double(contents(:, strcmp(colnames, 'RT'))) / 10 / 1000; % Presentation records time in 10ths of milliseconds
+eventtimes = str2double(contents(:, strcmp(colnames, 'Time'))) / 10 / 1000;
 
-eventLogsArray = pupl_check(eventLogsArray);
+eventlog = struct(...
+    'event', struct(...
+        'type', eventtypes(:)',...
+        'time', num2cell(eventtimes(:)'),...
+        'rt', num2cell(RTs(:)')));
 
 end

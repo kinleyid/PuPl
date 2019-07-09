@@ -74,7 +74,9 @@ if ~any(strcmpi(varargin, 'noAddOns'))
             fprintf('\t%s...', currFolder.name);
             addpath(genpath(fullfile(addonsfolder, currFolder.name)));
             try
-                run(fullfile(addonsfolder, currFolder.name, 'init.m'));
+                initfile = fullfile(addonsfolder, currFolder.name, 'init.m');
+                run(initfile);
+                clear(initfile);
             catch
                 fprintf('no init.m file found');
             end

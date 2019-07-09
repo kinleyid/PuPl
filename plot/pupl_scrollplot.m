@@ -6,7 +6,6 @@ addParameter(p, 'type', []);
 parse(p, varargin{:});
 
 set(ancestor(a, 'figure'), 'KeyPressFcn', @(h, e) moveData(h, e));
-set(a, 'Tag', 'scrollplotaxis');
 
 if isempty(p.Results.type)
     q = 'Plot which type of data?';
@@ -75,15 +74,14 @@ if numel(unique([EYE.srate])) > 1
 else
     srate = EYE(1).srate;
 end
-nSeconds = 5;
+nSeconds = 10;
 x = 1:(nSeconds*srate);
 
 set(a, 'UserData', struct(...
     'plotinfo', plotinfo,...
     'EYE', EYE,...
     'x', x,...
-    'srate', srate,...
-    'axes', []));
+    'srate', srate));
 
 updateplot(a);
 
@@ -158,7 +156,7 @@ switch e.Key
     otherwise
         return
 end
-a = findobj('Tag', 'scrollplotaxis');
+a = findobj('Tag', 'ax');
 UserData = get(a, 'UserData');
 UserData.x = UserData.x + change*UserData.srate;
 if any(UserData.x < 1)
