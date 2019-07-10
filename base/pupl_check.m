@@ -9,6 +9,8 @@ defaults = {
     'src', @(x)[]
     'name', @(x) getname(x)
     'getraw', @(x)''
+    'coords', @(x)[]
+    'units', @(x)[]
     'epoch' @(x)struct([])
     'trialset' @(x)struct([])
     'cond' @(x)''
@@ -18,8 +20,6 @@ defaults = {
     'eventlog' @(x)struct([])
     'datalabel' @(x)[]
     'ndata' @(x)getndata(x)
-    'aoi' @(x)struct([])
-    'aoiset' @(x)struct([])
     'BIDS', @(x)struct('sub', x.name)
 };
 

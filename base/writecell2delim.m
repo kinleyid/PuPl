@@ -9,26 +9,20 @@ else
     header = [];
 end
 
-fmt = cell(1, size(data, 2)*2 - 1);
+fmt = cell(1, size(data, 2)*2);
 fmt(1:2:end) = {'%s'};
 fmt(2:2:end-1) = {delim};
+fmt{end} = '\n';
 fmt = [fmt{:}];
 
-fid = fopen(fullpath, 'w');
-data = cellfun(@num2str, data, 'un', 0);
+data = cellfun(@num2str, data, 'un', 0)';
 
 if ~isempty(header)
-    fprintf(fid, '# %s\n', header{:});
+    header = sprintf('# %s\n', header{:});
 end
 
-nrows = size(data, 1);
-for row = 1:nrows
-    fprintf(fid, fmt, data{row, :});
-    if row ~= nrows
-        fprintf(fid, '\n');
-    end
-end
-
+fid = fopen(fullpath, 'w');
+fprintf(fid, '%s', header, sprintf(fmt, data{:}));
 fclose(fid);
 
 end

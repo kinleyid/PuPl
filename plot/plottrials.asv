@@ -1,6 +1,6 @@
 function plottrials(a, EYE)
 
-set(ancestor(a, 'figure'), 'KeyPressFcn', @(h, e) plotcurrtrial(a, e));
+set(ancestor(a, 'figure'), 'KeyPressFcn', @(h, e) moveData(h, e));
 
 reject = [EYE.epoch.reject];
 tmpEYE = EYE;
@@ -72,11 +72,10 @@ xlim([t(1) t(end)]);
 ylim(ud.ylims);
 xlabel('Time (s)');
 ylabel('Pupil diameter');
-legendentries = {'Event', 'Left', 'Right', 'Unprocesssed left', 'Unprocessed right'};
+legendentries = {'Event', 'Left', 'Right', 'Both', 'Unprocesssed left', 'Unprocessed right'};
 if isfield(diam, 'both')
-    legendentries = [legendentries(1:3) 'both' legendentries(4:end)];
+    legendentries = [legendentries(1:3) 'both' 
 end
-legend(legendentries{:});
 
 currtitle = ud.EYE.epoch(ud.trialidx).name;
 

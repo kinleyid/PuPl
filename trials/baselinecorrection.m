@@ -85,7 +85,12 @@ else
 end
 callStr = sprintf('%s''event'', %s, ''lims'', %s, ''mapping'', %s)', callStr, all2str(event), all2str(lims), all2str(mapping));
 
-
+switch correctionType
+    case 'subtract baseline mean'
+        correctionFunc = @(tv, bv) tv - nanmean_bc(bv);
+    case 'percent change from baseline mean'
+        correctionFunc = @(tv, bv) 100 * (tv - nanmean_bc(bv)) / nanmean_bc(bv);
+end
 
 fprintf('Baseline correcting using method %s...\n', correctionType);
 for dataidx = 1:numel(EYE)
@@ -93,7 +98,7 @@ for dataidx = 1:numel(EYE)
     
     currLims = timestr2lat(EYE(dataidx), lims);
     if isnumeric(event) % Baselines defined relative to each epoch-defining event
-        baselineLats = num2cell(bsxfun(@plus, [EYE(dataidx).epoch.eventLat], currLims(:)), 1);
+        baselineLats = num2cell(bsxfun(@plus, mergefields(EYE(dataidx), 'epoch', 'event', 'latency'), currLims(:)), 1);
         epochsToCorrect = 1:numel(EYE(dataidx).epoch);
     else % Baselines defined relative to their own events
         epochlats = [EYE(dataidx).epoch.eventLat]; % Event latencies for epochs
@@ -131,6 +136,9 @@ for dataidx = 1:numel(EYE)
                     baselineLats{correctionidx}(1):baselineLats{correctionidx}(2)),... basevec
                 correctionType);
         end
+        EYE(dataidx).epoch(epochsToCorrect(correctionidx)).baseline = struct(...
+            'abslims', baselineLats{correctionidx},...
+            'func', correctionFunc);
     end
     EYE(dataidx).history{end + 1} = callStr;
     fprintf('done\n');

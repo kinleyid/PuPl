@@ -1,2 +1,0 @@
-** CONVERTED FROM C:\Dokumente und Einstellungen\eye\Desktop\BS_Gagl_WS13\hyperlink\hyperlink_list1\results\v01_l1_h\v01_l1_h.edf using edfapi 3.1 Win32 Mar  2 2011 on Fri Nov 29 14:40:26 2013
-** DATE: Mon Nov 11 20:28:26 2013

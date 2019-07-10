@@ -1,11 +1,15 @@
 
 function threshold = UI_cdfgetrej(data, varargin)
 
-if numel(varargin) > 0
-    lims = varargin{1};
-else
-    lims = [min(data) max(data)];
-end
+p = inputParser;
+addParameter(p, 'dataname', 'data');
+addParameter(p, 'threshname', 'Threshold');
+addParameter(p, 'lims', [min(data) max(data)]);
+parse(p, varargin{:});
+
+dataname = p.Results.dataname;
+threshname = p.Results.threshname;
+lims = p.Results.lims;
 
 f = figure(...
     'ToolBar', 'none',...
@@ -23,7 +27,7 @@ uicontrol('Style', 'edit',...
     'Tag', 'threshold',...
     'String', 'Select rejection threshold',...
     'Units', 'normalized',...
-    'Callback', @(h,e)plotrejection(f),...
+    'Callback', @(h,e)plotrejection(f, dataname, threshname),...
     'Position', [0.01 0.01 0.48 0.08]);
 uicontrol('Style', 'pushbutton',...
     'Units', 'normalized',...
@@ -38,7 +42,7 @@ uicontrol('Style', 'pushbutton',...
     'KeyPressFcn', @(h,e) enterdo(e, @()delete(f)),...
     'Position', [0.76 0.01 0.23 0.08]);
 
-plotrejection(f)
+plotrejection(f, dataname, threshname)
 uiwait(f)
 if isgraphics(f)
     threshold = getcurrthresh(f);
@@ -49,7 +53,7 @@ end
 
 end
 
-function plotrejection(f)
+function plotrejection(f, dataname, threshname)
 
 currThreshold = getcurrthresh(f);
 
@@ -67,8 +71,8 @@ plot(repmat(currThreshold, 1, 2), [0 1], '--k')
 plot(lims, repmat(currPpnViolating, 1, 2), '--k')
 xlim(lims);
 ylim([0 1]);
-xlabel('Threshold');
-ylabel('Proportion violating threshold');
+xlabel(threshname);
+ylabel(sprintf('Proportion %s violating threshold', dataname));
 
 end
 

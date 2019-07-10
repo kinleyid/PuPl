@@ -20,7 +20,7 @@ for x = {'m'}
     cmd = strsubconstval(cmd, x{:}, '60');
 end
 for x = {'dp' 'd'}
-    cmd = strsubconstval(cmd, x{:}, sprintf('%f', 1/srate));
+    cmd = strsubconstval(cmd, x{:}, sprintf('(1/%f)', srate));
 end
 
 outtime = eval(cmd);

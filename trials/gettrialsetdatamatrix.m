@@ -1,21 +1,20 @@
 
-function [mat, isrej] = gettrialsetdatamatrix(EYE, setname)
+function [data, isrej] = gettrialsetdatamatrix(EYE, setname)
 
-mat = [];
-isrej = [];
+data = cell(numel(EYE), 1);
+isrej = cell(1, numel(EYE));
 for dataidx = 1:numel(EYE)
     setidx = strcmp({EYE(dataidx).trialset.name}, setname);
-    vecData = mergefields(EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx), 'diam', 'both');
-    currIsRej = [EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx).reject];
-    matData = reshape(vecData, numel(EYE(dataidx).trialset(setidx).relLatencies), [])';
-    mat = [
-        mat
-        matData
-    ];
-    isrej = [
-        isrej
-        currIsRej(:)
-    ];
+    vecdata = gettrialdata(EYE(dataidx), EYE(dataidx).trialset(setidx).epochidx, 'diam', 'both');
+    vecdata = [vecdata{:}];
+    % vecdata = mergefields(EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx), 'diam', 'both');
+    currisrej = [EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx).reject];
+    matdata = reshape(vecdata, numel(EYE(dataidx).trialset(setidx).relLatencies), [])';
+    data{dataidx} = matdata;
+    isrej{dataidx} = currisrej;
 end
+
+data = cell2mat(data);
+isrej = cell2mat(isrej)';
 
 end
