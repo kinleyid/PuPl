@@ -7,6 +7,9 @@ for dataidx = 1:numel(EYE)
     for field = {'gaze' 'diam'}
         EYE(dataidx).(field{:}) = getfromur(EYE(dataidx), field{:});
     end
+    if isfield(EYE(dataidx).diam, 'both')
+        rmfield(EYE(dataidx).diam, 'both');
+    end
     fprintf('clearing processing history...');
     EYE(dataidx).history = {};
     fprintf('done\n');

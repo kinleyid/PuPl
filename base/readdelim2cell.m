@@ -36,7 +36,7 @@ out = fread(fid, 'uint8=>char')';
 fclose(fid);
 
 out = strrep(out, eol, d); % Get it all as one line, replacing newlines with delimiters
-out = stringsplit(out, d); % Get cell array
+out = regexp(out, d, 'split'); % Get cell array
 out(end-mod(numel(out), ncols)+1:end) = []; % Future source of bugs
 out = reshape(out, ncols, [])';
 
