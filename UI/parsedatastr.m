@@ -1,11 +1,8 @@
 
-function lim = parsedatastr(str, data)
+function lim = parsedatastr(cmd, data)
 
 %   Inputs
 % str--something with %, m, sd
-
-cmd = lower(str);
-cmd = strrep(cmd,' ','');
 
 % Deal with percentiles
 for x = {'%'}
@@ -22,20 +19,18 @@ for x = {'%'}
         end
     end
 end
-for x = {'mn'}
-    cmd = strsubconstval(cmd, x{:}, sprintf('%f', nanmean_bc(data)));
-end
-for x = {'md'}
-    cmd = strsubconstval(cmd, x{:}, sprintf('%f', nanmedian_bc(data)));
-end
-for x = {'sd'}
-    cmd = strsubconstval(cmd, x{:}, sprintf('%f', nanstd_bc(data)));
-end
-for x = {'v'}
-    cmd = strsubconstval(cmd, x{:}, sprintf('%f', nanvar_bc(data)));
-end
-for x = {'iq'}
-    cmd = strsubconstval(cmd, x{:}, sprintf('%f', interquartilerange(data)));
+
+subs = {
+    '\$'  @(x) x
+    '`m' @nanmean_bc
+    '`d' @nanmedian_bc
+    '`s' @nanstd_bc
+    '`v'  @nanvar_bc
+    '`i' @interquartilerange
+};
+
+for ii = 1:size(subs, 1)
+    cmd = strsubconstval(cmd, subs{ii, 1}, all2str(subs{ii, 2}(data)));
 end
 
 try
