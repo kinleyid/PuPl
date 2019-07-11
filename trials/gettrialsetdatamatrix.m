@@ -7,9 +7,8 @@ for dataidx = 1:numel(EYE)
     setidx = strcmp({EYE(dataidx).trialset.name}, setname);
     vecdata = gettrialdata(EYE(dataidx), EYE(dataidx).trialset(setidx).epochidx, 'diam', 'both');
     vecdata = [vecdata{:}];
-    % vecdata = mergefields(EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx), 'diam', 'both');
     currisrej = [EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx).reject];
-    matdata = reshape(vecdata, numel(EYE(dataidx).trialset(setidx).relLatencies), [])';
+    matdata = reshape(vecdata, numel(unfold(EYE(dataidx).trialset(setidx).rellims)), [])';
     data{dataidx} = matdata;
     isrej{dataidx} = currisrej;
 end

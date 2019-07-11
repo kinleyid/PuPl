@@ -16,10 +16,10 @@ addParameter(p, 'lims', []);
 addParameter(p, 'mapping', []);
 parse(p, varargin{:});
 
-callStr = sprintf('eyeData = %s(eyeData, ', mfilename);
-
-correctionOptions = {'subtract baseline mean'
-    'percent change from baseline mean'};
+correctionOptions = {
+    'subtract baseline mean'
+    'percent change from baseline mean'
+    'none'};
 if isempty(p.Results.correctionType)
     correctionType = correctionOptions(...
         listdlg('PromptString', 'Baseline correction type',...
@@ -31,7 +31,6 @@ if isempty(p.Results.correctionType)
 else
     correctionType = p.Results.correctionType;
 end
-callStr = sprintf('%s''correctionType'', %s, ', callStr, all2str(correctionType));
 
 if isempty(p.Results.event) || isempty(p.Results.lims) || isempty(p.Results.mapping)
     mappingOptions = {'one:one'
@@ -83,13 +82,14 @@ else
     lims = p.Results.lims;
     mapping = p.Results.mapping;
 end
-callStr = sprintf('%s''event'', %s, ''lims'', %s, ''mapping'', %s)', callStr, all2str(event), all2str(lims), all2str(mapping));
 
 switch correctionType
     case 'subtract baseline mean'
         correctionFunc = @(tv, bv) tv - nanmean_bc(bv);
     case 'percent change from baseline mean'
         correctionFunc = @(tv, bv) 100 * (tv - nanmean_bc(bv)) / nanmean_bc(bv);
+    case 'none'
+        correctionFunc = @(tv, bv) tv;
 end
 
 fprintf('Baseline correcting using method %s...\n', correctionType);
@@ -98,7 +98,7 @@ for dataidx = 1:numel(EYE)
     
     currLims = timestr2lat(EYE(dataidx), lims);
     if isnumeric(event) % Baselines defined relative to each epoch-defining event
-        baselineLats = num2cell(bsxfun(@plus, mergefields(EYE(dataidx), 'epoch', 'event', 'latency'), currLims(:)), 1);
+        baselinelims = num2cell(bsxfun(@plus, mergefields(EYE(dataidx), 'epoch', 'event', 'latency'), currLims(:)), 1);
         epochsToCorrect = 1:numel(EYE(dataidx).epoch);
     else % Baselines defined relative to their own events
         epochlats = [EYE(dataidx).epoch.eventLat]; % Event latencies for epochs
@@ -108,7 +108,7 @@ for dataidx = 1:numel(EYE)
             baselineEventLats = baselineEventLats(1);
         end
         % Figure out which baselines correspond to which epochs
-        baselineLats = {};
+        baselinelims = {};
         epochsToCorrect = [];
         for baselineidx = 1:numel(baselineEventLats)
             currBaselineLats = baselineEventLats(baselineidx) + currLims;
@@ -121,26 +121,19 @@ for dataidx = 1:numel(EYE)
                     epochlats < baselineEventLats(baselineidx + 1);
             end
             currEpochsToCorrect = find(currEpochsToCorrect);
-            baselineLats = [
-                baselineLats
+            baselinelims = [
+                baselinelims
                 repmmat({currBaselineLats}, numel(currEpochsToCorrect), 1)
             ];
             epochsToCorrect = [epochsToCorrect currEpochsToCorrect];
         end
     end
     for correctionidx = 1:numel(epochsToCorrect)
-        for stream = reshape(fieldnames(EYE(dataidx).diam), 1, [])
-            EYE(dataidx).epoch(epochsToCorrect(correctionidx)).diam.(stream{:}) = correctionfunc(...
-                EYE(dataidx).epoch(epochsToCorrect(correctionidx)).diam.(stream{:}),... trialvec
-                EYE(dataidx).diam.(stream{:})(...
-                    baselineLats{correctionidx}(1):baselineLats{correctionidx}(2)),... basevec
-                correctionType);
-        end
         EYE(dataidx).epoch(epochsToCorrect(correctionidx)).baseline = struct(...
-            'abslims', baselineLats{correctionidx},...
+            'abslims', baselinelims{correctionidx},...
             'func', correctionFunc);
     end
-    EYE(dataidx).history{end + 1} = callStr;
+    EYE(dataidx).history{end + 1} = getcallstr(p);
     fprintf('done\n');
 end
 fprintf('Done\n');

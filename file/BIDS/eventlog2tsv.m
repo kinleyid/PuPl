@@ -13,7 +13,7 @@ bigcell = [...
         reshape({eventlog.event.type}, [], 1)
     ] [
         'response_time'
-        reshape({eventLog.event.rt}, [], 1)
+        reshape({eventlog.event.rt}, [], 1)
     ]
 ];
 

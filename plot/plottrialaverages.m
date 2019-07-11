@@ -99,9 +99,9 @@ for plotidx = 1:numel(plotstruct)
     
     data = data(~isrej, :);
     setidx = strcmp({EYE(1).trialset.name}, set);
-    relLatencies = EYE(1).trialset(setidx).relLatencies;
-    if ~isempty(relLatencies)
-        x = relLatencies;
+    rellims = EYE(1).trialset(setidx).rellims;
+    if ~isempty(rellims)
+        x = unfold(rellims);
     else
         warning('Trial set contains epochs in which the relative positions of the events are different\nX-axis will begin at 0 seconds');
         x = 0:size(data, 2)-1;

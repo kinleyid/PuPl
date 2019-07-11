@@ -3,37 +3,35 @@ function EYE = pupl_epoch(EYE, varargin)
 %   Inputs
 
 p = inputParser;
-addParameter(p, 'events', []);
+addParameter(p, 'timelocking', []);
 addParameter(p, 'lims', []);
+addParameter(p, 'overwrite', []);
 parse(p, varargin{:});
+unpack(p);
 
-callStr = sprintf('eyeData = %s(eyeData, ', mfilename);
-
-if any(arrayfun(@(x) ~isempty(x.epoch), EYE))
+if any(arrayfun(@(x) ~isempty(x.epoch), EYE)) && isempty(overwrite)
     q = 'Overwrite existing trials?';
     a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
     switch a
         case 'Yes'
-            [EYE.epoch] = deal([]);
+            overwrite = true;
         case 'No'
+            overwrite = false;
         otherwise
             return
     end
 end
 
-if isempty(p.Results.events)
+if isempty(timelocking)
     eventTypes = unique(mergefields(EYE, 'event', 'type'));
-    events = eventTypes(listdlgregexp('PromptString', 'Epoch relative to which events?',...
+    timelocking = eventTypes(listdlgregexp('PromptString', 'Epoch relative to which events?',...
         'ListString', eventTypes));
-    if isempty(events)
+    if isempty(timelocking)
         return
     end
-else
-    events = p.Results.events;
 end
-callStr = sprintf('%s''events'', %s, ', callStr, all2str(events));
 
-if isempty(p.Results.lims)
+if isempty(lims)
     lims = (inputdlg(...
         {sprintf('Trials start at this time relative to events:')
         'Trials end at this time relative to events:'}));
@@ -42,32 +40,25 @@ if isempty(p.Results.lims)
     else
         fprintf('Trials defined from [event] + [%s] to [event] + [%s]\n', lims{:})
     end
-else
-    lims = p.Results.lims;
 end
-callStr = sprintf('%s''lims'', %s)', callStr, all2str(lims));
+
+if overwrite
+    [EYE.epoch] = deal([]);
+end
 
 fprintf('Extracting trial data...\n')
 for dataidx = 1:numel(EYE)
     fprintf('\t%s...', EYE(dataidx).name);
-    currLims = EYE(dataidx).srate*[parsetimestr(lims{1}, EYE(dataidx).srate) parsetimestr(lims{2}, EYE(dataidx).srate)];
-    relLatencies = currLims(1):currLims(2);
-    for eventType = reshape(events, 1, [])
+    currlims = EYE(dataidx).srate*[parsetimestr(lims{1}, EYE(dataidx).srate) parsetimestr(lims{2}, EYE(dataidx).srate)];
+    for eventType = reshape(timelocking, 1, [])
         for eventidx = find(strcmp({EYE(dataidx).event.type}, eventType))
             currEpoch = struct(...
                 'reject', false,...
-                'relLatencies', relLatencies,...
-                'rellims', currLims,...
-                'abslims', EYE(dataidx).event(eventidx).latency + currLims,...
-                'absLatencies', EYE(dataidx).event(eventidx).latency + relLatencies,...
+                'rellims', currlims,...
+                'abslims', EYE(dataidx).event(eventidx).latency + currlims,...
                 'name', EYE(dataidx).event(eventidx).type,...
                 'event', EYE(dataidx).event(eventidx));
-            for datatype = {'diam' 'gaze'}
-                for stream = reshape(fieldnames(EYE(dataidx).(datatype{:})), 1, [])
-                    currEpoch.(datatype{:}).(stream{:}) = EYE(dataidx).(datatype{:}).(stream{:})(currEpoch.absLatencies);
-                end
-            end
-            EYE(dataidx).epoch = cat(1, EYE(dataidx).epoch, currEpoch);
+            EYE(dataidx).epoch = [EYE(dataidx).epoch, currEpoch];
         end
     end
     
@@ -80,10 +71,9 @@ for dataidx = 1:numel(EYE)
     trialsetdescriptions = struct(...
         'name', trialnames,...
         'members', cellfun(@cellstr, trialnames, 'UniformOutput', false));
-    EYE(dataidx) = createtrialsets(EYE(dataidx),...
-        'setDescriptions', trialsetdescriptions);
+    EYE(dataidx) = sub_createtrialsets(EYE(dataidx), trialsetdescriptions, true);
     
-    EYE(dataidx).history{end + 1} = callStr;
+    EYE(dataidx).history{end + 1} = getcallstr(p);
     
     fprintf('%d trials extracted\n', numel(EYE(dataidx).epoch));
 end

@@ -14,7 +14,7 @@ while ~feof(fid)
     endofheader = ftell(fid);
     currline = fgetl(fid);
     if strcmp(currline(1:numel(comment)), comment)
-        header(end+1) = {currline(3:end)};
+        header{end + 1} = currline(numel(comment)+1:end);
     else
         break
     end

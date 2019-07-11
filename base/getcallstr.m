@@ -14,7 +14,7 @@ else
     callstr = '';
 end
 callstr = sprintf('%s%s(eyeData, ', callstr, allfuncs(2).name);
-for variable = reshape(fieldnames(p.Results), 1, [])
+for variable = p.Parameters
     callstr = sprintf('%s''%s'', %s, ', callstr, variable{:}, all2str(evalin('caller', variable{:})));
 end
 callstr(end-1:end) = [];

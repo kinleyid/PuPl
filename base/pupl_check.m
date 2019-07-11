@@ -5,22 +5,21 @@ function EYE = pupl_check(EYE)
 
 % Fill in default values
 defaults = {
-    'srate', @(x)[]
-    'src', @(x)[]
-    'name', @(x) getname(x)
-    'getraw', @(x)''
-    'coords', @(x)[]
-    'units', @(x)[]
-    'epoch' @(x)struct([])
-    'trialset' @(x)struct([])
-    'cond' @(x)''
-    'event' @(x)struct([])
-    'isBlink' @(x)false(1, getndata(x))
-    'history' @(x){}
-    'eventlog' @(x)struct([])
+    'srate'     @(x)[]
+    'src'       @(x)[]
+    'name'      @(x)getname(x)
+    'getraw'    @(x)''
+    'coords'    @(x)[]
+    'units'     @(x)[]
+    'epoch'     @(x)struct([])
+    'trialset'  @(x)struct([])
+    'cond'      @(x)''
+    'event'     @(x)struct([])
+    'history'   @(x){}
+    'eventlog'  @(x)struct([])
     'datalabel' @(x)[]
-    'ndata' @(x)getndata(x)
-    'BIDS', @(x)struct('sub', x.name)
+    'ndata'     @(x)getndata(x)
+    'BIDS'      @(x)struct('sub', x.name)
 };
 
 % Ensure missing data is replaced with nan

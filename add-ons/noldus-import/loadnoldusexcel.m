@@ -30,8 +30,6 @@ for fileIdx = 1
     end
     eventTimes = cell2mat(R(2:end, strcmp(R(1,:), 'Time_Relative_sf'))); % Time is in seconds
     
-    fprintf('%d events found', numel(eventTypes));
-    
     eventLogsArray = [
         eventLogsArray
         struct(...

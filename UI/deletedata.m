@@ -25,4 +25,6 @@ UserData.activeEyeDataIdx(rmidx) = [];
 
 set(userInterface, 'UserData', UserData);
 
+update_UI;
+
 end

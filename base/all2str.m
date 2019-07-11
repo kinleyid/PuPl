@@ -7,8 +7,8 @@ elseif ischar(arg)
     outstr = sprintf('''%s''', arg);
 elseif iscell(arg)
     outstr = '{';
-    for el = reshape(arg, 1, [])
-        outstr = sprintf('%s%s ', outstr, all2str(el{:}));
+    for element = reshape(arg, 1, [])
+        outstr = sprintf('%s%s ', outstr, all2str(element{:}));
     end
     outstr = [outstr(1:end-1) '}']; % Remove last space
 elseif isstruct(arg)

@@ -21,7 +21,7 @@ for dataidx = 1:numel(EYE)
             abslats = unfold(abslims);
         end
         amtMissing = 0;
-        streams = {'left' 'right' 'both'};
+        streams = {'left' 'right'};
         for field = streams
             amtMissing = amtMissing + ...
                 nnz(isnan(EYE(dataidx).diam.(field{:})(abslats)));
