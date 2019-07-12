@@ -13,7 +13,7 @@ switch e.Key
     otherwise
         return
 end
-a = findobj('Tag', 'ax');
+a = findobj(h, 'Tag', 'ax');
 UserData = get(a, 'UserData');
 UserData.x = UserData.x + change*UserData.srate;
 if any(UserData.x < 1)
