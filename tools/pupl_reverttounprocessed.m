@@ -8,10 +8,10 @@ for dataidx = 1:numel(EYE)
         EYE(dataidx).(field{:}) = getfromur(EYE(dataidx), field{:});
     end
     if isfield(EYE(dataidx).diam, 'both')
-        rmfield(EYE(dataidx).diam, 'both');
+        EYE(dataidx).diam = rmfield(EYE(dataidx).diam, 'both');
     end
     fprintf('clearing processing history...');
-    EYE(dataidx).history = {};
+    EYE(dataidx).history{end + 1} = getcallstr;
     fprintf('done\n');
 end
 fprintf('Done\n');

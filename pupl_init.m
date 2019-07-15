@@ -7,7 +7,7 @@ function pupl_init(varargin)
 %   Example
 % >> pupl_init noui noaddons
 
-availableargs = {'noui' 'noglobals' 'noaddons'};
+availableargs = {'noweb' 'noui' 'noglobals' 'noaddons'};
 badargidx = ~ismember(lower(varargin), availableargs);
 if any(badargidx)
     for ii = find(badargidx)
@@ -21,15 +21,17 @@ end
 currVersion = '1.0.0';
 fprintf('PuPL, version %s\n', currVersion);
 % Check for updates
-try
-    newestVersion = urlread('https://kinleyid.github.io/newest.txt');
-    if ~strcmp(newestVersion, currVersion)
-        fprintf('! A new version (%s) is out, go to github.com/kinleyid/pupillometry-pipeline to get it\n', newestVersion);
-    else
-        fprintf('You are using the latest version\n');
-    end
-catch
-    fprintf('Error checking the web for a new version\n');
+if ~any(strcmpi(varargin, 'noweb'))
+  try
+      newestVersion = urlread('https://kinleyid.github.io/newest.txt');
+      if ~strcmp(newestVersion, currVersion)
+          fprintf('! A new version (%s) is out, go to github.com/kinleyid/pupillometry-pipeline to get it\n', newestVersion);
+      else
+          fprintf('You are using the latest version\n');
+      end
+  catch
+      fprintf('Error checking the web for a new version\n');
+  end
 end
 
 pdir = fileparts(which('pupl'));
@@ -47,15 +49,8 @@ end
 fprintf('\n');
 
 if ~any(strcmpi(varargin, 'noGlobals'))
-    fprintf('Initializing global variables...\n')
-    globalVariables = {
-        'eyeData'};
-    globalValues = {
-        'struct([])'};
-    for i = 1:numel(globalVariables)
-        evalin('base',...
-            sprintf('global %s; %s = %s;', globalVariables{i}, globalVariables{i}, globalValues{i}));
-    end
+    fprintf('Initializing global variables...\n');
+    evalin('base', 'global eyeData; eyeData = struct([]);');
 end
 
 if ~any(strcmpi(varargin, 'noUI'))

@@ -19,7 +19,7 @@ callstr = sprintf('%s''blinkParams'', %s, ', callstr, all2str(blinkParams));
 
 if isempty(p.Results.trimLen)
     prompt = 'Trim this long adjascent to blinks';
-    trimLen = inputdlg(prompt, prompt, 1, {'50ms'}); 
+    trimLen = inputdlg(prompt, prompt, 1, {'150ms'}); 
     if isempty(trimLen)
         return
     end

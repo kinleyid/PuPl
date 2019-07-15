@@ -1,24 +1,29 @@
 
-function outstr = all2str(arg)
+function out = all2str(in)
 
-if isnumeric(arg) || islogical(arg)
-    outstr = mat2str(arg);
-elseif ischar(arg)
-    outstr = sprintf('''%s''', arg);
-elseif iscell(arg)
-    outstr = '{';
-    for element = reshape(arg, 1, [])
-        outstr = sprintf('%s%s ', outstr, all2str(element{:}));
+if isnumeric(in) || islogical(in)
+    out = mat2str(in);
+elseif ischar(in)
+    out = sprintf('''%s''', in);
+elseif iscell(in)
+    out = cellfun(@all2str, in, 'UniformOutput', false)';
+    fmt = repmat('%s ', 1, size(out, 1));
+    fmt(end) = ';';
+    out = ['{' sprintf(fmt, out{:})];
+    out(end) = '}';
+elseif isstruct(in)
+    out = 'struct(';
+    for field = reshape(fieldnames(in), 1, [])
+        out = sprintf('%s''%s'', %s, ', out, field{:}, all2str({in.(field{:})}));
     end
-    outstr = [outstr(1:end-1) '}']; % Remove last space
-elseif isstruct(arg)
-    outstr = 'struct(';
-    for field = reshape(fieldnames(arg), 1, [])
-        outstr = sprintf('%s''%s'', %s, ', outstr, field{:}, all2str({arg.(field{:})}));
+    out = [out(1:end-2) ')']; % Remove last comma and space
+elseif isempty(in)
+    out = '[]';
+elseif strcontains(class(in), 'function')
+    out = func2str(in);
+    if out(1) ~= '@'
+        out = ['@' out];
     end
-    outstr = [outstr(1:end-2) ')']; % Remove last comma and space
-elseif isempty(arg)
-    outstr = '[]';
 end
 
 end

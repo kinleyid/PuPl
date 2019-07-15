@@ -1,8 +1,13 @@
 
-function callstr = getcallstr(p, varargin)
+function callstr = getcallstr(varargin)
 
 if numel(varargin) > 0
-    returnval = varargin{1};
+    p = varargin{1};
+else
+    p = [];
+end
+if numel(varargin) > 1 
+    returnval = varargin{2};
 else
     returnval = true;
 end
@@ -14,8 +19,10 @@ else
     callstr = '';
 end
 callstr = sprintf('%s%s(eyeData, ', callstr, allfuncs(2).name);
-for variable = p.Parameters
-    callstr = sprintf('%s''%s'', %s, ', callstr, variable{:}, all2str(evalin('caller', variable{:})));
+if ~isempty(p)
+    for variable = p.Parameters
+        callstr = sprintf('%s''%s'', %s, ', callstr, variable{:}, all2str(evalin('caller', variable{:})));
+    end
 end
 callstr(end-1:end) = [];
 callstr(end+1) = ')';
