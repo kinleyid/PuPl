@@ -5,7 +5,7 @@ p = inputParser;
 addParameter(p, 'center', []);
 addParameter(p, 'scale', []);
 parse(p, varargin{:});
-unpack(p);
+unpackparams(p);
 
 if isempty(center)
     t = 'Center by what quantity?';

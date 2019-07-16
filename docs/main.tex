@@ -8,7 +8,7 @@
 
 \title{PuPL Manual}
 \author{Isaac Kinley}
-\date{June 2019}
+\date{July 2019}
 
 \begin{document}
 
@@ -16,17 +16,15 @@
 \tableofcontents
 
 \section{Getting started}
-PuPL is a library of Matlab/Octave functions for processing eye tracking data and a user interface that runs these functions with a click.
+PuPL (pupillometry pipeline) is an Octave-compatible library of Matlab functions for processing pupillometry data and a user interface that runs these functions with a click.
 
 \subsection{Initializing}
-Change Matlab's working directory to the PuPL folder (which should contain \texttt{pupl.m}, \texttt{LICENSE.md}, etc.). You can do this either using the ``Current Folder'' panel or from the Command Window using the \texttt{cd} function.
-
-Run \texttt{pupl init} in the Command Window to add the source code to Matlab's path, initialize the global \texttt{eyeData} variable, initialize the user interface, and load whichever add-ons are in the add-ons/ folder. Any of these last 3 steps can be skipped by adding \texttt{noGlobals}, \texttt{noUI}, and/or \texttt{noAddOns}, respectively, as command-line arguments to \texttt{pupl init}.
+Change Matlab's working directory to the PuPL folder (which should contain \texttt{pupl.m}, \texttt{LICENSE.md}, etc.). You can do this either using Matlab's ``Current Folder'' panel or from the Command Window using the \texttt{cd} function. Run \texttt{pupl init} in the Command Window to add the source code to Matlab's path, check the web for a new verion, initialize the global \texttt{eyeData} variable, initialize the user interface, and load whichever add-ons are in the \texttt{add-ons/} folder. Any of these last 4 steps can be skipped by adding \texttt{noWeb}, \texttt{noGlobals}, \texttt{noUI}, and/or \texttt{noAddOns}, respectively, as command-line arguments to \texttt{pupl init}.
 \subsection{Importing raw data}
-Under \texttt{File > Import}, you will see options for importing raw data. Note: if you import raw data from a BIDS-formatted folder, event logs will not also be imported.
+Under \texttt{File > Import}, you will see options for importing raw data. Note: if you import raw data from a BIDS-formatted folder, event logs will not automatically also be imported. See \ref{import_event_logs} to find out how to import event logs from a BIDS-formatted folder.
 \subsection{Manipulating data}
 Loaded data will appear on the user interface. Unselected data is ignored by functions run using the user interface. To delete data from Matlab's workspace, go to \texttt{Edit > Remove datasets}. Data is also accessible in the Command Window through the global variable \texttt{eyeData}. If you process data in the command window and want to update the user interface, run \texttt{pupl redraw}.
-\subsection{Importing raw event logs}
+\subsection{Importing raw event logs} \label{import_event_logs}
 After you have loaded some data, you will be able to attach event logs to it. Go to \texttt{Trials > Event logs > Import} to see your options for importing raw event logs.
 \subsection{Synchronizing event logs and eye tracker data}
 When raw eye tracker data is loaded, event onsets are recomputed such that an event coinciding with the first data sample will be assigned an onset of zero. This means that timestamps in event logs cannot be directly copied to eye data. Furthermore, the clock used to measure timestamps in the event log and the clock used to measure timestamps in the eye data may drift relative to one another. To solve this problem, we use linear regression to find a mapping between timestamps in the two records. To begin, go to \texttt{Trials > Event logs > Synchronize with eye data}. A window will open for you to specify a correspondence between event types in the two records (for example, there may be sync markers sent by stimulus presentation software to both the eye tracker and an event log). After this, you will be able to select the events from the event logs that should be copied to the eye data, whether they should be copied under different names, and whether the pre-existing event records in the eye data should be deleted.
@@ -48,7 +46,7 @@ Once trials have been extracted, they can be plotted using \texttt{Plot > Plot t
 \subsection{Plotting trial sets}
 Once trials have been merged into trial sets (as explained in \ref{trialsets}), they can be plotted using \texttt{Plot > Plot trial sets}. The meanings of the line colours are the same as in the continuous pupil diameter plots. The shaded error bars represent one standard error of the mean.
 \section{Processing raw data}
-All functions for preprocessing raw data can be found under \texttt{Preprocess}. To undo all processing, go to \texttt{Tools > Revert to unpreprocessed data} (this also deletes the processing history).
+All functions for preprocessing raw data can be found under \texttt{Preprocess}. To undo all processing, go to \texttt{Tools > Revert to unpreprocessed data}. Note that this only recomputes diameter and gaze data. It does not delete processing history or remove trials/trial sets/compound events that have been defined.
 \subsection{A note on specifying durations} \label{timestr_explanation}
 You may use units and arithmetic to specify lengths of time. Valid units are as follows:
 \begin{addmargin}[1em]{0em}
@@ -73,7 +71,7 @@ E.g. \texttt{`m - 2`s} would compute the mean minus two standard deviations.
 \subsection{Converting between pupil area and diameter measurements}
 Some eye trackers record pupil area, while others record pupil diameter. To convert between these, go to \texttt{Process > Convert pupil size}.
 \subsection{Centering and scaling data}
-To center (e.g. by median or mean) and/or scale (e.g. by standard deviation, mean, or median) pupil data, go to \texttt{Process > Normalize data}.
+To center (e.g. by median or mean) and/or scale (e.g. by standard deviation, mean, or median) pupil data, go to \texttt{Process > Normalize pupil size data}. See \ref{datastr_explanation} for an explanation of how to specify quantities in the dialog boxes that appear.
 \subsection{Trimming data}
 \subsubsection{Trimming extreme pupil diameter measurements}
 Go to \texttt{Process > Trim data > Trim extreme dilation values} to remove pupil size measurements that are too high or low. In the window that opens, you can specify cutoff points as explained in \ref{datastr_explanation}. Note: the gaze measurements corresponding to rejected pupil size measurements will also be removed. If you plan to run the same pipeline on multiple participants, it is best to specify relative cutoffs since different participants will likely have different average pupil size measurements.
@@ -97,7 +95,7 @@ The pupil foreshortening error can be corrected using straightforward geometry i
 \subsubsection{Detrending PFE correction}
 Options to correct for a linear relationship between pupil size and gaze y position and a quadratic relationship between pupil size and gaze x position can be found under \texttt{Process > Pupil foreshortening error correction}. Note that at the time of writing these tools have not been thoroughly tested and use a first approximation of the PFE to avoid having to measure the experimental setup.
 \subsection{Interpolating missing data}
-To linearly interpolate missing pupil size and gaze data, go to \texttt{Process > Interpolate missing data}. Dialog boxes will open asking for the maximum length of time and the maximum distance to interpolate over (see \ref{timestr_explanation} and \ref{datastr_explanation} for explanations of how to provide input for these, respectively). Note: it is a good idea to be conservative when specifying the maximum gaze distance to interpolate over since, if saccades take place during long periods of missing data, linear interpolation will make these look like periods of smooth pursuit.
+To interpolate missing pupil size and gaze data using either linear interpolation or cubic spline interpolation, go to \texttt{Process > Interpolate missing data}. Dialog boxes will open asking for the maximum length of time and the maximum distance to interpolate over (see \ref{timestr_explanation} and \ref{datastr_explanation} for explanations of how to provide input for these, respectively). Note: it is a good idea to be conservative when specifying the maximum gaze distance to interpolate over since, if saccades take place during long periods of missing data, linear interpolation will make these look like periods of smooth pursuit.
 \subsection{Averaging left and right pupil size}
 To average the left and right data streams, go to \texttt{Process > Merge left and right diameter streams}.
 \subsection{Adding BIDS information}
@@ -118,13 +116,13 @@ To save processed data in a folder withing the \texttt{derivatives/} folder of y
 Under \texttt{BIDS > Load sourcedata}, you will have the option to load sourcedata from a BIDS-formatted directory. Note: if you use this option, any event logs corresponding to the data will be imported as well. You can also use this menu option to load data from a derivatives/ subfolder that was saved using the function explained in \ref{saving_derivatives}. Simply provide said subfolder as the sourcedata folder.
 \section{Event-related pupillometry}
 \subsection{Defining compound events}
-Often, we want to analyze responses to specific serial combinations of events (e.g. a trial of a certain type followed by a response of a certain type). To define these ``compound events'', go to \texttt{Trials > Define higher-order events}. In the dialog box that appears, specify the name of the compound event you wish to define. In the next dialog box, specify the ``time-locking'' events (these are the events whose onset times will be used as the onset times of your compound event). Next, specify ``secondary events'' that, if they occur in some serial position and/or time window relative to the time-locking events, will indicate the presence of your compound event. Next, you can specify a time window centered on the time-locking events in which the secondary events must occur (e.g. Start: \texttt{-2s}, End: \texttt{0s}; see \ref{timestr_explanation} for an explanation of how to specify this window; if none is specified,, itdefaults to the entire duration of the recording).  Next, you can specify the relative serial positions at which the secondary events must occur (these can be specified using Matlab's/Octave's colon operator, e.g. \texttt{-3:-1}. Next, you can specify whether compound events should be marked based on the presence or the absence of the secondary events within the specified window and serial position list. Finally, you will be asked if you want to overwrite the time-locking events. If you select ``Yes'', your compound event's name will replace its time-locking event's name. If you select "No", the name of your compound event will be appended to the name of its time-locking event.
+Often, we want to analyze responses to specific serial combinations of events (e.g. a trial of a certain type followed by a response of a certain type). To define these ``compound events'', go to \texttt{Trials > Define higher-order events}. In the dialog box that appears, specify the name of the compound event you wish to define. In the next dialog box, specify the ``primary'' events (these are the events whose onset times will be used as the onset times of your compound event). Next, specify ``secondary events'' that, if they occur in some serial position and/or time window relative to the time-locking events, will indicate the presence of your compound event. Next, you can specify a time window centered on the primary events in which the secondary events must occur (e.g. Start: \texttt{-2s}, End: \texttt{0s}; see \ref{timestr_explanation} for an explanation of how to specify this window; if none is specified, it defaults to the entire duration of the recording).  Next, you can specify the relative serial positions at which the secondary events must occur (these can be specified using Matlab's colon operator, e.g. \texttt{-3:-1}. Next, you can specify whether compound events should be marked based on the presence or the absence of the secondary events within the specified window and serial position list. Finally, you will be asked if you want to overwrite the time-locking events. If you select ``Yes'', your compound event's name will replace its primary event's name. If you select "No", the name of your compound event will be appended to the name of its time-locking event.
 \subsubsection{Example}
-If the time-locking events are \texttt{te1} and \texttt{te2} and the secondary events are \texttt{se1} and \texttt{se2}, and the window is specified as \texttt{-3s} to \texttt{0s}, and the relative serial positions are specified as \texttt{-3:-1}, then compound events will be marked as: each instance of \texttt{te1} or \texttt{te2} where an instance of \texttt{se1} or \texttt{se2} occurred at most 3 seconds prior but not afterward, and occurred as the immediately preceeding event, the one before the immediately preceeding event, or the one before that.
+If the primary events are \texttt{te1} and \texttt{te2} and the secondary events are \texttt{se1} and \texttt{se2}, and the window is specified as \texttt{-3s} to \texttt{0s}, and the relative serial positions are specified as \texttt{-3:-1}, then compound events will be marked as: each instance of \texttt{te1} or \texttt{te2} where an instance of \texttt{se1} or \texttt{se2} occurred at most 3 seconds prior but not afterward, and occurred as the immediately preceeding event, the one before the immediately preceeding event, or the one before that.
 \subsection{Computing reaction times}
 To compute reaction times, go to \texttt{Trials > Compute reaction times}. You will be asked to specify which events indicate the beginning of a trial and which events indicate a response. If there is no response event between one trial onset event and the next, the reaction time defaults to NaN. Next, you will be asked which events reaction times should be written to (e.g. you may want to record reaction times with either the onset or the response, or with another event nearby) a time window within which these events must occur, and whether this window is centred on the onset events or the response events.
 \subsection{Defining trials}
-To extract trial data, go to \texttt{\erp > Fragment continuous data into trials}. Trials are defined and extracted relative to events in the eye data. For example, if you wanted to examine pupillary response to an event called \texttt{showImage}, you would select this event name in the window that appears next. The durations of trials can be specified in the next dialog window. For example, to extract data from 200 milliseconds before the occurrence of events until 2 seconds after, you would enter \texttt{-200ms} and \texttt{2s} in the next dialog window. These durations can be specified as explained in \ref{timestr_explanation}.
+To extract trial data, go to \texttt{\erp > Fragment continuous data into trials}. Trials are defined and extracted relative to events in the eye data. For example, if you wanted to examine pupillary response to an event called \texttt{showImage}, you would select this event name in the window that appears next. The durations of trials can be specified in the next dialog window. For example, to extract data from 200 milliseconds before the occurrence of events until seconds after, you would enter \texttt{-200ms} and \texttt{2s} in the next dialog window. These durations can be specified as explained in \ref{timestr_explanation}.
 \subsection{Baseline-correcting trials}
 Due to variability in pupil size measurements, it is necessary to baseline correct trial data, either by subtracting the baseline mean or by computing the percentage change from baseline. To do this, go to \texttt{\erp > Baseline correction}. The mapping from baseline periods to trials can be one-to-one (e.g. baselines periods are the 200 ms before each event onset), one-to-all (e.g. one single baseline period occurs at the beginning of the experiment), or one-to-some (e.g. one baseline period occurs before a block of 5 trials). If the one-to-some mapping is selected, trials are baseline-corrected using the most recent baseline period. The durations of baseline periods can be specified as explained in \ref{timestr_explanation}.
 \subsection{Rejecting trials}
@@ -140,7 +138,7 @@ To run a processing pipeline on the data within a BIDS \texttt{sourcedata/} fold
 \section{Contributing}
 PuPL is meant to be extensible. All folders and sub-folders in \texttt{add-ons/} are added to the path when \texttt{pupl\_init} is run, and within each folder in \texttt{add-ons/}, PuPL searches for and runs a file called \texttt{init.m}, which can be used to add menus to the user interface.
 \subsection{Adding to the user interface}
-In the \texttt{init.m} file, including the line \texttt{global userInterface} will provide access to the PuPL user interface. The functions \texttt{appendtodata.m} and \texttt{updateactivedata.m} make it convenient to append to or update the \texttt{eyeData} variable and both take a single function as their input. For example, if you the following function:
+In the \texttt{init.m} file, including the line \texttt{global userInterface} will provide access to the PuPL user interface. The functions \texttt{appendtodata.m} and \texttt{updateactivedata.m} make it convenient to append to or update the \texttt{eyeData} variable and both take a single function as their input. For example, the following function
 \begin{verbatim}
 function EYE = renameall(EYE, name)
 
@@ -150,7 +148,7 @@ end
 
 end
 \end{verbatim}
-it can be added to the user interface in the \texttt{init.m} file as follows:
+can be added to the user interface in the \texttt{init.m} file as follows:
 \begin{verbatim}
 function init
 
@@ -201,7 +199,20 @@ Code to load raw data must be a function that takes the full path as its first a
 \texttt{left} (left eye)\\
 \texttt{right} (right eye)\\
 \texttt{camera}\\
-Each of the above will be a struct with the fields \texttt{x}, \texttt{y}, and \texttt{z}, specifying coordinates in millimeters using the coordinate system explained in \ref{coords_explanation}.
+Each of the above will be a struct with the fields \texttt{x}, \texttt{y}, and \texttt{z}, specifying coordinates ideally using the coordinate system explained in \ref{coords_explanation} (but if not, using the coordinate system explained immediately below)
+\end{addmargin}
+\texttt{units}: a struct with the following fields:
+\begin{addmargin}[1em]{0em}
+\texttt{diam}
+\begin{addmargin}[1em]{0em}
+\texttt{left}: cell array of character vectors, the first element of which is the units of left pupil size (probably \texttt{'dl'} for dimensionless)\\
+\texttt{right}: same as the above, only for right pupil size
+\end{addmargin}
+\texttt{gaze}
+\begin{addmargin}[1em]{0em}
+\texttt{x}: cell array of character vectors, the first element of which is the units of the gaze x coordinates (\texttt{'px'} or \texttt{'mm'})\\
+\texttt{y} cell array of character vectors, the first element of which is the units of the gaze y coordinates and the second element of which explains the reference point (\texttt{'screen top'} or \texttt{'screen bottom'}, most likely)
+\end{addmargin}
 \end{addmargin}
 \end{addmargin}
 

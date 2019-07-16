@@ -4,13 +4,21 @@ function EYE = pupl_check(EYE)
 % Ensures that the EYE struct array conforms to this code's expectations
 
 % Fill in default values
+defunitstruct = struct(...
+    'gaze', struct(...
+        'x', '',...
+        'y', ''),...
+    'diam', struct(...
+        'left', '',...
+        'right', ''));
+
 defaults = {
     'srate'     @(x)[]
     'src'       @(x)[]
     'name'      @(x)getname(x)
     'getraw'    @(x)''
     'coords'    @(x)[]
-    'units'     @(x)[]
+    'units'     @(x)defunitstruct
     'epoch'     @(x)struct([])
     'trialset'  @(x)struct([])
     'cond'      @(x)''
@@ -44,6 +52,13 @@ end
 % Set event to row vector
 for dataidx = 1:numel(EYE)
     EYE(dataidx).event = EYE(dataidx).event(:)';
+end
+
+% Make sure coords are cellstrs
+for dataidx = 1:numel(EYE)
+    for field = reshape(EYE(dataidx).units, 1, [])
+        EYE(dataidx).(field{:}) = structfun(@cellstr, EYE(dataidx).(field{:}), 'UniformOutput', false);
+    end
 end
 
 % Ensure event labels are strings

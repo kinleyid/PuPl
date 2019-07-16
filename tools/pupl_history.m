@@ -1,6 +1,13 @@
 
 function pupl_history(varargin)
 
+global eyeData
+
+if isempty(eyeData)
+    fprintf('Global eyeData struct is empty, cannot read processing history\n');
+    return
+end
+
 if numel(varargin) > 0 % Save to script file
     if strcmp(varargin{1}, 'wt') % Manually select 
         [f, p] = uiputfile('*.m', 'Save pipeline script');
@@ -17,8 +24,6 @@ if numel(varargin) > 0 % Save to script file
 else
     fid = 1;
 end
-
-global eyeData
 
 fprintf(fid, '%% Command history:\n\n');
 
