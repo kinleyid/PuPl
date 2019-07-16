@@ -7,7 +7,7 @@ addParameter(p, 'timelocking', []);
 addParameter(p, 'lims', []);
 addParameter(p, 'overwrite', []);
 parse(p, varargin{:});
-unpack(p);
+unpackparams(p);
 
 if any(arrayfun(@(x) ~isempty(x.epoch), EYE)) && isempty(overwrite)
     q = 'Overwrite existing trials?';

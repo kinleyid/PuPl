@@ -6,7 +6,7 @@ addParameter(p, 'interptype', []); % 'linear' or 'spline'
 addParameter(p, 'maxlen', []);
 addParameter(p, 'maxdist', []);
 parse(p, varargin{:});
-unpack(p)
+unpackparams(p)
 
 callStr = sprintf('eyeData = %s(eyeData, ', mfilename);
 if isempty(data)
