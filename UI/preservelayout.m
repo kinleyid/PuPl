@@ -18,6 +18,7 @@ top = dataPanelPixelPos(4) - buttonHeight;
 buttonWidth = dataPanelPixelPos(3) - sep;
 lowestButtonPos = top - (buttonHeight + sep)*numel(currData);
 if lowestButtonPos < dataPanelPixelPos(2)
+    % Extend user interface if there is enough data to do so
     dataPanelRelPos = get(dataPanel, 'Position');
     d = 0.5;
     dataPanelRelPos(2) = dataPanelRelPos(2) - d;
@@ -30,6 +31,8 @@ if lowestButtonPos < dataPanelPixelPos(2)
     dataPanelPixelPos = getDataPanelPixelPos;
     top = dataPanelPixelPos(4) - buttonHeight;
     buttonWidth = dataPanelPixelPos(3) - sep;
+else
+    % Shorten user interface
 end
 
 for dataidx = 1:numel(currData)

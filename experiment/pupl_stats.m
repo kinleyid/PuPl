@@ -120,14 +120,13 @@ for dataidx = 1:numel(EYE)
         stats = [];
         for statidx = 1:numel(statsStruct)
             currwin = timestr2lat(EYE(dataidx), statsStruct(statidx).win);
-            relLats = EYE(dataidx).trialset(setidx).relLatencies;
-            if isempty(relLats)
+            rellims = EYE(dataidx).trialset(setidx).rellims;
+            if isempty(rellims)
                 warning('You have combined epochs into a bin that do not all begin and end at the same time relative to their events');
                 latidx = currwin(1):currwin(2);
             else
-                latidx = find(relLats == currwin(1)):find(relLats == currwin(2));
+                latidx = find(rellims == currwin(1)):find(rellims == currwin(2));
             end
-        
             [data, isrej] = gettrialsetdatamatrix(EYE(dataidx), EYE(dataidx).trialset(setidx).name);
             data = data(:, latidx);
             if strcmp(trialwise, computeStatOfAverage)
