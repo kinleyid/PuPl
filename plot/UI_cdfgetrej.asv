@@ -55,11 +55,11 @@ end
 
 function plotrejection(f, dataname, threshname)
 
-UserData = get(f, 'UserData');
-data = UserData.data(~isnan(UserData.data));
-lims = UserData.lims;
+currThreshold = getcurrthresh(f);
 
-currThreshold = parsedatastr(getcurrthresh(f), data);
+UserData = get(f, 'UserData');
+data = UserData.data;
+lims = UserData.lims;
 
 thresholds = linspace(lims(1), lims(2), 1000);   
 ppnViolating = sum(bsxfun(@ge, data', thresholds))/numel(data);
@@ -79,7 +79,7 @@ end
 function thresh = getcurrthresh(f)
 
 teditbox = findobj(f, 'Tag', 'threshold');
-ud = get(f, 'UserData');
-thresh = get(teditbox, 'String');
+
+thresh = parsedatastr(get(teditbox, 'String'));
 
 end

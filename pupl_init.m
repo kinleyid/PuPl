@@ -19,7 +19,7 @@ if any(badargidx)
 end
 
 currVersion = '1.0.0';
-fprintf('PuPL, version %s\n', currVersion);
+fprintf('PuPl, version %s\n', currVersion);
 % Check for updates
 if ~any(strcmpi(varargin, 'noweb'))
   try

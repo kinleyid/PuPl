@@ -22,11 +22,12 @@ end
 
 subs = {
     '\$'  @(x) x
-    '`m' @nanmean_bc
-    '`d' @nanmedian_bc
-    '`s' @nanstd_bc
-    '`v'  @nanvar_bc
-    '`i' @interquartilerange
+    '`mn' @nanmean_bc
+    '`md' @nanmedian_bc
+    '`sd' @nanstd_bc
+    '`var'  @nanvar_bc
+    '`iq' @interquartilerange
+    '`mad' @medianabsdev
 };
 
 for ii = 1:size(subs, 1)
