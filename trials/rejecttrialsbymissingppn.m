@@ -37,7 +37,8 @@ missingPpns = getmissingppns(EYE, lims);
 
 for dataidx = 1:numel(EYE)
     fprintf('\t%s...', EYE(dataidx).name);
-    isrej = missingPpns{dataidx} >= threshold;
+    currthresh = parsedatastr(threshold, missingPpns{dataidx});
+    isrej = missingPpns{dataidx} >= currthresh;
     wasrej = [EYE(dataidx).epoch.reject];
     newrej = isrej & ~wasrej;
     fprintf('%d above threshold, %d newly rejected, %d/%d total rejected\n',...

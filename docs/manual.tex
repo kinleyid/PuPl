@@ -59,15 +59,17 @@ For example, \texttt{1s + 2 dp - 100 ms - 2d} translates to one second plus two 
 \subsection{A note on specifying relative quantities} \label{datastr_explanation}
 You can specify relative quantities by writing any valid Matlab expression using \texttt{\$} to refer to the data that. E.g. \texttt{max(\$)} would return the max. You can also use shortcuts to compute common statistics as follows:
 \begin{addmargin}[1em]{0em}
-\texttt{`m}: mean\\
-\texttt{`d}: median\\
-\texttt{`s}: standard deviation\\
-\texttt{`v}: variance\\
-\texttt{`i}: interquartile range\\
+\texttt{`mn}: mean\\
+\texttt{`md}: median\\
+\texttt{`sd}: standard deviation\\
+\texttt{`vr}: variance\\
+\texttt{`iq}: interquartile range\\
+\texttt{`madv}: median absolute deviation\\
 (Note that the backticks in the above are to avoid conflicts with other Matlab expressions)\\
 \texttt{\%}: percentile (e.g. \texttt{15\%} computes the 15th percentile)
 \end{addmargin}
-E.g. \texttt{`m - 2`s} would compute the mean minus two standard deviations.
+E.g. \texttt{`mn - 2`sd} would compute the mean minus two standard deviations.\\\\
+When you provide a relative quantity to a GUI tool, it uses all of the currently active data to compute it. However, the quantity will be computed for each individual recording during processing. For example, suppose you currently have an active dataset of 20 recordings and you begin using the GUI to reject trials according to proportion of missing data. If you provide \texttt{`mn + 2`sd} to the GUI tool, the feedback it shows you will be based on the pooled trial data from all participants (the mean proportion missing for all trials in the dataset plus two times the standard deviation of these data). However, during processing, the rejection threshold will be based on each individual recording (the mean proportion missing for a single participant's trials plus two times the standard deviation of these data). This approach has been taken so that relative quantities will not behave unpredictably on the basis of which recordings are being processed at the same time.
 \subsection{Converting between pupil area and diameter measurements}
 Some eye trackers record pupil area, while others record pupil diameter. To convert between these, go to \texttt{Process > Convert pupil size}.
 \subsection{Centering and scaling data}
@@ -77,9 +79,11 @@ To center (e.g. by median or mean) and/or scale (e.g. by standard deviation, mea
 Go to \texttt{Process > Trim data > Trim extreme dilation values} to remove pupil size measurements that are too high or low. In the window that opens, you can specify cutoff points as explained in \ref{datastr_explanation}. Note: the gaze measurements corresponding to rejected pupil size measurements will also be removed. If you plan to run the same pipeline on multiple participants, it is best to specify relative cutoffs since different participants will likely have different average pupil size measurements.
 \subsubsection{Trimming extreme gaze measurements}
 Go to \texttt{Process > Trim data > Trim extreme gaze values} to remove gaze measurements that are too extreme (e.g. off-screen or too far from a fixation cross). You can specify cutoff points as explained in \ref{datastr_explanation}. Note: the pupil size measurements corresponding to rejected gaze measurements will also be removed. If you plan to run the same pipeline on multiple participants, it is best to create absolute gaze cutoffs since screen x and y values are likely to have the same meaning across participants.
-\subsection{Trimming isolated samples}
-Go to \texttt{Process > Trim data > Trim isolated samples} to remove little blips of data that are unlikely to be meaningful or accurate measurements. See below to understand how to specify the max length of these islands of isolated data.
-\subsection{Trimming blink-adjacent samples}
+\subsubsection{Trimming extreme dilation speeds}
+Go to \texttt{Process > Trim data > Trim by extreme dilation speed} to trim datapoints that represent an abrupt change in pupil size.
+\subsubsection{Trimming isolated samples}
+Go to \texttt{Process > Trim data > Trim isolated samples} to remove little blips of data that are unlikely to be meaningful or accurate measurements. See \ref{timestr_explanation} to understand how to specify the max length of these islands of isolated data and the maximum allowable distance from the nearest other datapoint.
+\subsubsection{Trimming blink-adjacent samples}
 The pupil is partially obstructed shortly before and after the eye fully closes during blinks. This makes samples recorded near blinks unreliable. To trim these, go to \texttt{Process > Trim blink-adjacent samples}. See \ref{timestr_explanation} for an explanation of how to specify durations in the dialog boxes that appear.
 \subsection{Filtering data}
 To apply a moving mean or median filter to pupil size or gaze data, go to \texttt{Process > Moving average filter}.

@@ -25,7 +25,7 @@ subs = {
     '`mn' @nanmean_bc
     '`md' @nanmedian_bc
     '`sd' @nanstd_bc
-    '`var'  @nanvar_bc
+    '`vr'  @nanvar_bc
     '`iq' @interquartilerange
     '`madv' @medianabsdev
 };
