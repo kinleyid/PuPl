@@ -1,7 +1,7 @@
 function EYE = trimshort(EYE, varargin)
 
 p = inputParser;
-addParameter(p, 'lenthresh', []);
+addParameter(p, 'lenthresh', []); % Max allowable length
 addParameter(p, 'septhresh', []);
 parse(p, varargin{:});
 

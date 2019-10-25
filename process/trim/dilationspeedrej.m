@@ -15,6 +15,9 @@ if isempty(p.Results.thresh)
     end
     alld = cell2mat(alld);
     thresh = UI_cdfgetrej(alld, 'threshname', 'Dilation speed');
+    if isempty(thresh)
+        return
+    end
 else
     thresh = p.Results.thresh;
 end

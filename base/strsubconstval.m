@@ -10,6 +10,6 @@ while true
     end
 end
 
-cmd = strrep(cmd, fnd, repl);
+cmd = regexprep(cmd, fnd, repl);
 
 end

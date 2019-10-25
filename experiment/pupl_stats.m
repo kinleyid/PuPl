@@ -100,12 +100,17 @@ else
     fullpath = p.Results.fullpath;
 end
 
-colNames = {'Dataset' 'Cond' 'TrialSet'};
-if strcmp(trialwise, computeStatsPerTrial)
-    colNames = [colNames 'TrialType' 'TrialIdx' 'Rejected' 'RT'];
-else
-    colNames = [colNames 'MeanRT'];
+uniqueTrialSetNames = unique(mergefields(EYE, 'trialset', 'name'));
+uniqueCondNames = unique(mergefields(EYE, 'cond'));
+
+colNames = [{'Dataset' 'Cond'} strcat('Cond_', uniqueCondNames) strcat('TrialSet_', uniqueTrialSetNames)];
+switch trialwise
+    case computeStatsPerTrial
+        newColNames = {'RT' 'Rejected' 'TrialIdx' 'TrialType'};
+    otherwise
+        newColNames = 'MeanRT';
 end
+colNames = [colNames newColNames];
 
 statNames = [];
 for ii = 1:numel(statsStruct)
@@ -119,70 +124,82 @@ statsTable = colNames;
 fprintf('Computing statistics...\n');
 for dataidx = 1:numel(EYE)
     fprintf('\t%s...', EYE(dataidx).name);
-    for setidx = 1:numel(EYE(dataidx).trialset)
-        stats = [];
-        for statidx = 1:numel(statsStruct)
-            currwin = timestr2lat(EYE(dataidx), statsStruct(statidx).win);
-            rellats = unfold(EYE(dataidx).trialset(setidx).rellims);
-            if isempty(rellats)
-                warning('You have combined epochs into a bin that do not all begin and end at the same time relative to their events');
-                latidx = currwin(1):currwin(2);
-            else
-                latidx = find(rellats == currwin(1)):find(rellats == currwin(2));
+    % Get logical vector indicating experimental condition
+    condVec = ismember(uniqueCondNames, EYE(dataidx).cond);
+    switch trialwise % How to iterate through data?
+        case computeStatsPerTrial % Iterate over epochs
+            itermax = numel(EYE(dataidx).epoch);
+        otherwise % Iterate over trial sets
+            itermax = numel(uniqueTrialSetNames);
+    end
+    for iterator = 1:itermax
+        for winidx = 1:numel(statsStruct)
+            currwin = timestr2lat(EYE(dataidx), statsStruct(winidx).win);
+            % Get data as vector, plus other columns of the new data table
+            % row:
+            switch trialwise
+                case computeStatsPerTrial
+                    rellats = unfold(EYE(dataidx).epoch(iterator).rellims);
+                    data = EYE(dataidx).diam.both(unfold(EYE(dataidx).epoch(epochidx).abslims));
+                    isrej = EYE(dataidx).epoch(epochidx).reject;
+                    latidx = find(rellats == currwin(1)):find(rellats == currwin(2));
+                    data = data(latidx);
+                    rtstat = EYE(dataidx).epoch(iterator).event.rt;
+                    % Figure out trial set membership
+                    trialSetVec = [];
+                    for trialsetname = uniqueTrialSetNames
+                        trialsetidx = strcmp({EYE(dataidx).trialset.name}, trialsetname);
+                        if ismember(EYE(dataidx).epoch(iterator).name, EYE(dataidx).trialset(trialsetidx).description.members)
+                            newVal = true;
+                        else
+                            newVal = false;
+                        end
+                        trialSetVec = [trialSetVec newVal];
+                    end
+                otherwise
+                    rellats = unfold(EYE(dataidx).trialset(iterator).rellims);
+                    if isempty(rellats)
+                        warning('You have combined epochs into a bin that do not all begin and end at the same time relative to their events');
+                        latidx = currwin(1):currwin(2);
+                    else
+                        latidx = find(rellats == currwin(1)):find(rellats == currwin(2));
+                    end
+                    [data, isrej] = gettrialsetdatamatrix(EYE(dataidx), EYE(dataidx).trialset(setidx).name);
+                    data = nanmean_bc(data(~isrej, latidx));
+                    epochidx = getepochidx(EYE(dataidx), EYE(dataidx).trialset(iterator).description);
+                    rtstat = nanmean_bc(mergefields(EYE(dataidx).epoch(epochidx), 'event', 'rt')); % Mean reaction time
+                    trialSetVec = ismember(uniqueTrialSetNames, EYE(dataidx).trialset(iterator).name);
             end
-            [data, isrej] = gettrialsetdatamatrix(EYE(dataidx), EYE(dataidx).trialset(setidx).name);
-            data = data(:, latidx);
-            if strcmp(trialwise, computeStatOfAverage)
-                nRows = 1;
-                data = nanmean_bc(data(~isrej, :));
-            else
-                nRows = size(data, 1);
+            % Compute statistics of vector
+            nStats = numel(statsStruct(winidx).stats);
+            currStats = nan(1, nStats);
+            for statidx = 1:nStats
+                statname = statsStruct(winidx).stats{statidx};
+                statoptidx = strcmp(statname, statOptions(:, 1));
+                currStats(statidx) = feval(statOptions{statoptidx, 2}, data);
             end
             
-            nStats = numel(statsStruct(statidx).stats);
-            currStats = nan(nRows, nStats);
-        
-            for rowidx = 1:nRows
-                for currstatidx = 1:nStats
-                    statname = statsStruct(statidx).stats{currstatidx};
-                    statoptidx = strcmp(statname, statOptions(:, 1));
-                    currStats(rowidx, currstatidx) = feval(statOptions{statoptidx, 2}, data(rowidx, :));
-                end
+            currRow = [
+                EYE(dataidx).name... Dataset name
+                condVec... Logical vector indicating experimental condition membership
+                trialSetVec... Logical vector indicating trial set membership
+                rtstat... Reaction time, either individual or trial set average
+            ];
+            switch trialwise
+                case computeStatsPerTrial
+                    newCols = [
+                        isrej... Rejected
+                        iterator... TrialIdx
+                        EYE(datadix).epoch(iterator).name... TrialType
+                    ];
+                otherwise
+                    newCols = [];
             end
-            % Append to statistics portion of table horizontally
-            stats = [stats currStats];
+            statsTable = [
+                statsTable
+                [currRow newCols]
+            ];
         end
-        
-        % Combine multiple conditions into a single string
-        currCond = cellstr(EYE(dataidx).cond);
-        currCond = cellstr(strcat(currCond{:}));
-        
-        % Append to stats table vertically
-        switch trialwise
-            case computeStatsPerTrial
-                currTable = [
-                    cellstr(repmat(EYE(dataidx).name, nRows, 1))... Dataset name
-                    cellstr(repmat(currCond, nRows, 1))... Condition
-                    cellstr(repmat(EYE(dataidx).trialset(setidx).name, nRows, 1))... Trial set name
-                    cellstr(reshape({EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx).name}, [], 1))... Trial name
-                    num2cell(reshape(EYE(dataidx).trialset(setidx).epochidx, [], 1)),... Trial index
-                    num2cell(reshape([EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx).reject], [], 1))... Rejected?
-                    num2cell(reshape(mergefields(EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx), 'event', 'rt'), [], 1))... Reaction time
-                    num2cell(stats)
-                ];
-            case computeStatOfAverage
-                currTable = [
-                    cellstr(EYE(dataidx).name)... Recording name
-                    currCond... Condition
-                    cellstr(EYE(dataidx).trialset(setidx).name)... Trial set name
-                    nanmean_bc(mergefields(EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx), 'event', 'rt'))... Mean reaction time
-                    stats
-                ];
-        end
-        statsTable = [
-            statsTable
-            currTable
-        ];
     end
     fprintf('done\n');
 end

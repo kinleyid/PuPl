@@ -26,7 +26,7 @@ for dataidx = 1:numel(EYE)
     fprintf('\t%f%% of points marked as saccades\n', 100*sum(vel >= threshold) / sum(~isnan(vel)));
     EYE(dataidx).datalabel(isSaccade) = 's';
     EYE(dataidx).datalabel(~isSaccade) = 'f';
-    EYE(dataidx).history = cat(1, EYE(dataidx).history, callstr);
+    EYE(dataidx).history{end + 1} = callstr;
 end
 fprintf('Done\n');
 

@@ -45,7 +45,7 @@ for dataidx = 1:numel(EYE)
             EYE(dataidx).(field1{:}).(field2{:})(badidx) = nan; 
         end
     end
-    fprintf('\t%s: %0.2f%% of data removed\n', EYE(dataidx).name, 100*nnz(badidx)/numel(EYE(dataidx).isBlink))
+    fprintf('\t%s: %0.2f%% of data removed\n', EYE(dataidx).name, 100*nnz(badidx)/EYE(dataidx).ndata)
     EYE(dataidx).history{end + 1} = callStr;
 end
 fprintf('Done\n')

@@ -41,10 +41,11 @@ function recursiveupdatemenu(currMenu)
 
 if strcmp(get(currMenu, 'Type'), 'uimenu')
     if ~isempty(get(currMenu, 'UserData'))
-        if feval(get(currMenu, 'UserData'))
-            set(currMenu, 'Enable', 'on');
-        else
-            set(currMenu, 'Enable', 'off');
+        set(currMenu, 'Enable', 'off');
+        try
+            if feval(get(currMenu, 'UserData'))
+                set(currMenu, 'Enable', 'on');
+            end
         end
     end
 end

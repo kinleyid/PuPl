@@ -1,11 +1,18 @@
 
 function out = gettrialdata(EYE, trialidx, varargin)
 
+% Here EYE is a single struct, not an array
+
 if isempty(trialidx)
     trialidx = 1:numel(EYE.epoch);
 end
 
-vec = getfield(EYE, varargin{:});
+if strcmp(varargin{end}, 'both') && ~isfield(getfield(EYE, varargin{1:end-1}), varargin{end})
+    % Compute "both" field on the fly
+    vec = mergelr(EYE);
+else
+    vec = getfield(EYE, varargin{:});
+end
 
 out = cell(1, nnz(trialidx));
 for ii = 1:numel(trialidx)

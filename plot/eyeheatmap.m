@@ -67,8 +67,8 @@ switch include
 end
 data = data(~isrej, :);
 
+setidx = strcmp({EYE(dataidx).trialset.name}, set);
 if byRT
-    setidx = strcmp({EYE(dataidx).trialset.name}, set);
     RTs = mergefields(EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx), 'event', 'rt');
     RTs = RTs(~isrej);
     [~, I] = sort(RTs);
@@ -78,8 +78,14 @@ else
     xlab = 'Trial';
 end
 
-latencies = 1:size(data, 2);
-times = (latencies - 1)/unique([EYE(dataidx).srate]);
+rellims = EYE(1).trialset(setidx).rellims;
+if ~isempty(rellims)
+    x = unfold(rellims);
+else
+    warning('Trial set contains epochs in which the relative positions of the events are different\nX-axis will begin at 0 seconds');
+    x = 0:size(data, 2)-1;
+end
+times = x /unique([EYE(dataidx).srate]);
 figure;
 ii = image(times, 1:size(data, 1), data,'CDataMapping','scaled');
 try

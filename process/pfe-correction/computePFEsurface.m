@@ -20,8 +20,7 @@ idx = false(numel(ranges.x), numel(ranges.y), numel(EYE.diam.left));
 for xi = 1:numel(ranges.x)
     for yi = 1:numel(ranges.y)
         currIdx =  abs(EYE.gaze.x - ranges.x(xi)) <= widths.x...
-            & abs(EYE.gaze.y - ranges.y(yi)) <= widths.y...
-            & ~EYE.isBlink;
+            & abs(EYE.gaze.y - ranges.y(yi)) <= widths.y;
         surface(yi, xi) = nanmean_bc(EYE.diam.left(currIdx));
         density(yi, xi) = nnz(~isnan(EYE.diam.left(currIdx)));
     end

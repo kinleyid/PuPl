@@ -56,8 +56,8 @@ end
 
 % Make sure coords are cellstrs
 for dataidx = 1:numel(EYE)
-    for field = reshape(EYE(dataidx).units, 1, [])
-        EYE(dataidx).(field{:}) = structfun(@cellstr, EYE(dataidx).(field{:}), 'UniformOutput', false);
+    for field = reshape(fieldnames(EYE(dataidx).units), 1, [])
+        EYE(dataidx).units.(field{:}) = structfun(@cellstr, EYE(dataidx).units.(field{:}), 'UniformOutput', false);
     end
 end
 

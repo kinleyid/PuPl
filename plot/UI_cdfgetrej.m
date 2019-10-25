@@ -9,8 +9,7 @@ parse(p, varargin{:});
 
 dataname = p.Results.dataname;
 threshname = p.Results.threshname;
-lims = p.Results.lims;
-
+lims = p.Results.lims;    
 f = figure(...
     'ToolBar', 'none',...
     'MenuBar', 'none',...
@@ -72,7 +71,8 @@ plot(lims, repmat(currPpnViolating, 1, 2), '--k')
 xlim(lims);
 ylim([0 1]);
 xlabel(threshname);
-ylabel(sprintf('Proportion %s violating threshold', dataname));
+ylabel(sprintf('Proportion of %s violating threshold', dataname));
+title(sprintf('%d %s (%.2f%%) would be rejected', nnz(data >= currThreshold), dataname, 100*currPpnViolating));
 
 end
 

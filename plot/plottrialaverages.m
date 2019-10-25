@@ -106,7 +106,7 @@ for plotidx = 1:numel(plotstruct)
         warning('Trial set contains epochs in which the relative positions of the events are different\nX-axis will begin at 0 seconds');
         x = 0:size(data, 2)-1;
     end
-    t = x /unique([EYE(dataidx).srate]);
+    t = x /[EYE(dataidx).srate];
     currplot = plot(t, nanmean_bc(data));
     x = [t t(end:-1:1)];
     y = [nanmean_bc(data) + nanstd_bc(data) ./ sqrt(sum(~isnan(data)))...

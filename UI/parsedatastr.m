@@ -27,7 +27,7 @@ subs = {
     '`sd' @nanstd_bc
     '`var'  @nanvar_bc
     '`iq' @interquartilerange
-    '`mad' @medianabsdev
+    '`madv' @medianabsdev
 };
 
 for ii = 1:size(subs, 1)
