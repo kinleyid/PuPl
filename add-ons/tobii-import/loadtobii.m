@@ -10,6 +10,8 @@ switch type
         [~ , ~, r] = xlsread(fullpath);
     case 'tab'
         r = readdelim2cell(fullpath, '\t');
+    case 'csv'
+        r = readdelim2cell(fullpath, ',');
 end
 
 cols = lower(r(1, :));

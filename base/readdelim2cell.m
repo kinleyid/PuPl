@@ -20,12 +20,16 @@ while ~feof(fid)
     end
 end
 
-eol = sprintf('\n');
 d = sprintf(delim);
 
 % Determine number of columns
 fseek(fid, endofheader, 'bof');
-currline = fgetl(fid);
+[currline, eol] = fgets(fid);
+currline = currline(1:end-length(eol));
+if isempty(currline)
+    currline = '';
+end
+eol = char(eol);
 currline = strrep(currline, eol, d);
 currline = stringsplit(currline, delim);
 ncols = numel(currline);

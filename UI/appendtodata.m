@@ -1,6 +1,7 @@
 
 function appendtodata(func)
 
-updateglobals('eyeData', 'append', func, 1);
-        
+global pupl_globals
+updateglobals(pupl_globals.datavarname, 'append', func, 1);
+
 end

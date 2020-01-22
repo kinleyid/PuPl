@@ -7,13 +7,14 @@ addParameter(p, 'loadfunc', []); % required
 addParameter(p, 'fullpath', []); % optional
 addParameter(p, 'filefilt', '*.*'); % optional
 addParameter(p, 'type', 'eye'); % eye or event, required
+addParameter(p, 'usebids', []); % use BIDS?
 addParameter(p, 'args', {}); % cell array of extra args passed to loadfunc
 parse(p, varargin{:});
 
 EYE = p.Results.eyedata;
 
-if isempty(p.Results.fullpath) % Get path
-    q = 'Load BIDS raw data?';
+if isempty(p.Results.usebids)
+    q = sprintf('Load BIDS raw data?\n(No to manually select individual files)');
     a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'No');
     switch a
         case 'Yes'
@@ -23,6 +24,11 @@ if isempty(p.Results.fullpath) % Get path
         otherwise
             return
     end
+else
+    usebids = p.Results.usebids;
+end
+
+if isempty(p.Results.fullpath) % Get path
     if usebids
         rawdatapath = uigetdir(pwd, 'Select project folder');
         if isnumeric(rawdatapath)

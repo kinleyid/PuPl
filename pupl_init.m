@@ -7,6 +7,14 @@ function pupl_init(varargin)
 %   Example
 % >> pupl_init noui noaddons
 
+global pupl_globals
+if ~isfield(pupl_globals, 'UI')
+    pupl_globals.UI = [];
+end
+% Global settings
+pupl_globals.datavarname = 'eye_data';
+pupl_globals.catdim = 2;
+
 availableargs = {'noweb' 'noui' 'noglobals' 'noaddons'};
 badargidx = ~ismember(lower(varargin), availableargs);
 if any(badargidx)
@@ -50,14 +58,15 @@ fprintf('\n');
 
 if ~any(strcmpi(varargin, 'noGlobals'))
     fprintf('Initializing global variables...\n');
-    evalin('base', 'global eyeData; eyeData = struct([]);');
+    evalin('base',...
+        sprintf('global %s; %s = struct([]);',...
+            pupl_globals.datavarname, pupl_globals.datavarname));
 end
 
 if ~any(strcmpi(varargin, 'noUI'))
-    global userInterface
-    if isgraphics(userInterface)
-        fprintf('Closing previous user interface...\n')
-        delete(userInterface)
+    if isgraphics(pupl_globals.UI)
+        fprintf('Closing previous user interface (only one allowed at a time)...\n')
+        delete(pupl_globals.UI)
     end
     fprintf('Initilizing user interface...\n')
     pupl_UI
@@ -71,16 +80,17 @@ if ~any(strcmpi(varargin, 'noAddOns'))
         if ~any(strcmp(currFolder.name, {'.' '..'}))
             fprintf('\t%s...', currFolder.name);
             addpath(genpath(fullfile(addonsfolder, currFolder.name)));
-            try
-                initfile = fullfile(addonsfolder, currFolder.name, 'init.m');
-                run(initfile);
-                clear(initfile);
-            catch
-                fprintf('no init.m file found');
+            initfile = fullfile(addonsfolder, currFolder.name, 'init.m');
+            if exist(initfile, 'file')
+                run(initfile)
+                clear('init')
+            else
+                fprintf('could not find expected file %s', initfile)
             end
-            fprintf('\n');
+            fprintf('\n')
         end
     end
+    % Duplicate the "import" menu under the BIDS menu
 end
 
 % Is octave?

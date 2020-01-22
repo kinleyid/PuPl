@@ -3,7 +3,9 @@ function preservelayout(varargin)
 sep = 2;
 buttonHeight = 20;
 
-global userInterface eyeData
+global pupl_globals
+eyeData = evalin('base', pupl_globals.datavarname);
+userInterface = pupl_globals.UI;
 
 currData = eyeData;
 dataPanel = findobj(userInterface, 'tag', 'activeEyeDataPanel');
@@ -71,8 +73,8 @@ end
 end
 
 function dataPanelPixelPos = getDataPanelPixelPos
-
-global userInterface;
+global pupl_globals
+userInterface = pupl_globals.UI;
 dataPanelPixelPos = getPixelPos(...
     get(userInterface, 'position'),...
     get(findobj(userInterface, 'Tag', 'activeEyeDataPanel'), 'position'));

@@ -2,7 +2,9 @@ function update_UI
 
 % Update UI panels when new data is loaded or the active datasets change
 
-global userInterface eyeData
+global pupl_globals
+userInterface = pupl_globals.UI;
+eyeData = evalin('base', pupl_globals.datavarname);
 activeEyeDataPanel = findobj(userInterface, 'Tag', 'activeEyeDataPanel');
 
 UserData = get(userInterface, 'UserData');

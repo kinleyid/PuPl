@@ -1,20 +1,19 @@
 function savewarning(varargin)
 
-global eyeData eventLogs
-if ~isempty(eyeData) || ~isempty(eventLogs)
-    q = 'Save data from workspace?';
-    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
+global pupl_globals
+unsaved_data = evalin('base', pupl_globals.datavarname);
 
+if ~isempty(unsaved_data)
+    q = sprintf('Save data (variable %s) from workspace?', pupl_globals.datavarname);
+    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
     switch a
         case 'Yes'
-            data = {eyeData eventLogs};
-            types = {'eye data' 'event logs'};
-            for i = 1:numel(data)
-                if ~isempty(data{i})
-                    uiwait(msgbox(sprintf('Save the %s', types{i})));
-                    pupl_save('data', data{i}, 'type', types{i});
-                end
+            if numel(unsaved_data) > 1
+                batch = true;
+            else
+                batch = false;
             end
+            pupl_save('data', unsaved_data, 'type', 'eye data', 'batch', batch);
             delete(gcbf)
         case 'No'
             delete(gcbf)

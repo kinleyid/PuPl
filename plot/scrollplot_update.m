@@ -17,7 +17,8 @@ for dataidx = 1:numel(plotinfo.data)
 end
 xlim([xtimes(1) xtimes(end)]);
 xlabel('Time (s)');
-ylabel('Pupil size');
+units = EYE.units.gaze.left;
+ylabel(sprintf('Pupil %s (%s)', units{1}, units{2}));
 % Display events
 if ~isempty(EYE.event)
     currevents = find(ismember([EYE.event.latency], x));

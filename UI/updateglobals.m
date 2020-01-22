@@ -1,39 +1,48 @@
-function updateglobals(globalVarName, globalVarIndex, functionToCall, outputIndex)
+function updateglobals(globalVarName, idx, func, outputidx)
 
 % Updates global variables
-% This is my least favourite part of this code
 %   Inputs
-% globalVarName--string
-% globalVarIndex--logical or integer array or 'append'
-% functionToCall--function handle
-% outputIndex--which serial output of functionToCall to assign to
+% globalVarName--string, ignored
+% idx--logical or integer array or 'append'
+% func--function handle
+% outputidx--which serial output of func to use
 
-if isempty(globalVarName) ||...
-        isempty(globalVarIndex) ||...
-        isempty(outputIndex)
+global pupl_globals
+pupl_globals.datavarname = pupl_globals.datavarname;
+
+if isempty(pupl_globals.datavarname) ||...
+        isempty(idx) ||...
+        isempty(outputidx)
     % Function has no outputs
-    feval(functionToCall)
+    feval(func)
 else
     % Get the outputs
-    codeSmell = cell(1, outputIndex);
-    [codeSmell{:}] = feval(functionToCall);
+    outputs = cell(1, outputidx);
+    [outputs{:}] = feval(func);
     
     % Subset the outputs
-    codeSmell = codeSmell{outputIndex};
-    if isempty(codeSmell)
+    outputs = outputs{outputidx};
+    if isempty(outputs)
         return
     end
+    
+    % Get the global data variable
+    tmp_datavar = evalin('base', pupl_globals.datavarname);
+    
     % Make sure the new structs are consistent with the old ones
-    eval(sprintf('global %s', globalVarName));
-    eval(sprintf('[%s, codeSmell] = fieldconsistency(%s, codeSmell);', globalVarName, globalVarName));
+    [tmp_datavar, outputs] = fieldconsistency(tmp_datavar, outputs);
+    
     % Are we subsetting or appending?
-    if strcmpi(globalVarIndex, 'append')
+    if strcmpi(idx, 'append')
         % We are appending
-        eval(sprintf('%s = cat(2, %s, codeSmell);', globalVarName, globalVarName));
+        tmp_datavar = cat(pupl_globals.catdim, tmp_datavar, outputs);
     else
         % We are subsetting
-        eval(sprintf('%s(globalVarIndex) = codeSmell;', globalVarName));
+        tmp_datavar(idx) = outputs;
     end
+    
+    % Update the global variable
+    assignin('base', pupl_globals.datavarname, tmp_datavar);
 end
 
 % Update the user interface

@@ -3,18 +3,19 @@ function out = getfromur(EYE, type)
 
 switch(type)
     case 'diam'
-        out = struct(...
-            'left', EYE.urdiam.left,...
-            'right', EYE.urdiam.right);
-        %{
-        out = struct(...
-            'left', mean([
-                EYE.urDiam.left.x
-                EYE.urDiam.left.y]),...
-            'right', mean([
-                EYE.urDiam.right.x
-                EYE.urDiam.right.y]));
-        %}
+        try
+            out = struct(...
+                'left', EYE.urdiam.left,...
+                'right', EYE.urdiam.right);
+        catch
+            out = struct(...
+                'left', mean([
+                    EYE.urdiam.left.x
+                    EYE.urdiam.left.y]),...
+                'right', mean([
+                    EYE.urdiam.right.x
+                    EYE.urdiam.right.y]));
+        end
     case 'gaze'
         out = struct(...
             'x', mean([

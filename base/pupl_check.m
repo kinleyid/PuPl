@@ -11,7 +11,7 @@ defunitstruct = struct(...
     'diam', struct(...
         'left', '',...
         'right', ''));
-
+    
 defaults = {
     'srate'     @(x)[]
     'src'       @(x)[]
@@ -43,10 +43,12 @@ for defidx = 1:size(defaults, 1)
 end
 
 % Ensure zero diameter measurements are set to nan
-for field = {'left' 'right'}
-    data = EYE.urdiam.(field{:});
-    data(data < eps) = nan;
-    EYE.urdiam.(field{:}) = data;
+for dataidx = 1:numel(EYE)
+    for field = {'left' 'right'}
+        data = EYE(dataidx).urdiam.(field{:});
+        data(data < eps) = nan;
+        EYE(dataidx).urdiam.(field{:}) = data;
+    end
 end
 
 % Set event to row vector
@@ -80,22 +82,25 @@ end
 % Adds "beginning of recording" and "end of recording" as events if they
 % don't exist
 for dataidx = 1:numel(EYE)
-    if ~strcmp(EYE(dataidx).event(1).type, 'Start of recording')
-        EYE(dataidx).event = cat(2,...
-            struct('type', 'Start of recording',...
-                'time', 0,...
-                'latency', 1,...
-                'rt', NaN),...
-            reshape(EYE(dataidx).event, 1, []));
-                
-    end
-    if ~strcmp(EYE(dataidx).event(end).type, 'End of recording')
-        EYE(dataidx).event(end+1) = ...
-            struct(...
-                'type', 'End of recording',...
-                'time', (EYE(dataidx).ndata - 1) / EYE(dataidx).srate,...
-                'latency', EYE(dataidx).ndata,...
-                'rt', NaN);
+    startev = struct('type', 'Start of recording',...
+        'time', 0,...
+        'latency', 1,...
+        'rt', NaN);
+    endev = struct(...
+        'type', 'End of recording',...
+        'time', (EYE(dataidx).ndata - 1) / EYE(dataidx).srate,...
+        'latency', EYE(dataidx).ndata,...
+        'rt', NaN);
+    if isempty(EYE(dataidx).event)
+        EYE(dataidx).event = [startev endev];
+    else
+        if ~strcmp(EYE(dataidx).event(1).type, 'Start of recording')
+            EYE(dataidx).event = cat(2, startev, reshape(EYE(dataidx).event, 1, []));
+
+        end
+        if ~strcmp(EYE(dataidx).event(end).type, 'End of recording')
+            EYE(dataidx).event(end+1) = endev;
+        end
     end
 end
 

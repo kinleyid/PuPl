@@ -1,6 +1,7 @@
 
 function updateactivedata(func)
 
-updateglobals('eyeData', getactiveidx, func, 1);
+global pupl_globals
+updateglobals(pupl_globals.datavarname, getactiveidx, func, 1);
         
 end

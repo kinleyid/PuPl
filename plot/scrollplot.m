@@ -6,6 +6,7 @@ addParameter(p, 'type', []);
 parse(p, varargin{:});
 
 set(ancestor(a, 'figure'), 'KeyPressFcn', @scrollplot_move);
+set(ancestor(a, 'figure'), 'Title', 'Testing testing');
 
 if isempty(p.Results.type)
     q = 'Plot which type of data?';

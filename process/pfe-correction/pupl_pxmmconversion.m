@@ -50,12 +50,13 @@ fprintf('Converting gaze in pixels to gaze in millimeters\n');
 for dataidx = 1:numel(EYE)
     fprintf('\t%s...', EYE(dataidx).name);
     EYE(dataidx).gaze.x = EYE(dataidx).gaze.x * mmdims(1) / pxdims(1);
-    EYE(dataidx).units.gaze.x{1} = 'mm';
+    EYE(dataidx).units.gaze.x{2} = 'mm';
     EYE(dataidx).gaze.y = EYE(dataidx).gaze.y * mmdims(2) / pxdims(2);
-    EYE(dataidx).units.gaze.y{1} = 'mm';
+    EYE(dataidx).units.gaze.y{2} = 'mm';
     if flipy
         EYE(dataidx).gaze.y = mmdims(1) - EYE(dataidx).gaze.y;
         EYE(dataidx).coords.gaze.y{2} = 'screen bottom';
+        EYE(dataidx).units.gaze.y{3} = 'screen bottom';
     end
     fprintf('done\n');
     EYE(dataidx).history{end + 1} = getcallstr(p);

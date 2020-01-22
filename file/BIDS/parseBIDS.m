@@ -19,7 +19,9 @@ for subidx = 1:numel(subjects)
         contents = dir(currpath);
         contents(1:2) = [];
         if any([contents.isdir])
-            currpath = fullfile(currpath, contents([contents.isdir]).name);
+            names = {contents.name};
+            idx = strcontains(names, 'eyetrack') | strcontains(names, 'ses');
+            currpath = fullfile(currpath, contents(idx).name);
         else
             break
         end

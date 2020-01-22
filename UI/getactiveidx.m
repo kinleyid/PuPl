@@ -1,8 +1,7 @@
 
 function out = getactiveidx
 
-global userInterface;
-
-out = getfield(get(userInterface, 'UserData'), 'activeEyeDataIdx');
+global pupl_globals;
+out = getfield(get(pupl_globals.UI, 'UserData'), 'activeEyeDataIdx');
 
 end

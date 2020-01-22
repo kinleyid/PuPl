@@ -24,6 +24,13 @@ if strcmp(rawindicator, 'raw')
                 end
             end
         end
+        % Reshape data fields to 1 x n
+        for ii1 = 1:numel(sides)
+            for ii2 = 1:numel(fields)
+                out = setfield(out, fields{ii2}{:}, sides{ii1},...
+                    reshape(getfield(out, fields{ii2}{:}, sides{ii1}), 1, []));
+            end
+        end
         out = pupl_check(out);
         for field = {'gaze' 'diam'}
             out.(field{:}) = getfromur(out, field{:});
