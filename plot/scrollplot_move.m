@@ -14,12 +14,12 @@ switch e.Key
         return
 end
 a = findobj(h, 'Tag', 'ax');
-UserData = get(a, 'UserData');
-UserData.x = UserData.x + change*UserData.srate;
-if any(UserData.x < 1)
-    UserData.x = UserData.x - min(UserData.x) + 1;
+ud = get(a, 'UserData');
+ud.x = ud.x + change*ud.srate;
+if any(ud.x < 1)
+    ud.x = ud.x - min(ud.x) + 1;
 end
-set(a, 'UserData', UserData);
+set(a, 'UserData', ud);
 
 scrollplot_update(a);
 

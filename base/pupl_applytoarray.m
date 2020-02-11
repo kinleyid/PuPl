@@ -2,30 +2,42 @@
 function EYE = pupl_applytoarray(func, EYE, varargin)
 
 % Get arguments
-getargs = func();
-args = getargs(EYE, varargin{:});
-if isempty(args)
+args = func(); % nargin = 0
+if isa(args, 'function_handle')
+    if nargout(args) < 1
+        args = struct([]);
+    else
+        args = args(EYE, varargin{:});
+    end
+end
+if isstruct(args)
+    args = pupl_struct2args(args);    
+elseif isempty(args)
     return
-elseif isstruct(args)
-    args = pupl_struct2args(args);
 end
 
 % Generate caller string for history field
 args_str = cellfun(@all2str, args, 'UniformOutput', false);
-args_str = sprintf('%s, ', args_str{:});
-args_str = args_str(1:end-2); % Remove trailing comma and space
+if isempty(args_str)
+    args_str = '';
+else
+    args_str = sprintf(', %s', args_str{:});
+end
 global pupl_globals;
-callstr = sprintf('%s = %s(@%s, %s, %s);',....
+callstr = sprintf('%s = %s(@%s, %s%s);',....
     pupl_globals.datavarname, mfilename, func2str(func), pupl_globals.datavarname, args_str);
 
 % Apply the function
+fprintf('Running %s...\n', func2str(func))
 for dataidx = 1:numel(EYE)
     fprintf('\t%s...', EYE(dataidx).name);
-    EYE(dataidx) = func(EYE, args{:});
-    EYE(dataidx).history{end + 1} = callstr;
-    fprintf('\tdone\n');
+    tmp = func(EYE(dataidx), args{:});
+    [tmp, EYE] = fieldconsistency(tmp, EYE);
+    tmp.history{end + 1} = callstr;
+    EYE(dataidx) = tmp;
+    fprintf('\t\tdone\n');
 end
-fprintf('done\n');
+fprintf('Done\n');
 EYE = pupl_check(EYE);
 
 end

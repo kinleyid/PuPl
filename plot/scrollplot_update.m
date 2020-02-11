@@ -2,12 +2,12 @@ function scrollplot_update(a)
 
 axes(a);
 
-UserData = get(a, 'UserData');
+ud = get(a, 'UserData');
 
-plotinfo = UserData.plotinfo;
-EYE = UserData.EYE;
-x = UserData.x;
-srate = UserData.srate;
+plotinfo = ud.plotinfo;
+EYE = ud.EYE;
+x = ud.x;
+srate = ud.srate;
 xtimes = (x - 1)/srate;
 
 cla; hold on
@@ -17,8 +17,24 @@ for dataidx = 1:numel(plotinfo.data)
 end
 xlim([xtimes(1) xtimes(end)]);
 xlabel('Time (s)');
-units = EYE.units.gaze.left;
-ylabel(sprintf('Pupil %s (%s)', units{1}, units{2}));
+switch ud.type
+    case 'gaze'
+        ylabel('Gaze coordinate');
+        for ii = 1:numel(plotinfo.legendentries)
+            currentry = plotinfo.legendentries{ii};
+            for coord = {'x' 'y'}
+                if strcontains(currentry, coord{:})
+                    units = EYE.units.gaze.(coord{:});
+                    additional = sprintf('(%s, %s)', units{2}, units{3});
+                    currentry = sprintf('%s %s', currentry, additional);
+                    break
+                end
+            end
+            plotinfo.legendentries{ii} = currentry;
+        end
+    case 'pupil'
+        ylabel(sprintf('Pupil %s (%s, %s)', EYE.units.pupil{:}));
+end
 % Display events
 if ~isempty(EYE.event)
     currevents = find(ismember([EYE.event.latency], x));
@@ -48,6 +64,6 @@ ylim(plotinfo.ylim);
 
 legend(plotinfo.legendentries{:});
 
-set(a, 'UserData', UserData);
+set(a, 'UserData', ud);
 
 end

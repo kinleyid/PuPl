@@ -1,32 +1,37 @@
 
 function threshold = UI_cdfgetrej(data, varargin)
 
+if ~iscell(data)
+    data = {data};
+end
+
 p = inputParser;
-addParameter(p, 'dataname', 'data');
+addParameter(p, 'dataname', 'data points');
 addParameter(p, 'threshname', 'Threshold');
-addParameter(p, 'lims', [min(data) max(data)]);
+addParameter(p, 'names', []);
+addParameter(p, 'outcomename', 'rejected');
+addParameter(p, 'lims', []);
 parse(p, varargin{:});
 
-dataname = p.Results.dataname;
-threshname = p.Results.threshname;
-lims = p.Results.lims;    
+args = p.Results;
+
 f = figure(...
     'ToolBar', 'none',...
     'MenuBar', 'none',...
     'NumberTitle', 'off',...
     'Name', 'Rejection threshold',...
     'UserData', struct(...
-        'data', data,...
-        'lims', lims));
+        'data', {data},...
+        'args', {args}));
 axes(f,...
     'Tag', 'axis',...
     'Units', 'normalized',...
     'Position', [0.11 0.21 0.78 0.68]);
 uicontrol('Style', 'edit',...
     'Tag', 'threshold',...
-    'String', 'Select rejection threshold',...
+    'String', 'Select threshold',...
     'Units', 'normalized',...
-    'Callback', @(h,e)plotrejection(f, dataname, threshname),...
+    'Callback', @(h,e)plotrejection(f),...
     'Position', [0.01 0.01 0.48 0.08]);
 uicontrol('Style', 'pushbutton',...
     'Units', 'normalized',...
@@ -41,7 +46,7 @@ uicontrol('Style', 'pushbutton',...
     'KeyPressFcn', @(h,e) enterdo(e, @()delete(f)),...
     'Position', [0.76 0.01 0.23 0.08]);
 
-plotrejection(f, dataname, threshname)
+plotrejection(f)
 uiwait(f)
 if isgraphics(f)
     threshold = getcurrthresh(f);
@@ -52,34 +57,53 @@ end
 
 end
 
-function plotrejection(f, dataname, threshname)
+function plotrejection(f)
 
-UserData = get(f, 'UserData');
-data = UserData.data(~isnan(UserData.data));
-lims = UserData.lims;
+axes(findobj(f, 'Tag', 'axis'));
+cla('reset');
+hold('on');
 
-currThreshold = parsedatastr(getcurrthresh(f), data);
+ud = get(f, 'UserData');
 
-thresholds = linspace(lims(1), lims(2), 1000);   
-ppnViolating = sum(bsxfun(@ge, data', thresholds))/numel(data);
-currPpnViolating = nnz(data >= currThreshold)/numel(data);
-ax = findobj(f, 'Tag', 'axis');
-axes(ax); cla; hold on
-plot(thresholds, ppnViolating, 'k');
-plot(repmat(currThreshold, 1, 2), [0 1], '--k')
-plot(lims, repmat(currPpnViolating, 1, 2), '--k')
+% Get consistent xlims
+alldata = [ud.data{:}];
+if isempty(ud.args.lims)
+    lims = [min(alldata) max(alldata)];
+else
+    lims = ud.args.lims;
+end
+
+for dataidx = 1:numel(ud.data)
+    data = ud.data{dataidx};
+    data = data(~isnan(data));
+
+    currThreshold = parsedatastr(getcurrthresh(f), data);
+
+    thresholds = linspace(lims(1), lims(2), 1000);   
+    ppnViolating = sum(bsxfun(@ge, data', thresholds))/numel(data);
+    currPpnViolating = nnz(data >= currThreshold)/numel(data);
+    p = plot(thresholds, ppnViolating);
+    c = get(p, 'Color');
+    plot(repmat(currThreshold, 1, 2), [0 1], '--', 'Color', c, 'HandleVisibility', 'off')
+    plot(lims, repmat(currPpnViolating, 1, 2), '--', 'Color', c, 'HandleVisibility', 'off')
+end
+
 xlim(lims);
 ylim([0 1]);
-xlabel(threshname);
-ylabel(sprintf('Proportion of %s violating threshold', dataname));
-title(sprintf('%d %s (%.2f%%) would be rejected', nnz(data >= currThreshold), dataname, 100*currPpnViolating));
+xlabel(ud.args.threshname);
+ylabel(sprintf('Proportion of %s above threshold', ud.args.dataname));
+title(sprintf('%d %s (%.2f%%) would be %s', nnz(data >= currThreshold), ud.args.dataname, 100*currPpnViolating, ud.args.outcomename));
+if ~isempty(ud.args.names)
+    legend(ud.args.names, 'Interpreter', 'none');
+end
+
+hold('off');
 
 end
 
 function thresh = getcurrthresh(f)
 
 teditbox = findobj(f, 'Tag', 'threshold');
-ud = get(f, 'UserData');
 thresh = get(teditbox, 'String');
 
 end

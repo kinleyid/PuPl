@@ -1,15 +1,22 @@
 function lims = UI_histgetrej(data, varargin)
 
-p = inputParser;
-addParameter(p, 'dataname', 'data');
-parse(p, varargin{:});
+% Data will be a cell array
 
-dataname = p.Results.dataname;
+if ~iscell(data)
+    data = {data};
+end
+
+args = pupl_args2struct(varargin, {
+    'dataname' 'data'
+    'names' []
+});
 
 f = figure(...
     'ToolBar', 'none',...
     'MenuBar', 'none',...
-    'UserData', data);
+    'UserData', struct(...
+        'data', {data},...
+        'args', {args}));
 p = uipanel(f,...
     'Tag', 'plotpanel',...
     'Units', 'normalized',...
@@ -23,14 +30,14 @@ p = uipanel(f,...
 uicontrol(p,...
     'Style', 'edit',...
     'Tag', 'lower',...
-    'Callback', @(h,e) updateplot(f, dataname),...
+    'Callback', @(h,e) updateplot(f),...
     'String', 'lower cutoff',...
     'Units', 'normalized',...
     'Position', [0.01 0.01 0.48 0.98]);
 uicontrol(p,...
     'Style', 'edit',...
     'Tag', 'upper',...
-    'Callback', @(h,e) updateplot(f, dataname),...
+    'Callback', @(h,e) updateplot(f),...
     'String', 'upper cutoff',...
     'Units', 'normalized',...
     'Position', [0.51 0.01 0.48 0.98]);
@@ -50,7 +57,7 @@ uicontrol(p,...
     'KeyPressFcn', @(h,e) enterdo(e, @() delete(f)),...
     'Position', [0.51 0.01 0.48 0.98]);
 
-updateplot(f, dataname);
+updateplot(f);
 
 uiwait(f);
 
@@ -64,38 +71,42 @@ end
 
 end
 
-function updateplot(f, dataname)
-
-data = get(f, 'UserData');
-
-badidx = false(size(data));
-
-for limType = {'lower' 'upper'}
-    currLim = parsedatastr(getlim(f, limType), data);
-    if strcmp(limType, 'lower')
-        badidx = badidx | data < currLim;
-    else
-        badidx = badidx | data > currLim;
-    end
-end
-
-n = 4*log2(numel(data));
-x1 = min(data);
-x2 = max(data);
-c = [x1:(x2-x1)/(n-1):x2 x2+(x2-x1)/(n-1)];
+function updateplot(f)
 
 axes(findobj(f, 'Type', 'axes', 'Tag', 'hist'));
 cla;
 
-hist(data(~badidx), c);
-h = findobj(gca,'Type','patch');
-set(h, 'EdgeColor', 'w');
-set(findobj(gca,'Type','line'), 'Marker', 'none');
+ud = get(f, 'UserData');
 
-xlabel(dataname);
+% Get consistent bins
+alldata = [ud.data{:}];
+n = 4*log2(numel(alldata));
+x1 = min(alldata);
+x2 = max(alldata);
+bins = [x1:(x2-x1)/(n-1):x2 x2+(x2-x1)/(n-1)];
+
+for dataidx = 1:numel(ud.data)
+    data = ud.data{dataidx};
+    badidx = false(size(data));
+
+    for limType = {'lower' 'upper'}
+        currLim = parsedatastr(getlim(f, limType), data);
+        if strcmp(limType, 'lower')
+            badidx = badidx | data < currLim;
+        else
+            badidx = badidx | data > currLim;
+        end
+    end
+
+    histf(data(~badidx), bins, 'EdgeColor', 'w', 'FaceAlpha', 0.5);
+    % set(findobj(gca,'Type','line'), 'Marker', 'none');
+end
+xlabel(ud.args.dataname);
 ylabel('Count');
-
-title(sprintf('%0.2f%% trimmed', 100*nnz(badidx)/numel(badidx)));
+if ~isempty(ud.args.names)
+    legend(ud.args.names, 'Interpreter', 'none');
+end
+title(sprintf('%0.2f%% would be trimmed', 100*nnz(badidx)/numel(badidx)));
 
 end
 

@@ -1,0 +1,67 @@
+
+function out = pupl_blink_rm(EYE, varargin)
+
+if nargin == 0
+    out = getargs;
+else
+    out = sub_blink_rm(EYE, varargin{:});
+end
+
+end
+
+function args = parseargs(varargin)
+
+args = pupl_args2struct(varargin, {
+    'trim' []
+});
+
+end
+
+function outargs = getargs(varargin)
+
+outargs = [];
+args = parseargs(varargin{:});
+
+if isempty(args.trim)
+    prompt = 'Trim how much data immediately before and after blinks?';
+    args.trim = inputdlg(prompt, prompt, 1, {'100ms'}); 
+    if isempty(args.trim)
+        return
+    else
+        args.trim = args.trim{:};
+    end
+end
+
+outargs = args;
+
+end
+
+function EYE = sub_blink_rm(EYE, varargin)
+
+args = parseargs(varargin{:});
+
+trimlen = parsetimestr(args.trim, EYE.srate) * EYE.srate;
+isblink = EYE.datalabel == 'b';
+
+blinkStarts = find(diff(isblink) == 1);
+blinkEnds = find(diff(isblink) == -1);
+if blinkStarts(1) > blinkEnds(1) % Recording starts with a blink
+    blinkStarts = [1 blinkStarts];
+end
+if blinkStarts(end) > blinkEnds(end) % Recording ends with a blink
+    blinkEnds = [blinkEnds EYE.ndata];
+end
+
+nblinks = numel(blinkStarts);
+for blinkidx = 1:nblinks
+    EYE = pupl_proc(EYE, @(x) rmblinks(x, [blinkStarts(blinkidx) blinkEnds(blinkidx)], trimlen));
+end
+
+end
+
+function x = rmblinks(x, blink, trimlen)
+
+x(max(1, blink(1)-trimlen):blink(1)) = NaN;
+x(blink(2):min(blink(2)+trimlen, numel(x))) = NaN;
+
+end

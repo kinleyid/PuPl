@@ -71,7 +71,7 @@ plot(t, urdiam.right, 'r:');
 xlim([t(1) t(end)]);
 ylim(ud.ylims);
 xlabel('Time (s)');
-ylabel('Pupil diameter');
+ylabel(sprintf('Pupil %s (%s, %s)', EYE.units.epoch{:}));
 legendentries = {'Event', 'Left', 'Right', 'Unprocesssed left', 'Unprocessed right'};
 if isfield(diam, 'both')
     legendentries = [legendentries(1:3) 'both' legendentries(4:end)];

@@ -1,8 +1,8 @@
 
 function pupilsizehist(f, EYE)
 
-l = EYE.diam.left;
-r = EYE.diam.right;
+l = EYE.pupil.left;
+r = EYE.pupil.right;
 
 a = 0.4;
 axes(f); hold on;
@@ -29,8 +29,8 @@ try
     alpha(h, a);
 end
 
-xlabel 'Pupil diameter'
-ylabel 'Data count'
+xlabel(sprintf('Pupil %s (%s, %s)', EYE.units.pupil{:}))
+ylabel('Data count')
 
 h = findobj(gca,'Type','patch');
 legend(h, 'Right', 'Left');

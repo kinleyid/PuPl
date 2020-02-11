@@ -40,4 +40,11 @@ catch
     lim = nan;
 end
 
+if ischar(lim)
+    lim = str2double(lim);
+    if isempty(lim)
+        lim = nan;
+    end
+end
+
 end

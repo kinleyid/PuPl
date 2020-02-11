@@ -1,6 +1,8 @@
 
 function callstr = getcallstr(varargin)
 
+global pupl_globals;
+
 if numel(varargin) > 0
     p = varargin{1};
 else
@@ -14,11 +16,11 @@ end
 
 allfuncs = dbstack;
 if returnval
-    callstr = 'eyeData = ';
+    callstr = sprintf('%s = ', pupl_globals.datavarname);
 else
     callstr = '';
 end
-callstr = sprintf('%s%s(eyeData, ', callstr, allfuncs(2).name);
+callstr = sprintf('%s%s(%s, ', callstr, allfuncs(2).name, pupl_globals.datavarname);
 if ~isempty(p)
     for variable = p.Parameters
         callstr = sprintf('%s''%s'', %s, ', callstr, variable{:}, all2str(evalin('caller', variable{:})));

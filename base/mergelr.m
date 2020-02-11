@@ -2,8 +2,8 @@
 function b = mergelr(s)
 
 b = mean([
-    s.diam.left(:)'
-    s.diam.right(:)'
+    s.pupil.left(:)'
+    s.pupil.right(:)'
 ]);
 
 end

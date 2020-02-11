@@ -3,35 +3,13 @@ function out = pupl_interp(EYE, varargin)
 if nargin == 0
     out = @getargs;
 else
-    args = pupl_args2struct(varargin, {
-        'data' []
-        'interptype' []
-        'maxlen' []
-        'maxdist' []
-    });
-    switch args.interptype
-        case 'linear'
-            interpfunc = @interp1;
-        case 'spline'
-            interpfunc = @spline;
-    end
-    currn = round(parsetimestr(args.maxlen, EYE.srate)*EYE.srate);
-    fprintf('interpolating max. %d missing data points\n', currn)
-    for field = reshape(fieldnames(EYE.(args.data)), 1, [])
-        currv = EYE.(args.data).(field{:}); % Current data vector
-        currm = parsedatastr(args.maxdist, currv); % Current max distance
-        fprintf('\t\t%s (max jump %.2f):', field{:}, currm);
-        EYE.(args.data).(field{:}) = applyinterpolation(interpfunc, currv, currn, currm);
-    end
-    
-    out = EYE;
+    out = sub_interp(EYE, varargin{:});
 end
 
 end
 
-function outargs = getargs(EYE, varargin)
+function args = parseargs(varargin)
 
-outargs = [];
 args = pupl_args2struct(varargin, {
     'data' []
     'interptype' []
@@ -39,12 +17,19 @@ args = pupl_args2struct(varargin, {
     'maxdist' []
 });
 
+end
+
+function outargs = getargs(varargin)
+
+outargs = [];
+args = parseargs(varargin{:});
+
 if isempty(args.data)
     q = 'Interpolate which type of data?';
-    a = questdlg(q, q, 'Pupil diameter', 'Gaze', 'Cancel', 'Pupil diameter');
+    a = questdlg(q, q, 'Pupil size', 'Gaze', 'Cancel', 'Pupil size');
     switch a
-        case 'Pupil diameter'
-            args.data = 'diam';
+        case 'Pupil size'
+            args.data = 'pupil';
         case 'Gaze'
             args.data = 'gaze';
         otherwise
@@ -76,8 +61,8 @@ if isempty(args.maxlen)
 end
 
 if isempty(args.maxdist)
-    prompt = 'Max size of jump to interpolate across';
-    maxdist = inputdlg(prompt, prompt, [1 50], {'0.5`s'});
+    prompt = 'Max jump in pupil size to interpolate across';
+    maxdist = inputdlg(prompt, prompt, [1 50], {'3`sd'});
     if isempty(maxdist)
         return
     else
@@ -87,6 +72,26 @@ end
 
 fprintf('Interpolating max. %s of missing data using %s interpolation\n', args.maxlen, args.interptype)
 outargs = args;
+
+end
+
+function EYE = sub_interp(EYE, varargin)
+
+args = parseargs(varargin{:});
+switch args.interptype
+    case 'linear'
+        interpfunc = @interp1;
+    case 'spline'
+        interpfunc = @spline;
+end
+currn = round(parsetimestr(args.maxlen, EYE.srate)*EYE.srate);
+fprintf('interpolating max. %d missing data points\n', currn)
+for field = reshape(fieldnames(EYE.(args.data)), 1, [])
+    currv = EYE.(args.data).(field{:}); % Current data vector
+    currm = parsedatastr(args.maxdist, currv); % Current max distance
+    fprintf('\t\t%s (max jump %.2f): ', field{:}, currm);
+    EYE.(args.data).(field{:}) = applyinterpolation(interpfunc, currv, currn, currm);
+end
 
 end
 

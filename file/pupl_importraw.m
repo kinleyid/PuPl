@@ -2,7 +2,7 @@
 function EYE = pupl_importraw(varargin)
 
 p = inputParser;
-addParameter(p, 'eyedata', struct([])); % optional
+addParameter(p, 'eyedata', struct([])); % optional, only required if adding event logs
 addParameter(p, 'loadfunc', []); % required
 addParameter(p, 'fullpath', []); % optional
 addParameter(p, 'filefilt', '*.*'); % optional
@@ -78,12 +78,16 @@ for dataidx = 1:numel(fullpath)
     [~, fname] = fileparts(fullpath{dataidx});
     fprintf('Loading %s...', fname);
     % Generate getraw function
-    args = '';
-    for ii = 1:numel(p.Results.args)
-        args = sprintf('%s, %s', args, all2str(p.Results.args{ii}));
+    args_str = cellfun(@all2str, p.Results.args, 'UniformOutput', false);
+    if isempty(args_str)
+        args_str = '';
+    else
+        args_str = sprintf(', %s', args_str{:});
     end
-    getraw = str2func(sprintf('@()loader(''%s'',''%s'',@%s,''%s''%s)',...
-        'raw', p.Results.type, func2str(p.Results.loadfunc), fullpath{dataidx}, args));
+    getraw = str2func(sprintf('@() pupl_checkraw(%s(%s%s), ''src'', %s, ''type'', %s)',...
+        func2str(p.Results.loadfunc), all2str(fullpath{dataidx}), args_str,...
+            all2str(fullpath{dataidx}),...
+            all2str(p.Results.type)));
     curr = feval(getraw);
     curr.getraw = getraw;
     switch p.Results.type

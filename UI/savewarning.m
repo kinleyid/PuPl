@@ -1,25 +1,24 @@
 function savewarning(varargin)
 
 global pupl_globals
-unsaved_data = evalin('base', pupl_globals.datavarname);
 
-if ~isempty(unsaved_data)
-    q = sprintf('Save data (variable %s) from workspace?', pupl_globals.datavarname);
-    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
-    switch a
-        case 'Yes'
+if ~isempty(pupl_globals) % will be empty if clear('all') happened
+    unsaved_data = evalin('base', pupl_globals.datavarname);
+    if ~isempty(unsaved_data)
+        a = questdlg(sprintf('Save data (variable "%s") from workspace?', pupl_globals.datavarname));
+        if strcmpi(a, 'yes')
+            batch = false;
             if numel(unsaved_data) > 1
-                batch = true;
-            else
-                batch = false;
+                a = questdlg('Save all data in the same folder?');
+                if strcmpi(a, 'yes')
+                    batch = true;
+                end
             end
-            pupl_save('data', unsaved_data, 'type', 'eye data', 'batch', batch);
-            delete(gcbf)
-        case 'No'
-            delete(gcbf)
+            pupl_save(unsaved_data, 'batch', batch);
+        end
     end
-else
-    delete(gcbf)
 end
+
+delete(gcbf)
 
 end

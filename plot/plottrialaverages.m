@@ -29,7 +29,7 @@ if isempty(p.Results.plotstruct)
         end
         plotstruct(plotidx).dataidx = dataidx;
         
-        setopts = unique(mergefields(EYE(dataidx), 'trialset', 'name'));
+        setopts = unique(mergefields(EYE(dataidx), 'epochset', 'name'));
         sel = listdlg('PromptString', 'Plot from which trial set?',...
             'ListString', setopts,...
             'SelectionMode', 'single');
@@ -78,7 +78,9 @@ clf; hold on;
 for plotidx = 1:numel(plotstruct)
     dataidx = plotstruct(plotidx).dataidx;
     set = plotstruct(plotidx).set;
-    [data, isrej] = gettrialsetdatamatrix(EYE(dataidx), set);
+    
+    [data, isrej] = pupl_epoch_getdata(EYE(dataidx), set);
+    data = cell2mat(data);
     
     switch plotstruct(plotidx).include
         case 'all'
@@ -98,12 +100,12 @@ for plotidx = 1:numel(plotstruct)
         names, plotstruct(plotidx).set, nnz(~isrej), plotstruct(plotidx).include);
     
     data = data(~isrej, :);
-    setidx = strcmp({EYE(1).trialset.name}, set);
-    rellims = EYE(1).trialset(setidx).rellims;
+    setidx = strcmp({EYE(1).epochset.name}, set);
+    rellims = EYE(1).epochset(setidx).rellims;
     if ~isempty(rellims)
         x = unfold(rellims);
     else
-        warning('Trial set contains epochs in which the relative positions of the events are different\nX-axis will begin at 0 seconds');
+        warning('Epoch set contains epochs in which the relative positions of the events are different\nX-axis will begin at 0 seconds');
         x = 0:size(data, 2)-1;
     end
     t = x /[EYE(dataidx).srate];
@@ -120,7 +122,7 @@ for plotidx = 1:numel(plotstruct)
 end
 
 xlabel('Time (s)');
-ylabel('Pupil diameter');
+ylabel(sprintf('Mean pupil %s (%s, %s)', EYE(dataidx).units.epoch{:}));
 
 legend(plotstruct.legendentry, 'Interpreter', 'none');
 

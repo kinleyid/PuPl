@@ -6,14 +6,14 @@ addParameter(p, 'type', []);
 parse(p, varargin{:});
 
 set(ancestor(a, 'figure'), 'KeyPressFcn', @scrollplot_move);
-set(ancestor(a, 'figure'), 'Title', 'Testing testing');
+set(ancestor(a, 'figure'), 'Name', sprintf('(Use HJKL keys to scroll) %s', EYE.name));
 
 if isempty(p.Results.type)
     q = 'Plot which type of data?';
-    a = questdlg(q, q, 'Dilation', 'Gaze', 'Cancel', 'Dilation');
+    a = questdlg(q, q, 'Pupil size', 'Gaze', 'Cancel', 'Dilation');
     switch a
-        case 'Dilation'
-            type = 'diam';
+        case 'Pupil size'
+            type = 'pupil';
         case 'Gaze'
             type = 'gaze';
         otherwise
@@ -24,13 +24,13 @@ else
 end
 
 plotinfo = [];
-if strcmpi(type, 'diam')
+if strcmpi(type, 'pupil')
     for dataidx = 1:numel(EYE)
         plotinfo(dataidx).data = {
-            getfield(getfromur(EYE(dataidx), 'diam'), 'left')
-            getfield(getfromur(EYE(dataidx), 'diam'), 'right')
-            EYE(dataidx).diam.left
-            EYE(dataidx).diam.right};
+            getfield(getfromur(EYE(dataidx), 'pupil'), 'left')
+            getfield(getfromur(EYE(dataidx), 'pupil'), 'right')
+            EYE(dataidx).pupil.left
+            EYE(dataidx).pupil.right};
         plotinfo(dataidx).legendentries = {
             'Unprocessed left'
             'Unprocessed right'
@@ -41,12 +41,12 @@ if strcmpi(type, 'diam')
             'r:'
             'b'
             'r'};
-        if isfield(EYE(dataidx).diam, 'both')
-            plotinfo(dataidx).data{end + 1} = EYE(dataidx).diam.both;
+        if isfield(EYE(dataidx).pupil, 'both')
+            plotinfo(dataidx).data{end + 1} = EYE(dataidx).pupil.both;
             plotinfo(dataidx).colours{end + 1} = 'k';
             plotinfo(dataidx).legendentries{end + 1} = 'Both';
         end
-        plotinfo(dataidx).ylim = [min(structfun(@min, EYE(dataidx).diam)) max(structfun(@max, EYE(dataidx).diam))];
+        plotinfo(dataidx).ylim = [min(structfun(@min, EYE(dataidx).pupil)) max(structfun(@max, EYE(dataidx).pupil))];
     end
 elseif strcmpi(type, 'gaze')
     for dataidx = 1:numel(EYE)
@@ -82,6 +82,7 @@ set(a, 'UserData', struct(...
     'plotinfo', plotinfo,...
     'EYE', EYE,...
     'x', x,...
+    'type', type,...
     'srate', srate));
 
 scrollplot_update(a);

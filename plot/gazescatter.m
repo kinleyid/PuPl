@@ -9,7 +9,7 @@ s = scatter(...
 try
     alpha(s, 0.1);
 end
-xlabel('Gaze x')
-ylabel('Gaze y');
+xlabel(sprintf('Gaze x (%s, %s)', EYE.units.gaze.x{2:end}))
+ylabel(sprintf('Gaze y (%s, %s)', EYE.units.gaze.y{2:end}))
 
 end

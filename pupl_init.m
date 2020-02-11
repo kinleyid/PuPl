@@ -9,11 +9,12 @@ function pupl_init(varargin)
 
 global pupl_globals
 if ~isfield(pupl_globals, 'UI')
-    pupl_globals.UI = [];
+    pupl_globals.UI = []; % The handle to the GUI is stored here
 end
 % Global settings
-pupl_globals.datavarname = 'eye_data';
-pupl_globals.catdim = 2;
+pupl_globals.datavarname = 'eye_data'; % Name of the global data variable
+pupl_globals.catdim = 2; % Will the global data variable be a row (2) or column (1) vector?
+pupl_globals.ext = '.pupl'; % The extension to use for saving data files
 
 availableargs = {'noweb' 'noui' 'noglobals' 'noaddons'};
 badargidx = ~ismember(lower(varargin), availableargs);
@@ -85,19 +86,25 @@ if ~any(strcmpi(varargin, 'noAddOns'))
                 run(initfile)
                 clear('init')
             else
-                fprintf('could not find expected file %s', initfile)
+                fprintf('did not find expected file %s', initfile)
             end
             fprintf('\n')
         end
     end
-    % Duplicate the "import" menu under the BIDS menu
 end
 
 % Is octave?
 if exist('OCTAVE_VERSION', 'builtin') ~= 0
-    fprintf('Octave detected. Loading packages\n');
-    pkg load statistics
+    pupl_globals.isoctave = true;
+    fprintf('Octave detected. Loading packages:\n');
+    for package = {'statistics' 'data-smoothing'}
+        fprintf('\t%s...', package{:})
+        pkg('load', package{:})
+        fprintf('done\n')
+    end
+else
+    pupl_globals.isoctave = false;
 end
 
-fprintf('done\n')
+fprintf('Done\n')
 end

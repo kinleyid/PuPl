@@ -1,6 +1,10 @@
 
 function args = pupl_args2struct(inputs, defs)
 
+if size(defs, 1) == 1
+    defs = reshape(defs, 2, [])';
+end
+
 for argidx = 1:size(defs, 1)
     argname = defs{argidx, 1};
     found = strcmpi(argname, inputs);

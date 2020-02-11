@@ -41,8 +41,7 @@ for fields = {
     end
 end
 
-units.diam.left = {'diameter' diamunits 'absolute'};
-units.diam.right = units.diam.left;
+units.diam = {'diameter' diamunits 'absolute'};
 
 %% Get gaze
 

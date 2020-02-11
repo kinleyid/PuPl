@@ -24,12 +24,10 @@ d = sprintf(delim);
 
 % Determine number of columns
 fseek(fid, endofheader, 'bof');
-[currline, eol] = fgets(fid);
-currline = currline(1:end-length(eol));
-if isempty(currline)
-    currline = '';
-end
-eol = char(eol);
+currline = fgetl(fid);
+fseek(fid, endofheader, 'bof');
+currline_long = fgets(fid);
+eol = currline_long(length(currline)+1:end);
 currline = strrep(currline, eol, d);
 currline = stringsplit(currline, delim);
 ncols = numel(currline);

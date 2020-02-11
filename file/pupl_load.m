@@ -1,49 +1,42 @@
-function structArray = pupl_load(varargin)
+function out = pupl_load(varargin)
 
 % Load eye data or event logs
 %   Inputs
-% type--data type: see getextfromdatatype for more info
-% filenames--cell array
-% directory--char
+% path--string or cell array of strings
 %   Outputs
-% structArray--struct array
+% out--struct array containing data
 
-p = inputParser;
-addParameter(p, 'filenames', [])
-addParameter(p, 'directory', [])
-parse(p, varargin{:});
+global pupl_globals
 
-structArray = struct([]);
+out = struct([]);
 
-extFilter = '*.eyedata';
+args = pupl_args2struct(varargin, {
+    'path' []
+});
 
-if isempty(p.Results.filenames) || isempty(p.Results.filenames)
-    [filenames, directory] = uigetfile(extFilter,...
+if isempty(args.path)
+    [f, p] = uigetfile(sprintf('*%s', pupl_globals.ext),...
         'MultiSelect', 'on');
-    if isnumeric(filenames)
+    if isnumeric(f)
         return
+    else
+        args.path = fullfile(p, f);
     end
-else
-    filenames = p.Results.filenames;
-    directory = p.Results.directory;
 end
 
-if isnumeric(filenames)
-    return
-else
-    filenames = cellstr(filenames);
+args.path = cellstr(args.path);
+
+for dataidx = 1:numel(args.path)
+    fprintf('Loading %s...', args.path{dataidx});
+    curr = load(args.path{dataidx}, '-mat');
+    % curr should be a structure with 1 field
+    fn = fieldnames(curr);
+    curr = curr.(fn{:});
+    out = fieldconsistency(out, curr);
+    out = cat(pupl_globals.catdim, out, curr);
+    fprintf('done\n');
 end
 
-fprintf('Loading data...\n');
-for fileIdx = 1:numel(filenames)
-    fprintf('\t');
-    data = sub_load(fullfile(directory, filenames{fileIdx}));
-    structArray = fieldconsistency(structArray, data);
-    structArray = cat(2, structArray, data);
-    fprintf('\n');
-end
-fprintf('Done\n');
-
-structArray = pupl_check(structArray);
+out = pupl_check(out);
 
 end

@@ -1,84 +1,121 @@
-function EYE = pupl_epoch(EYE, varargin)
+function out = pupl_epoch(EYE, varargin)
 
-%   Inputs
+if nargin == 0
+    out = @getargs;
+else
+    out = sub_epoch(EYE, varargin{:});
+end
 
-p = inputParser;
-addParameter(p, 'timelocking', []);
-addParameter(p, 'lims', []);
-addParameter(p, 'overwrite', []);
-parse(p, varargin{:});
-unpackparams(p);
+end
 
-if any(arrayfun(@(x) ~isempty(x.epoch), EYE)) && isempty(overwrite)
-    q = 'Overwrite existing trials?';
+function args = parseargs(varargin)
+
+args = pupl_args2struct(varargin{:}, {
+    'timelocking' []
+    'lims' []
+    'overwrite' []
+});
+
+end
+
+function outargs = getargs(EYE, varargin)
+
+outargs = [];
+args = parseargs(varargin);
+
+if any(arrayfun(@(x) ~isempty(x.epoch), EYE)) && isempty(args.overwrite)
+    q = 'Overwrite existing epochs?';
     a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
     switch a
         case 'Yes'
-            overwrite = true;
+            args.overwrite = true;
         case 'No'
-            overwrite = false;
+            args.overwrite = false;
         otherwise
             return
     end
 end
 
-if isempty(timelocking)
+if isempty(args.timelocking)
     eventTypes = unique(mergefields(EYE, 'event', 'type'));
-    timelocking = eventTypes(listdlgregexp('PromptString', 'Epoch relative to which events?',...
+    args.timelocking = eventTypes(listdlgregexp('PromptString', 'Epoch relative to which events?',...
         'ListString', eventTypes));
-    if isempty(timelocking)
+    if isempty(args.timelocking)
         return
     end
 end
 
-if isempty(lims)
-    lims = (inputdlg(...
-        {sprintf('Trials start at this time relative to events:')
-        'Trials end at this time relative to events:'}));
-    if isempty(lims)
+if isempty(args.lims)
+    args.lims = (inputdlg(...
+        {sprintf('Epochs start at this time relative to events:')
+        'Epochs end at this time relative to events:'}));
+    if isempty(args.lims)
         return
-    else
-        fprintf('Trials defined from [event] + [%s] to [event] + [%s]\n', lims{:})
     end
 end
 
-if overwrite
+fprintf('Epoch-defining events:\n%s', sprintf('\t%s\n', args.timelocking{:}));
+fprintf('Epochs defined from [event] + [%s] to [event] + [%s]\n', args.lims{:});
+
+outargs = args;
+
+end
+
+function EYE = sub_epoch(EYE, varargin)
+
+args = parseargs(varargin);
+
+if args.overwrite
     [EYE.epoch] = deal([]);
 end
 
-fprintf('Extracting trial data...\n')
-for dataidx = 1:numel(EYE)
-    fprintf('\t%s...', EYE(dataidx).name);
-    currlims = EYE(dataidx).srate*[parsetimestr(lims{1}, EYE(dataidx).srate) parsetimestr(lims{2}, EYE(dataidx).srate)];
-    for eventType = reshape(timelocking, 1, [])
-        for eventidx = find(strcmp({EYE(dataidx).event.type}, eventType))
-            currEpoch = struct(...
-                'reject', false,...
-                'rellims', currlims,...
-                'abslims', EYE(dataidx).event(eventidx).latency + currlims,...
-                'name', EYE(dataidx).event(eventidx).type,...
-                'event', EYE(dataidx).event(eventidx));
-            EYE(dataidx).epoch = [EYE(dataidx).epoch, currEpoch];
+currlims = EYE.srate * parsetimestr(args.lims, EYE.srate);
+for eventType = reshape(args.timelocking, 1, [])
+    for eventidx = find(strcmp({EYE.event.type}, eventType))
+        currEpoch = struct(...
+            'reject', false,...
+            'lims', {args.lims},...
+            'rellims', currlims,...
+            'abslims', EYE.event(eventidx).latency + currlims,...
+            'name', EYE.event(eventidx).type,...
+            'event', EYE.event(eventidx));
+        
+        badlimidx = 0;
+        if currEpoch.abslims(1) < 1
+            badlimidx = 1;
+        elseif currEpoch.abslims(2) > EYE.ndata
+            badlimidx = 2;
+        end
+        if badlimidx
+            error('Event "%s" occurs at %f seconds into the recording "%s". %s from this event reaches outside the bounds of that recording (0 seconds to %f seconds).',...
+                EYE.event(eventidx).type,...
+                (EYE.event(eventidx).latency - 1) / EYE.srate,...
+                EYE.name,...
+                args.lims{badlimidx},...
+                (EYE.ndata - 1) / EYE.srate)
+        else
+            EYE.epoch = [EYE.epoch, currEpoch];
         end
     end
-    
-    % Sort epochs by event time
-    [~, I] = sort(mergefields(EYE(dataidx), 'epoch', 'event', 'latency'));
-    EYE(dataidx).epoch = EYE(dataidx).epoch(I);
-    
-    % Set preliminary 1:1 trial set-to-trial relationship
-    trialnames = unique({EYE(dataidx).epoch.name});
-    trialsetdescriptions = struct(...
-        'name', trialnames,...
-        'members', cellfun(@cellstr, trialnames, 'UniformOutput', false));
-    EYE(dataidx) = createtrialsets(EYE(dataidx),...
-        'setdescriptions', trialsetdescriptions,...
-        'overwrite', true);
-    
-    EYE(dataidx).history{end + 1} = getcallstr(p);
-    
-    fprintf('%d trials extracted\n', numel(EYE(dataidx).epoch));
 end
-fprintf('Done\n');
+
+% Sort epochs by event time
+[~, I] = sort(mergefields(EYE, 'epoch', 'event', 'latency'));
+EYE.epoch = EYE.epoch(I);
+
+% Set units for epochs
+EYE.units.epoch = EYE.units.pupil;
+
+% Set preliminary 1:1 trial set-to-trial relationship
+trialnames = unique({EYE.epoch.name});
+epochsetdescriptions = struct(...
+    'name', trialnames,...
+    'members', cellfun(@cellstr, trialnames, 'UniformOutput', false));
+EYE = pupl_epochset(EYE,...
+    'setdescriptions', epochsetdescriptions,...
+    'overwrite', true,...
+    'verbose', false);
+
+fprintf('%d trials extracted\n', numel(EYE.epoch));
 
 end

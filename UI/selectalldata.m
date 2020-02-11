@@ -1,8 +1,8 @@
 
 function selectalldata
 
-global userInterface;
-ud = get(userInterface, 'UserData');
+global pupl_globals;
+ud = get(pupl_globals.UI, 'UserData');
 idx = ud.activeEyeDataIdx;
 dim = size(idx);
 if all(idx)
@@ -13,8 +13,8 @@ else
     newt = 'Deselect';
 end
 ud.activeEyeDataIdx = idx;
-set(userInterface, 'UserData', ud);
-uic = findobj(userInterface, 'Tag', 'selectAllData');
+set(pupl_globals.UI, 'UserData', ud);
+uic = findobj(pupl_globals.UI, 'Tag', 'selectAllData');
 set(uic, 'Label', [newt ' &all data']);
 
 preservelayout

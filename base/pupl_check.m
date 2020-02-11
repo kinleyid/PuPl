@@ -6,13 +6,12 @@ function EYE = pupl_check(EYE)
 % Fill in default values
 defunitstruct = struct(...
     'gaze', struct(...
-        'x', '',...
-        'y', ''),...
-    'diam', struct(...
-        'left', '',...
-        'right', ''));
-    
+        'x', {{'x' 'unknown units' 'unknown relative position'}},...
+        'y', {{'y' 'unknown units' 'unknown relative position'}}),...
+    'pupil', {{'diameter' 'unknown units' 'assumed absolute'}});
+
 defaults = {
+    't1'        @(x)[]
     'srate'     @(x)[]
     'src'       @(x)[]
     'name'      @(x)getname(x)
@@ -25,12 +24,18 @@ defaults = {
     'event'     @(x)struct([])
     'history'   @(x){}
     'eventlog'  @(x)struct([])
-    'datalabel' @(x)[]
+    'datalabel' @(x)repmat(' ', 1, getndata(x))
     'ndata'     @(x)getndata(x)
     'BIDS'      @(x)struct('sub', x.name)
 };
 
-% Ensure missing data is replaced with nan
+if isfield(EYE, 'diam') && ~isfield(EYE, 'pupil')
+    [EYE.pupil] = EYE.diam;
+end
+
+if isfield(EYE, 'urdiam') && ~isfield(EYE, 'urpupil')
+    [EYE.urpupil] = EYE.urdiam;
+end
 
 % Fill in defaults
 for defidx = 1:size(defaults, 1)
@@ -42,25 +47,30 @@ for defidx = 1:size(defaults, 1)
     end
 end
 
+% Keep units of epochs consistent with pupil size units
+for dataidx = 1:numel(EYE)
+    if isfield(EYE, 'epoch')
+        EYE(dataidx).units.epoch(1:2) = EYE(dataidx).units.pupil(1:2);
+        % The third element, the relative size, may have been set by the
+        % baseline correction:
+        if ~isfield(EYE.epoch, 'baseline') || isempty(EYE(dataidx).units.epoch(3))
+            EYE(dataidx).units.epoch(3) = EYE(dataidx).units.pupil(3);
+        end
+    end
+end
+
 % Ensure zero diameter measurements are set to nan
 for dataidx = 1:numel(EYE)
     for field = {'left' 'right'}
-        data = EYE(dataidx).urdiam.(field{:});
+        data = EYE(dataidx).urpupil.(field{:});
         data(data < eps) = nan;
-        EYE(dataidx).urdiam.(field{:}) = data;
+        EYE(dataidx).urpupil.(field{:}) = data;
     end
 end
 
 % Set event to row vector
 for dataidx = 1:numel(EYE)
     EYE(dataidx).event = EYE(dataidx).event(:)';
-end
-
-% Make sure coords are cellstrs
-for dataidx = 1:numel(EYE)
-    for field = reshape(fieldnames(EYE(dataidx).units), 1, [])
-        EYE(dataidx).units.(field{:}) = structfun(@cellstr, EYE(dataidx).units.(field{:}), 'UniformOutput', false);
-    end
 end
 
 % Ensure event labels are strings
@@ -111,9 +121,9 @@ function ndata = getndata(EYE)
 if isfield(EYE, 'ndata')
     ndata = EYE.ndata;
 else
-    for field = reshape(fieldnames(EYE.urdiam), 1, [])
-        if ~isempty(EYE.urdiam.(field{:}))
-            ndata = numel(EYE.urdiam.(field{:}));
+    for field = reshape(fieldnames(EYE.urpupil), 1, [])
+        if ~isempty(EYE.urpupil.(field{:}))
+            ndata = numel(EYE.urpupil.(field{:}));
             return
         end
     end

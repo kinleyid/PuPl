@@ -18,8 +18,7 @@ else
 end
 
 if isempty(p.Results.set)
-    % setNames = unique(mergefields(EYE, 'set', 'name'));
-    setOpts = unique(mergefields(EYE, 'trialset', 'name'));
+    setOpts = unique(mergefields(EYE, 'epochset', 'name'));
     sel = listdlg('PromptString', 'Plot from which trial set?',...
         'ListString', setOpts,...
         'SelectionMode', 'single');
@@ -57,7 +56,8 @@ else
     include = p.Results.include;
 end
 
-[data, isrej] = gettrialsetdatamatrix(EYE(dataidx), set);
+[data, isrej] = pupl_epoch_getdata(EYE(dataidx), set);
+data = cell2mat(data);
 
 switch include
     case 'all'
@@ -67,9 +67,9 @@ switch include
 end
 data = data(~isrej, :);
 
-setidx = strcmp({EYE(dataidx).trialset.name}, set);
+setidx = strcmp({EYE(dataidx).epochset.name}, set);
 if byRT
-    RTs = mergefields(EYE(dataidx).epoch(EYE(dataidx).trialset(setidx).epochidx), 'event', 'rt');
+    RTs = mergefields(EYE(dataidx).epoch(EYE(dataidx).epochset(setidx).epochidx), 'event', 'rt');
     RTs = RTs(~isrej);
     [~, I] = sort(RTs);
     data = data(I, :);
@@ -78,7 +78,7 @@ else
     xlab = 'Trial';
 end
 
-rellims = EYE(1).trialset(setidx).rellims;
+rellims = EYE(1).epochset(setidx).rellims;
 if ~isempty(rellims)
     x = unfold(rellims);
 else

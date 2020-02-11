@@ -9,18 +9,18 @@ function pupl_stats(EYE, varargin)
 statOptions = [
 %   {Name presented to user} {function} {column name in stats spreadsheet}
     {'Mean'} {@nanmean_bc} {'Mean'};...
-    {'PeakToPeakDiff'} {@(x)(max(x) - min(x))} {'PeakToPeakDiff'};...
+    {'Peak-to-peak difference'} {@(x)(max(x) - min(x))} {'PeakToPeakDiff'};...
     {'Max'} {@max} {'Max'};...
     {'Min'} {@min} {'Min'};...
     {'Median'} {@nanmedian_bc} {'Median'};...
-    {'StDev'} {@nanstd_bc} {'StDev'};...
+    {'Standard deviation'} {@nanstd_bc} {'StDev'};...
     {'Variance'} {@nanvar_bc} {'Variance'};...
-    {'PctMissing'} {@(x)100*nnz(isnan(x))/numel(x)} {'PctMissing'};...
+    {'Percent missing'} {@(x)100*nnz(isnan(x))/numel(x)} {'PctMissing'};...
 ];
 
 % Store names as variables in case I decide to change them
-computeStatsPerTrial = 'Compute stats per trial';
-computeStatOfAverage = 'Compute stat of trial average';
+computeStatsPerTrial = 'Compute statistics for each trial (good for mixed effects models)';
+computeStatOfAverage = 'Compute statistic for average of trials (good for classical statistics)';
 trialwiseOptions = {
     computeStatsPerTrial
     computeStatOfAverage
@@ -36,19 +36,19 @@ if isempty(p.Results.statsStruct)
     statsStruct = [];
     while true
         win = (inputdlg(...
-            {sprintf('Define statistics window centred on trial-defining events\n\nWindow start:')
+            {sprintf('Define statistics time window centred on trial-defining events\n\nWindow start:')
             'Window end:'}));
         if isempty(win)
             return
         end
         name = (inputdlg(...
-            {'Name of window'}));
+            {sprintf('Name of statistics time window from %s to %s', win{:})}));
         if isempty(name)
             return
         else
             name = name{:};
         end
-        sel = listdlg('PromptString', sprintf('Compute which statistics in window ''%s''?', name),...
+        sel = listdlgregexp('PromptString', sprintf('Compute which statistics in window ''%s''?', name),...
             'ListString', statOptions(:, 1));
         if isempty(sel)
             return
@@ -62,7 +62,7 @@ if isempty(p.Results.statsStruct)
                 'win', {win},...
                 'stats', {stats})
         ];
-        q = 'Define another statistics window?';
+        q = 'Compute more statistics in another time window?';
         a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
         switch a
             case 'Yes'
@@ -78,7 +78,7 @@ else
 end
 
 if isempty(p.Results.trialwise)
-    sel = listdlg('PromptString', 'How should individual trials be handled?',...
+    sel = listdlgregexp('PromptString', 'How should individual trials be handled?',...
         'ListString', trialwiseOptions,...
         'SelectionMode', 'single');
     if isempty(sel)
@@ -95,7 +95,7 @@ if isempty(p.Results.fullpath)
     if isnumeric(file)
         return
     end
-    fullpath = sprintf('%s', dir, file);
+    fullpath = fullfile(dir, file);
 else
     fullpath = p.Results.fullpath;
 end
@@ -134,7 +134,7 @@ for dataidx = 1:numel(EYE)
     end
     for iterator = 1:itermax
         for winidx = 1:numel(statsStruct)
-            currwin = timestr2lat(EYE(dataidx), statsStruct(winidx).win);
+            currwin = parsetimestr(statsStruct(winidx).win, EYE(dataidx).srate, 'smp');
             % Get data as vector, plus other columns of the new data table
             % row:
             switch trialwise

@@ -3,6 +3,6 @@ function srate = estimatesrate(timestamps)
 
 % Assumes timestamps are in units of seconds
 
-srate = round((numel(timestamps) - 1)/((max(timestamps) - min(timestamps))), -1);
+srate = round((numel(timestamps) - 1)/((max(timestamps) - min(timestamps))));
 
 end

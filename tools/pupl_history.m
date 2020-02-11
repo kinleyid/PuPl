@@ -1,10 +1,11 @@
 
 function pupl_history(varargin)
 
-global eyeData
+global pupl_globals
+datavar = evalin('base', pupl_globals.datavarname);
 
-if isempty(eyeData)
-    fprintf('Global eyeData struct is empty, cannot read processing history\n');
+if isempty(datavar)
+    fprintf('Global data variable %s is empty, cannot read processing history\n', pupl_globals.datavarname);
     return
 end
 
@@ -27,18 +28,18 @@ end
 
 fprintf(fid, '%% Command history:\n\n');
 
-if numel(eyeData) > 1
-    if ~isequal(eyeData.history)
+if numel(datavar) > 1
+    if ~isequal(datavar.history)
         fprintf(fid, 'Not all datasets have the same processing history\n');
-        for idx = 1:numel(eyeData)
-            fprintf(fid, '\n\%\t%s:\n\n', eyeData(idx).name);
-            fprintf(fid, '%s;\n', eyeData(idx).history{:});
+        for idx = 1:numel(datavar)
+            fprintf(fid, '\n\%\t%s:\n\n', datavar(idx).name);
+            fprintf(fid, '%s\n', datavar(idx).history{:});
         end
     else
-        fprintf(fid, '%s;\n', eyeData(1).history{:});
+        fprintf(fid, '%s\n', datavar(1).history{:});
     end
 else
-    fprintf(fid, '%s;\n', eyeData.history{:});
+    fprintf(fid, '%s\n', datavar.history{:});
 end
 
 if fid ~= 1
