@@ -28,6 +28,12 @@ if isempty(args.lims)
 end
 
 outargs = args;
+fprintf('Invalid gaze points are:\n');
+txt = {};
+txt(1:3:10) = {'x' 'x' 'y' 'y'};
+txt(2:3:11) = {'<' '>' '<' '>'};
+txt(3:3:12) = args.lims;
+fprintf('\t%s %s %s\n', txt{:});
 
 end
 
@@ -216,30 +222,27 @@ function EYE = sub_trim_gaze(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-lims = args.lims;
-
 % Convert string to numerical limits
 
-fprintf('Trimming extreme gaze values...\n')
-
-numlims = [
-    parsedatastr(lims{1}, EYE.gaze.x)
-    parsedatastr(lims{2}, EYE.gaze.x)
-    parsedatastr(lims{3}, EYE.gaze.y)
-    parsedatastr(lims{4}, EYE.gaze.y)
+lims = [];
+lims.x = [
+    parsedatastr(args.lims{1}, EYE.gaze.x)
+    parsedatastr(args.lims{2}, EYE.gaze.x)
 ];
-fprintf('\t%s: trimming points where:\n', EYE.name)
-fprintf('\t\t\tx < %0.1f\n', numlims(1))
-fprintf('\t\t\tx > %0.1f\n', numlims(2))
-fprintf('\t\t\ty < %0.1f\n', numlims(3))
-fprintf('\t\t\ty > %0.1f\n', numlims(4))
-badidx = EYE.gaze.x < numlims(1) |...
-    EYE.gaze.x > numlims(2) |...
-    EYE.gaze.y < numlims(3) |...
-    EYE.gaze.y > numlims(4);
+lims.y = [
+    parsedatastr(args.lims{3}, EYE.gaze.y)
+    parsedatastr(args.lims{4}, EYE.gaze.y)
+];
+
+badidx = false(1, EYE.ndata);
+for field = reshape(fieldnames(EYE.gaze), 1, [])
+    badidx = badidx | ...
+        EYE.gaze.(field{:}) < lims.(field{:})(1) | ...
+        EYE.gaze.(field{:}) > lims.(field{:})(2);
+end
 
 EYE = pupl_proc(EYE, @(x) badidx2nan(x, badidx), 'all');
-fprintf('\t\t%0.2f%% of data removed\n', 100*nnz(badidx)/EYE.ndata)
+fprintf('%0.2f%% data removed\n', 100*nnz(badidx)/EYE.ndata)
 
 end
 

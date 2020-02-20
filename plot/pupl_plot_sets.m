@@ -1,4 +1,4 @@
-function plottrialaverages(EYE, varargin)
+function pupl_plot_sets(EYE, varargin)
 
 p = inputParser;
 addParameter(p, 'plotstruct', [])
@@ -108,7 +108,7 @@ for plotidx = 1:numel(plotstruct)
         warning('Epoch set contains epochs in which the relative positions of the events are different\nX-axis will begin at 0 seconds');
         x = 0:size(data, 2)-1;
     end
-    t = x /[EYE(dataidx).srate];
+    t = x / unique([EYE.srate]);
     currplot = plot(t, nanmean_bc(data));
     x = [t t(end:-1:1)];
     y = [nanmean_bc(data) + nanstd_bc(data) ./ sqrt(sum(~isnan(data)))...
@@ -122,7 +122,7 @@ for plotidx = 1:numel(plotstruct)
 end
 
 xlabel('Time (s)');
-ylabel(sprintf('Mean pupil %s (%s, %s)', EYE(dataidx).units.epoch{:}));
+ylabel(sprintf('Mean %s', pupl_getunits(EYE, 'epoch')));
 
 legend(plotstruct.legendentry, 'Interpreter', 'none');
 

@@ -6,11 +6,15 @@ if isnumeric(in) || islogical(in)
 elseif ischar(in)
     out = sprintf('''%s''', in);
 elseif iscell(in)
-    out = cellfun(@all2str, in, 'UniformOutput', false)';
-    fmt = repmat('%s ', 1, size(out, 1));
-    fmt(end) = ';';
-    out = ['{' sprintf(fmt, out{:})];
-    out(end) = '}';
+    if isempty(in)
+        out = '{}';
+    else
+        out = cellfun(@all2str, in, 'UniformOutput', false)';
+        fmt = repmat('%s ', 1, size(out, 1));
+        fmt(end) = ';';
+        out = ['{' sprintf(fmt, out{:})];
+        out(end) = '}';
+    end
 elseif isstruct(in)
     out = 'struct(';
     for field = reshape(fieldnames(in), 1, [])

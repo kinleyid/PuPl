@@ -15,7 +15,7 @@ fmt(2:2:end-1) = {delim};
 fmt{end} = '\n';
 fmt = [fmt{:}];
 
-data = cellfun(@num2str, data, 'un', 0)';
+data = cellfun(@num2str, data, 'UniformOutput', false)';
 
 if ~isempty(header)
     header = sprintf('# %s\n', header{:});

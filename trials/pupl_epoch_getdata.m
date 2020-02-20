@@ -4,8 +4,7 @@ function [data, isrej] = pupl_epoch_getdata(EYE, varargin)
 % Get epoch data
 %   Inputs
 % EYE: struct array or single struct
-% varargin{1}: index (numerical index of epochs), empty (all epochs), or string
-% (epochs within a set)
+% varargin{1}: index (numerical index of epochs), empty (all epochs), or string (epochs within a set)
 % varargin{2:end}: strings to specify which data to access
 %   Outputs
 % out: cell array of 1 x n numeric vectors
@@ -37,26 +36,27 @@ for dataidx = 1:numel(EYE)
         idx = sel;
     end
     
-    vec = getfield(EYE(dataidx), data_fields{:}); % All data from current recording
+    if isequal(data_fields, {'pupil' 'both'}) % Compute on the fly
+        EYE(dataidx) = pupl_mergelr(EYE(dataidx));
+    end
+    all_data = getfield(EYE(dataidx), data_fields{:}); % All data from current recording
     
-    curr = cell(1, nnz(idx));
+    curr_data = cell(1, nnz(idx)); % Epoch data from the current recording
     for ii = 1:numel(idx)
-        epoch = EYE(dataidx).epoch(idx(ii));
-        rellims = EYE(dataidx).srate*[
-            parsetimestr(epoch.lims{1}, EYE(dataidx).srate)...
-            parsetimestr(epoch.lims{2}, EYE(dataidx).srate)
-        ];
-        abslims = (rellims(1):rellims(2)) + epoch.event.latency;
-        curr{ii} = vec(abslims);
+        curr_epoch = EYE(dataidx).epoch(idx(ii));
+        curr_lims = curr_epoch.event.latency + ...
+            parsetimestr(curr_epoch.lims, EYE(dataidx).srate, 'smp');
+        curr_data{ii} = all_data(unfold(curr_lims));
+        
         % Baseline correction
-        if strcmp(data_fields{1}, 'pupil')
-            if isfield(epoch, 'baseline')
-                curr{ii} = epoch.baseline.func(curr{ii}, vec(abslims));
-            end
+        if strcmp(data_fields{1}, 'pupil') && isfield(curr_epoch, 'baseline')
+            baseline_lims = parsetimestr(curr_epoch.baseline.lims, EYE(dataidx).srate, 'smp', 'abs');
+            baseline_data = all_data(baseline_lims);
+            curr_data{ii} = curr_epoch.baseline.func(curr_data{ii}, baseline_data);
         end
     end
     
-    data{dataidx} = curr;
+    data{dataidx} = curr_data;
     isrej{dataidx} = [EYE(dataidx).epoch(idx).reject];
     
 end

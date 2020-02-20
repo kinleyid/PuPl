@@ -2,7 +2,7 @@
 function out = pupl_blink_rm(EYE, varargin)
 
 if nargin == 0
-    out = getargs;
+    out = @getargs;
 else
     out = sub_blink_rm(EYE, varargin{:});
 end
@@ -17,7 +17,7 @@ args = pupl_args2struct(varargin, {
 
 end
 
-function outargs = getargs(varargin)
+function outargs = getargs(EYE, varargin)
 
 outargs = [];
 args = parseargs(varargin{:});
@@ -33,6 +33,7 @@ if isempty(args.trim)
 end
 
 outargs = args;
+fprintf('Trimming %s immediately before and after blinks\n', args.trim);
 
 end
 
@@ -56,6 +57,7 @@ nblinks = numel(blinkStarts);
 for blinkidx = 1:nblinks
     EYE = pupl_proc(EYE, @(x) rmblinks(x, [blinkStarts(blinkidx) blinkEnds(blinkidx)], trimlen));
 end
+fprintf('\t\t%f%% of data is blink-adjacent\n', 2 * 100 * nblinks * trimlen / EYE.ndata)
 
 end
 

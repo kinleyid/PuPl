@@ -8,10 +8,6 @@ f = figure(...
         'data', EYE,...
         'plotfunc', plotfunc,...
         'varargin', {varargin}));
-a = axes(f,...
-    'Tag', 'ax',...
-    'Units', 'normalized',...
-    'OuterPosition', [0.01 0.11 0.98 0.88]);
 p = uipanel(f,...
     'Units', 'normalized',...
     'Position', [0.01 0.01 0.98 0.08]);
@@ -43,11 +39,19 @@ uicontrol(p,...
 
 datainc(f, 1);
 
-axes(a);
-
 end
 
 function datainc(f, n)
+
+% Recreate panel that gets passed down to plotfunc
+h = findobj(f, 'Tag', 'hostpanel');
+if isgraphics(h)
+    delete(h)
+end
+h = uipanel(f,...
+    'Tag', 'hostpanel',...
+    'Units', 'normalized',...
+    'Position', [0.01 0.11 0.98 0.88]);
 
 ud = get(f, 'UserData');
 ii = ud.dataidx + n;
@@ -61,9 +65,7 @@ ud.dataidx = ii;
 
 set(f, 'UserData', ud);
 set(f, 'Name', data(ii).name);
-a = findobj(f, 'Tag', 'ax');
-cla(a);
-ud.plotfunc(a, data(ii), ud.varargin{:});
+ud.plotfunc(h, data(ii), ud.varargin{:});
 title(data(ii).name, 'Interpreter', 'none');
 
 end

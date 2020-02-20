@@ -1,42 +1,55 @@
-function pupl_plot_epochs(a, EYE)
-
-set(ancestor(a, 'figure'), 'KeyPressFcn', @(h, e) sub_plot_epochs(a, e));
+function pupl_plot_epochs(h, EYE)
 
 % Get limits
 [l, rej] = pupl_epoch_getdata(EYE, [], 'pupil', 'left');
 r = pupl_epoch_getdata(EYE, [], 'pupil', 'right');
 alldata = [l{~rej} r{~rej}];
+if isempty(alldata) % If all are rejected
+    alldata = [l{:} r{:}];
+end
 lims = [min(alldata) max(alldata)];
 
-set(a,...
+set(h,...
     'UserData', struct(...
         'trialidx', 1,...
         'ylims', lims,...
-        'EYE', EYE,...
-        'srate', EYE.srate));
+        'EYE', EYE));
 
-sub_plot_epochs(a, [])
+% Prepare figure
+control_panel = uipanel(h,...
+    'Units', 'normalized',...
+    'Position', [0.01 0.01 0.98 0.08]);
+uicontrol(control_panel,...
+    'Style', 'pushbutton',...
+    'String', '< Previous epoch <',...
+    'HorizontalAlignment', 'right',...
+    'Units', 'normalized',...
+    'Callback', @(a, b) sub_plot_epochs(h, -1),...
+    'Position', [0.01 0.01 0.48 0.98]);
+uicontrol(control_panel,...
+    'Style', 'pushbutton',...
+    'String', '> Next epoch >',...
+    'HorizontalAlignment', 'right',...
+    'Units', 'normalized',...
+    'Callback', @(a, b) sub_plot_epochs(h, 1),...
+    'Position', [0.51 0.01 0.48 0.98]);
+p = uipanel(h,...
+    'Units', 'normalized',...
+    'Position', [0.01 0.11 0.98 0.88]);
+axes(p, 'Tag', 'axes');
+
+sub_plot_epochs(h, 0)
 
 end
 
-function sub_plot_epochs(a, e)
+function sub_plot_epochs(h, n)
 
-ud = get(a, 'UserData');
+ud = get(h, 'UserData');
 trialidx = ud.trialidx;
 EYE = ud.EYE;
 epoch = EYE.epoch(trialidx);
 
-if ~isempty(e)
-    switch e.Key
-        case {'pagedown', 'rightarrow'}
-            trialidx = trialidx + 1;
-        case {'pageup', 'leftarrow'}
-            trialidx = trialidx - 1;
-        otherwise
-            return
-    end
-end
-
+trialidx = trialidx + n;
 if trialidx < 1
     trialidx = 1;
 elseif trialidx > numel(EYE.epoch)
@@ -47,26 +60,18 @@ ud.trialidx = trialidx;
 
 [pupil, urpupil] = deal([]);
 for field = {'left' 'right'}
-    pupil.(field{:}) = pupl_epoch_getdata(EYE, trialidx, 'pupil', field{:});
-    urpupil.(field{:}) = pupl_epoch_getdata(EYE, trialidx, 'urpupil', field{:});
+    pupil.(field{:}) = cell2mat(pupl_epoch_getdata(EYE, trialidx, 'pupil', field{:}));
+    urpupil.(field{:}) = cell2mat(pupl_epoch_getdata(EYE, trialidx, 'urpupil', field{:}));
 end
 if isfield(EYE.pupil, 'both')
-    pupil.both = pupl_epoch_getdata(EYE, trialidx, 'pupil', 'both');
+    pupil.both = cell2mat(pupl_epoch_getdata(EYE, trialidx, 'pupil', 'both'));
 end
 
-for field = reshape(fieldnames(urpupil), 1, [])
-    urpupil.(field{:}) = urpupil.(field{:}){:};
-end
-
-for field = reshape(fieldnames(pupil), 1, [])
-    pupil.(field{:}) = pupil.(field{:}){:};
-end
-
-axes(a);
+axes(findobj(h, 'Tag', 'axes'));
 cla; hold on
 
-t = (unfold(epoch.abslims) - 1) / EYE.srate;
-eventidx = unfold(epoch.rellims) == 0;
+t = unfold(parsetimestr(epoch.lims, EYE.srate, 'smp') + epoch.event.latency) / EYE.srate; % Time in seconds
+eventidx = unfold(parsetimestr(epoch.lims, EYE.srate, 'smp')) == 0; % Find where the event occurs
 plot(repmat(t(eventidx), 1, 2), ud.ylims, 'k--');
 plot(t, pupil.left, 'b');
 plot(t, pupil.right, 'r');
@@ -93,6 +98,6 @@ if EYE.epoch(trialidx).reject
 end
 title(currtitle);
 
-set(a, 'UserData', ud)
+set(h, 'UserData', ud)
 
 end

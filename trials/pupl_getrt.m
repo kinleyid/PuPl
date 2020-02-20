@@ -14,7 +14,6 @@ function args = parseargs(varargin)
 args = pupl_args2struct(varargin, {
 	'onsets' []
     'responses' []
-	'writeto' []
 });
 
 end
@@ -42,36 +41,11 @@ if isempty(args.responses)
     end
 end
 
-if isempty(args.writeto)
-    [~, events] = listdlgregexp(...
-        'PromptString', 'Write RTs to which event(s)?',...
-        'ListString', unique(mergefields(EYE, 'event', 'type')));
-    if isempty(events)
-        return
-    end
-    win = inputdlg({...
-        sprintf('Said events must occur within this window relative to trial onsets/responses\n\nWindow start')
-        'Window end'});
-    if isempty(win)
-        return
-    end
-    q = 'Center windows on trial onsets or responses?';
-    a = questdlg(q, q, 'Trial onsets', 'Responses', 'Cancel', 'Trial onsets');
-    switch a
-        case 'Trial onsets'
-            centres = 'onsets';
-        case 'Responses'
-            centres = 'responses';
-        otherwise
-            return
-    end
-    args.writeto = struct(...
-        'events', {cellstr(events)},...
-        'win', {win},...
-        'centres', centres);
-end
-
 outargs = args;
+fprintf('Trial onsets marked by:\n');
+fprintf('\t%s\n', args.onsets{:});
+fprintf('Responses marked by:\n');
+fprintf('\t%s\n', args.responses{:});
 
 end
 
@@ -79,43 +53,26 @@ function EYE = sub_getrt(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-onsets = args.onsets;
-responses = args.responses;
-writeto = args.writeto;
-
-nresps = 0;
-nrts = [];
-curronsets = find(ismember({EYE.event.type}, onsets));
-currresponses = find(ismember({EYE.event.type}, responses));
-currwritetoevents = ismember({EYE.event.type}, writeto.events);
-responsetimes = [EYE.event(currresponses).time];
-for onsetidx = 1:numel(curronsets)
-    responseidx = responsetimes >= EYE.event(curronsets(onsetidx)).time;
-    if onsetidx < numel(curronsets)
-        responseidx = responseidx & ...
-            responsetimes < EYE.event(curronsets(onsetidx + 1)).time;
+onset_idxs = find(ismember({EYE.event.type}, args.onsets));
+onset_times = [EYE.event(onset_idxs).time];
+response_idxs = find(ismember({EYE.event.type}, args.responses));
+response_times = [EYE.event(response_idxs).time];
+all_rts = cell(size(onset_times));
+n_rts = 0;
+for trialidx = 1:numel(onset_times)
+    is_resp = response_times > onset_times(trialidx);
+    if trialidx < numel(onset_times)
+        is_resp = is_resp & response_times < onset_times(trialidx + 1);
     end
-    responseidx = find(responseidx, 1);
-    if isempty(responseidx)
-        rt = nan;
-    else
-        rt = EYE.event(currresponses(responseidx)).time - ...
-            EYE.event(curronsets(onsetidx)).time;
-        nresps = nresps + 1;
+    if any(is_resp)
+        rt = response_times(is_resp) - onset_times(trialidx);
+        EYE.event(onset_idxs(is_resp)).rt = rt;
+        EYE.event(response_idxs(trialidx)).rt = rt;
+        n_rts = n_rts + 1;
+        all_rts{trialidx} = rt;
     end
-    switch writeto.centres
-        case 'onsets'
-            centreidx = curronsets(onsetidx);
-        case 'responses'
-            centreidx = currresponses(responseidx);
-    end
-    currlats = timestr2lat(EYE, writeto.win) + EYE.event(centreidx).latency;
-    currwritetoidx = currwritetoevents &...
-        [EYE.event.latency] >= currlats(1) &...
-        [EYE.event.latency] <= currlats(2);
-    [EYE.event(currwritetoidx).rt] = deal(rt);
-    nrts(end + 1) = nnz(currwritetoidx);
 end
-fprintf('%d/%d trials have responses, %f RT(s) recorded per trial\n', nresps, numel(curronsets), mean(nrts));
+
+fprintf('%d/%d trials have responses. Mean rt: %f s\n', n_rts, numel(onset_times), mean([all_rts{:}]));
 
 end

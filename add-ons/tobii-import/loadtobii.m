@@ -1,7 +1,9 @@
 
 function outStruct = loadtobii(fullpath, type)
 
-% Based on https://www.tobiipro.com/siteassets/tobii-pro/user-manuals/tobii-pro-studio-user-manual.pdf
+% Based on:
+% tobiipro.com/siteassets/tobii-pro/user-manuals/tobii-pro-studio-user-manual.pdf
+% tobiipro.com/siteassets/tobii-pro/user-manuals/Tobii-Pro-Lab-User-Manual/
 
 %% Read raw file
 
@@ -16,6 +18,13 @@ end
 
 cols = lower(r(1, :));
 contents = r(2:end, :);
+
+% Are we working from Tobii Studio or Tobii Pro Lab?
+if any(strcontains(cols, 'adcs')) || any(strcontains(cols, 'mcs'))
+    tobii = 'studio';
+else
+    tobii = 'pro lab';
+end
 
 %% Get recording timestamps (should start at 0 and be in seconds)
 
@@ -53,6 +62,8 @@ event = event(I);
 
 %% Get diameter measuments
 
+pupil_units = {'diameter' 'mm' 'absolute'};
+
 pupilidx = strcontains(cols, 'pupil');
 if nnz(pupilidx) > 2
     if mod(nnz(pupilidx), 2) == 1 && any(strcontains(cols(pupilidx), 'glasses'))
@@ -63,6 +74,7 @@ if nnz(pupilidx) > 2
             strcontains(cols, 'diam'); % We only want diameter
     end
 end
+
 urpupil = [];
 for field = {'left' 'right'}
     urpupil.(field{:}) = cellstr2num(...
@@ -81,10 +93,39 @@ if nnz(gazeidx) > 4
     if any(strcontains(cols(gazeidx), '3')) % 3-dimensional coords?
         gazeidx = gazeidx &...
             strcontains(cols, '2'); % We only want 2d coords
-    elseif any(strcontains(cols(gazeidx), 'mm')) % Multiple units?
+    end
+    if any(strcontains(cols(gazeidx), 'mm')) % Multiple units?
         gazeidx = gazeidx &...
             strcontains(cols, 'mm'); % Get gaze position in millimetres rather than pixes
     end
+end
+
+gaze_units = [];
+switch tobii
+    case 'studio'
+        if any(strcontains(cols(gazeidx), 'adcspx'))
+            gaze_units.x = {'x' 'px' 'from left side of screen'};
+            gaze_units.y = {'y' 'px' 'from top of screen'};
+        elseif any(strcontains(cols(gazeidx), 'adcsmm'))
+            gaze_units.x = {'x' 'mm' 'from left side of screen'};
+            gaze_units.y = {'y' 'mm' 'from bottom of screen'};
+        elseif any(strcontains(cols(gazeidx), 'mcspx'))
+            gaze_units.x = {'x' 'px' 'from left side of media'};
+            gaze_units.y = {'y' 'px' 'from top of media'};
+        end
+    case 'pro lab'
+        gaze_units.x = {'x' [] 'from left side of display'};
+        gaze_units.y = {'y' [] 'from top of display'};
+        if any(strcontains(cols(gazeidx), 'norm'))
+            gaze_units.x{2} = 'normalized units';
+            gaze_units.y{2} = 'normalized units';
+        elseif any(strcontains(cols(gazeidx), 'mm'))
+            gaze_units.x{2} = 'mm';
+            gaze_units.y{2} = 'mm';
+        else
+            gaze_units.x{2} = 'px';
+            gaze_units.y{2} = 'px';
+        end
 end
 for ax = {'x' 'y'}
     for side = {'left' 'right'}
@@ -102,7 +143,10 @@ outStruct = struct(...
     'urpupil', urpupil,...
     'srate', srate,...
     'urgaze', urgaze,...
-    'event', event);
+    'event', event,...
+    'units', struct(...
+        'pupil', {pupil_units},...
+        'gaze', {gaze_units}));
 
 end
 

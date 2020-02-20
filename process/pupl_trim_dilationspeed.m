@@ -41,6 +41,7 @@ if isempty(args.thresh)
 end
 
 outargs = args;
+fprintf('Valid dilation speed samples are less than %s\n', args.thresh);
 
 end
 
@@ -48,16 +49,26 @@ function EYE = sub_trim_dilationspeed(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-EYE = pupl_proc(EYE, @(x) trim_ds(x, args.thresh));
+if isgraphics(gcbf)
+    fprintf('\n')
+end
+
+for field = reshape(fieldnames(EYE.pupil), 1, [])
+    data = EYE.pupil.(field{:});
+    badidx = trim_ds(data, args.thresh);
+    badidx = badidx & ~isnan(data);
+    data(badidx) = nan;
+    EYE.pupil.(field{:}) = data;
+    fprintf('\t\t%s:\t%f%% previously extant data removed\n', field{:}, 100*nnz(badidx)/numel(badidx));
+end
 
 end
 
-function x = trim_ds(x, thresh)
+function badidx = trim_ds(x, thresh)
 
 dp = dprime(x);
 currthresh = parsedatastr(thresh, dp);
-isrej = dp >= currthresh;
-x(isrej) = nan;
+badidx = dp >= currthresh;
 
 end
 

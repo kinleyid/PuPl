@@ -79,7 +79,7 @@ if isempty(args.width)
     end
 end
 
-fprintf('Applying %s filter of %s on either side\n', args.avfunc, args.width);
+fprintf('Applying %s-window moving %s filter of width %s\n', args.win, args.avfunc, args.width);
 outargs = args;
 
 end
@@ -88,7 +88,7 @@ function EYE = sub_filt(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-width = round(parsetimestr(args.width, EYE.srate) * EYE.srate);
+width = parsetimestr(args.width, EYE.srate, 'smp');
 if mod(width, 2) == 0
     width = width - 1;
 end
@@ -119,8 +119,6 @@ switch lower(args.win)
     case 'hamming'
         win = 0.54 - 0.46 * cos(2*pi * (0:width - 1)/(width - 1));
 end
-
-usefast = true;
 
 for stream = reshape(fieldnames(EYE.(args.data)), 1, [])
     fprintf('\t\tFiltering %s...', stream{:});

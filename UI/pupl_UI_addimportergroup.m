@@ -1,5 +1,5 @@
 
-function pupl_UI_addimporter(varargin)
+function pupl_UI_addimportergroup(varargin)
 
 global pupl_globals
 if isgraphics(pupl_globals.UI)

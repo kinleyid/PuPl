@@ -30,7 +30,7 @@ args = parseargs(varargin{:});
 if isempty(args.method)
     q = 'Which method?';
     args.method = lower(questdlg(q, q, 'Velocity', 'Dispersion', 'Cancel', 'Velocity'));
-    if isempty(args.method)
+    if isempty(args.method) || strcmp(args.method, 'cancel')
         return
     end
 end
@@ -44,24 +44,22 @@ if isempty(args.cfg)
             if isempty(args.cfg.thresh)
                 return
             end
+            fprintf('Identifying saccades using I-VT algorithm with a velocity threshold of %s\n', args.cfg.thresh);
         case 'dispersion'
-            if isempty(args.cfg.minfixms)
-                args.cfg.minfixms = inputdlg('Minimum fixation length (ms)', '', 1, {'100'});
-                if isempty(args.cfg.minfixms)
-                    return
-                else
-                    args.cfg.minfixms = str2double(args.cfg.minfixms{:});
-                end
+            args.cfg.minfix = inputdlg('Minimum fixation length', '', 1, {'100ms'});
+            if isempty(args.cfg.minfix)
+                return
+            else
+                args.cfg.minfix = args.cfg.minfix{:};
             end
 
-            if isempty(args.thresh)
-                args.cfg.thresh = inputdlg('Dispersion threshold', '', 1, {'30'});
-                if isempty(args.cfg.thresh)
-                    return
-                else
-                    args.cfg.thresh = str2double(args.cfg.thresh{:});
-                end
+            args.cfg.thresh = inputdlg('Dispersion threshold', '', 1, {'30'});
+            if isempty(args.cfg.thresh)
+                return
+            else
+                args.cfg.thresh = str2double(args.cfg.thresh{:});
             end
+            fprintf('Identifying saccades using I-DT algorithm with a dispersion threshold of %f and a minimum fixation length of %s\n', args.cfg.thresh, args.cfg.minfix);
     end
 end
 
@@ -73,7 +71,7 @@ function EYE = sub_saccades(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-new_datalabel = rep(' ', size(EYE.datalabel));
+new_datalabel = repmat(' ', size(EYE.datalabel));
 
 switch args.method
     case 'velocity'
@@ -85,7 +83,7 @@ switch args.method
     case 'dispersion'
         thresh = str2double(num2str(args.cfg.thresh));
         s = 1; % window start
-        w = round(args.cfg.minfixms / 1000 * EYE.srate) - 1; % window size
+        w = parsetimestr(args.cfg.minfix, EYE.srate, 'smp') - 1;
         e = s + w; % window end
         x = EYE.gaze.x;
         y = EYE.gaze.y;

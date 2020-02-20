@@ -1,8 +1,8 @@
 
-function out = pupl_areadiamconversion(EYE, varargin)
+function out = pupl_ad_convert(EYE, varargin)
 
 if nargin == 0
-    out = getargs(varargin{:});
+    out = @getargs;
 else
     args = pupl_args2struct(varargin, {
         'to' []
@@ -15,11 +15,12 @@ else
     end
     % Adjust units
     EYE.units.pupil{1} = args.to;
+    out = EYE;
 end
 
 end
 
-function out = getargs(varargin)
+function out = getargs(EYE, varargin)
 
 out = pupl_args2struct(varargin, {
     'to' []

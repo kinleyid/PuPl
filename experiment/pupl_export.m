@@ -32,15 +32,27 @@ if isempty(args.path)
     args.path = fullfile(d, f);
 end
 
-info_colnames = {'dataset' 'cond' 'trial_type' 'trial_idx' 'rejected' 'rt'}; % Data columns will be added afterward
+info_colnames = {'recording' 'trial_type' 'trial_idx' 'rejected' 'rt'}; % Data columns will be added afterward
+cond_colnames = unique(mergefields(EYE, 'cond')); % Condition membership
 set_colnames = unique(mergefields(EYE, 'epochset', 'name')); % Set membership
 all_info = {};
-all_data = {};
+all_condmemberships = {};
 all_setmemberships = {};
+all_data = {};
 
 fprintf('Getting data...\n');
 for dataidx = 1:numel(EYE)
     fprintf('\t%s...', EYE(dataidx).name);
+    
+    % Determine condition membership
+    curr_condmemberships = ismember(...
+        cond_colnames,...
+        EYE(dataidx).cond);
+    all_condmemberships = [
+        all_condmemberships
+        repmat({curr_condmemberships}, numel(EYE(dataidx).epoch), 1)
+    ];
+    
     win_width = -1 + parsetimestr(args.cfg.width, EYE(dataidx).srate, 'smp');
     % The -1 in the above line is so that 1s at 60Hz gives 60 datapoints
     if isempty(args.cfg.step)
@@ -48,11 +60,12 @@ for dataidx = 1:numel(EYE)
     else
         win_step = parsetimestr(args.cfg.step, EYE(dataidx).srate, 'smp');
     end
+    curr_setdescriptions = [EYE(dataidx).epochset.description];
+    curr_setnames = {EYE(dataidx).epochset.name};
     for epochidx = 1:numel(EYE(dataidx).epoch)
         % Get epoch info
         all_info(end + 1, :) = {
             EYE(dataidx).name
-            EYE(dataidx).cond
             EYE(dataidx).epoch(epochidx).name
             epochidx
             EYE(dataidx).epoch(epochidx).reject
@@ -90,10 +103,15 @@ for dataidx = 1:numel(EYE)
         end
         all_data{end + 1} = [curr_data{:}];
         
-        % Determine set membership
-        all_setmemberships{end + 1} = arrayfun(...
-            @(desc) ismember(EYE(dataidx).epoch(epochidx).name, desc.members),...
-            [EYE(dataidx).epochset.description]);
+        % Determine set membership, lining up membership with column names
+        curr_setmembership = curr_setnames(...
+            arrayfun(...
+                @(desc) ismember(...
+                    EYE(dataidx).epoch(epochidx).name,...
+                    desc.members),...
+                curr_setdescriptions));
+        all_setmemberships{end + 1} = ismember(set_colnames, curr_setmembership);
+                
     end
     fprintf('done\n');
 end
@@ -108,18 +126,15 @@ end
 all_data = num2cell(cell2mat(all_data(:)));
 
 all_setmemberships = num2cell(cell2mat(all_setmemberships(:)));
+all_condmemberships = num2cell(cell2mat(all_condmemberships(:)));
 
 bigtable = [
-    info_colnames   set_colnames        data_colnames
-    all_info        all_setmemberships  all_data
+    info_colnames   strcat('cond_', cond_colnames)  strcat('set_', set_colnames)    data_colnames
+    all_info        all_condmemberships             all_setmemberships              all_data
 ];
 
 fprintf('Writing to %s...\n', args.path);
 writecell2delim(args.path, bigtable, ',');
 fprintf('Done\n');
-
-if ~isempty(gcbf)
-    fprintf('Equivalent command: %s\n', getcallstr(p, false));
-end
 
 end

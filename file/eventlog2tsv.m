@@ -17,6 +17,8 @@ bigcell = [...
     ]
 ];
 
+fprintf('Saving %s...', fullpath);
 writecell2delim(fullpath, bigcell, '\t', eventlog.src);
+fprintf('done\n');
 
 end

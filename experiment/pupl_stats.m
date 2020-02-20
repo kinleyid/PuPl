@@ -6,8 +6,8 @@ function pupl_stats(EYE, varargin)
 % win--either a numeric vector of 2 latencies or a cell array of 2 time strings
 % byTrial--true or false
 
-statOptions = [
-%   {Name presented to user} {function} {column name in stats spreadsheet}
+stat_opts = [
+%   {Name presented to user} {function} {column name in spreadsheet}
     {'Mean'} {@nanmean_bc} {'Mean'};...
     {'Peak-to-peak difference'} {@(x)(max(x) - min(x))} {'PeakToPeakDiff'};...
     {'Max'} {@max} {'Max'};...
@@ -19,21 +19,20 @@ statOptions = [
 ];
 
 % Store names as variables in case I decide to change them
-computeStatsPerTrial = 'Compute statistics for each trial (good for mixed effects models)';
-computeStatOfAverage = 'Compute statistic for average of trials (good for classical statistics)';
-trialwiseOptions = {
-    computeStatsPerTrial
-    computeStatOfAverage
+per_epoch = 'Analyze individual epochs (e.g. for mixed effects models)';
+set_avg = 'Analyze epoch set averages';
+trialwise_opts = {
+    per_epoch
+    set_avg
 };
 
-p = inputParser;
-addParameter(p, 'statsStruct', []);
-addParameter(p, 'trialwise', []);
-addParameter(p, 'fullpath', []);
-parse(p, varargin{:});
+args = pupl_args2struct(varargin, {
+    'cfg' []
+    'trialwise' []
+    'fullpath' []
+});
 
-if isempty(p.Results.statsStruct)
-    statsStruct = [];
+if isempty(args.cfg)
     while true
         win = (inputdlg(...
             {sprintf('Define statistics time window centred on trial-defining events\n\nWindow start:')
@@ -49,21 +48,21 @@ if isempty(p.Results.statsStruct)
             name = name{:};
         end
         sel = listdlgregexp('PromptString', sprintf('Compute which statistics in window ''%s''?', name),...
-            'ListString', statOptions(:, 1));
+            'ListString', stat_opts(:, 1));
         if isempty(sel)
             return
         else
-            stats = reshape(statOptions(sel, 1), 1, []);
+            stats = reshape(stat_opts(sel, 1), 1, []);
         end
-        statsStruct = [
-            statsStruct...
+        args.cfg = [
+            args.cfg...
             struct(...
                 'name', name,...
                 'win', {win},...
                 'stats', {stats})
         ];
         q = 'Compute more statistics in another time window?';
-        a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
+        a = questdlg(q);
         switch a
             case 'Yes'
                 continue
@@ -73,72 +72,81 @@ if isempty(p.Results.statsStruct)
                 return
         end
     end
-else
-    statsStruct = p.Results.statsStruct;
 end
 
-if isempty(p.Results.trialwise)
+if isempty(args.trialwise)
     sel = listdlgregexp('PromptString', 'How should individual trials be handled?',...
-        'ListString', trialwiseOptions,...
+        'ListString', trialwise_opts,...
         'SelectionMode', 'single');
     if isempty(sel)
         return
     else
-        trialwise = trialwiseOptions{sel};
+        args.trialwise = trialwise_opts{sel};
     end
-else
-    trialwise = p.Results.trialwise;
 end
 
-if isempty(p.Results.fullpath)
+if isempty(args.fullpath)
     [file, dir] = uiputfile('*.csv');
     if isnumeric(file)
         return
     end
-    fullpath = fullfile(dir, file);
-else
-    fullpath = p.Results.fullpath;
+    args.fullpath = fullfile(dir, file);
 end
 
-uniqueTrialSetNames = unique(mergefields(EYE, 'trialset', 'name'));
-uniqueCondNames = unique(mergefields(EYE, 'cond'));
+info_colnames = {'recording'}; % Data columns will be added afterward
+cond_colnames = unique(mergefields(EYE, 'cond')); % Condition membership
+set_colnames = unique(mergefields(EYE, 'epochset', 'name')); % Set membership
+all_info = {};
+all_condmemberships = {};
+all_setmemberships = {};
+all_data = {};
 
-colNames = [{'Dataset' 'Cond'} strcat('Cond_', uniqueCondNames) strcat('TrialSet_', uniqueTrialSetNames)];
 switch trialwise
-    case computeStatsPerTrial
-        newColNames = {'RT' 'Rejected' 'TrialIdx' 'TrialType'};
+    case per_epoch
+        trial_colnames = {'trial_idx' 'trial_type' 'rejected' 'rt'};
     otherwise
-        newColNames = 'MeanRT';
-end
-colNames = [colNames newColNames];
-
-statNames = [];
-for ii = 1:numel(statsStruct)
-    statNames = [statNames strcat(statsStruct(ii).name, '_', statsStruct(ii).stats)];
+        trial_colnames = {'mean_rt' 'median_rt' 'mean_log_rt'};
 end
 
-colNames = [colNames statNames];
-
-statsTable = colNames;
+stat_colnames = [];
+for ii = 1:numel(args.cfg)
+    stat_colnames = [stat_colnames strcat(args.cfg(ii).name, '_', args.cfg(ii).stats)];
+end
 
 fprintf('Computing statistics...\n');
 for dataidx = 1:numel(EYE)
     fprintf('\t%s...', EYE(dataidx).name);
-    % Get logical vector indicating experimental condition
-    condVec = ismember(uniqueCondNames, EYE(dataidx).cond);
-    switch trialwise % How to iterate through data?
-        case computeStatsPerTrial % Iterate over epochs
+    
+    switch cfg.trialwise % How to iterate through data?
+        case per_epoch % Iterate over epochs
             itermax = numel(EYE(dataidx).epoch);
         otherwise % Iterate over trial sets
-            itermax = numel(uniqueTrialSetNames);
+            itermax = numel(EYE(dataidx).epochset);
     end
+    
+    % Get logical vector indicating experimental condition
+    curr_condmemberships = ismember(...
+        cond_colnames,...
+        EYE(dataidx).cond);
+    all_condmemberships = [
+        all_condmemberships
+        repmat({curr_condmemberships}, itermax, 1)
+    ];
+    
+    switch cfg.trialwise
+        case per_epoch
+            
+        case set_avg
+            % Iterate over 
+    end
+
     for iterator = 1:itermax
-        for winidx = 1:numel(statsStruct)
-            currwin = parsetimestr(statsStruct(winidx).win, EYE(dataidx).srate, 'smp');
+        for winidx = 1:numel(args.cfg)
+            currwin = parsetimestr(args.cfg(winidx).win, EYE(dataidx).srate, 'smp');
             % Get data as vector, plus other columns of the new data table
             % row:
             switch trialwise
-                case computeStatsPerTrial
+                case per_epoch
                     rellats = unfold(EYE(dataidx).epoch(iterator).rellims);
                     data = EYE(dataidx).diam.both(unfold(EYE(dataidx).epoch(epochidx).abslims));
                     isrej = EYE(dataidx).epoch(epochidx).reject;
@@ -171,12 +179,12 @@ for dataidx = 1:numel(EYE)
                     trialSetVec = ismember(uniqueTrialSetNames, EYE(dataidx).trialset(iterator).name);
             end
             % Compute statistics of vector
-            nStats = numel(statsStruct(winidx).stats);
+            nStats = numel(args.cfg(winidx).stats);
             currStats = nan(1, nStats);
             for statidx = 1:nStats
-                statname = statsStruct(winidx).stats{statidx};
-                statoptidx = strcmp(statname, statOptions(:, 1));
-                currStats(statidx) = feval(statOptions{statoptidx, 2}, data);
+                statname = args.cfg(winidx).stats{statidx};
+                statoptidx = strcmp(statname, stat_opts(:, 1));
+                currStats(statidx) = feval(stat_opts{statoptidx, 2}, data);
             end
             
             currRow = [
@@ -186,7 +194,7 @@ for dataidx = 1:numel(EYE)
                 rtstat... Reaction time, either individual or trial set average
             ];
             switch trialwise
-                case computeStatsPerTrial
+                case per_epoch
                     newCols = [
                         isrej... Rejected
                         iterator... TrialIdx

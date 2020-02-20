@@ -11,6 +11,7 @@ addParameter(p, 'threshname', 'Threshold');
 addParameter(p, 'names', []);
 addParameter(p, 'outcomename', 'rejected');
 addParameter(p, 'lims', []);
+addParameter(p, 'func', @ge);
 parse(p, varargin{:});
 
 args = p.Results;
@@ -80,8 +81,8 @@ for dataidx = 1:numel(ud.data)
     currThreshold = parsedatastr(getcurrthresh(f), data);
 
     thresholds = linspace(lims(1), lims(2), 1000);   
-    ppnViolating = sum(bsxfun(@ge, data', thresholds))/numel(data);
-    currPpnViolating = nnz(data >= currThreshold)/numel(data);
+    ppnViolating = sum(bsxfun(ud.args.func, data(:), thresholds))/numel(data);
+    currPpnViolating = nnz(ud.args.func(data, currThreshold))/numel(data);
     p = plot(thresholds, ppnViolating);
     c = get(p, 'Color');
     plot(repmat(currThreshold, 1, 2), [0 1], '--', 'Color', c, 'HandleVisibility', 'off')

@@ -20,7 +20,7 @@ end
 function args = parseargs(varargin)
 
 args = pupl_args2struct(varargin, {
-    'correctionType' []
+    'correction' []
 	'event' []
 	'lims' []
 	'mapping' []
@@ -30,71 +30,77 @@ end
 
 function outargs = getargs(EYE, varargin)
 
+outargs = [];
 args = parseargs(varargin{:});
 
-if isempty(args.correctionType)
+if isempty(args.correction)
     correctionOptions = {
         'subtract baseline mean'
         'percent change from baseline mean'
         'none'};
-    correctionType = correctionOptions(...
+    correction = correctionOptions(...
         listdlg('PromptString', 'Baseline correction type',...
         'ListString', correctionOptions));
-    if isempty(correctionType)
+    if isempty(correction)
         return
     end
-    args.correctionType = correctionType{:};
+    args.correction = correction{:};
 end
 
-if isempty(args.event) || isempty(args.lims) || isempty(args.mapping)
-    mappingOptions = {'one:one'
-        'one:all'
-        'one:some'};
-    mapping = mappingOptions(...
-        listdlg('PromptString', 'Baseline-to-trial mapping',...
-        'ListString', mappingOptions));
-    if isempty(mapping)
-        return
+if strcmp(args.correction, 'none') % Any baseline correction?
+    % If none, fill in defaults
+    args.mapping = 'one:all';
+    args.event = EYE(1).event(1).type; % Should be 'beginning of recording'
+    args.lims = {'0' '0'};
+else
+    if isempty(args.mapping)
+        mappingOptions = {'one:one'
+            'one:all'
+            'one:some'};
+        args.mapping = mappingOptions(...
+            listdlg('PromptString', 'Baseline-to-trial mapping',...
+            'ListString', mappingOptions));
+        if isempty(args.mapping)
+            return
+        else
+            args.mapping = args.mapping{:};
+        end
     end
-    switch mapping{:}
-        case 'one:one'
-            lims = (inputdlg(...
-                {sprintf('Baselines start at this time relative to events that define trials:')
-                'Baselines end at this time relative to events that define trials:'}));
-            if isempty(lims)
-                return
-            end
-            event = 0;
-        case 'one:all'
-            eventTypes = unique(mergefields(EYE, 'event', 'type'));
-            event = eventTypes(listdlgregexp('PromptString', 'Baseline is defined relative to which event?',...
-                'SelectionMode', 'single',...
-                'ListString', eventTypes));
-            lims = (inputdlg(...
-                {sprintf('Baselines start at this time relative to event:')
-                'Baselines end at this time relative to event:'}));
-            if isempty(lims)
-                return
-            end
-        case 'one:some'
-            eventTypes = unique(mergefields(EYE, 'event', 'type'));
-            event = eventTypes(listdlgregexp('PromptString', 'Baselines are defined relative to which events?',...
-                'SelectionMode', 'single',...
-                'ListString', eventTypes));
-            if isempty(event)
-                return
-            end
-            lims = (inputdlg(...
-                {sprintf('Baselines start at this time relative to event:')
-                'Baselines end at this time relative to event:'}));
-            if isempty(lims)
-                return
-            end
+
+    if isempty(args.event)
+        eventTypes = unique(mergefields(EYE, 'event', 'type'));
+        switch args.mapping
+            case 'one:one'
+                args.event = 0;
+            otherwise
+                args.event = eventTypes(listdlgregexp('PromptString', 'Baselines are defined relative to which events?',...
+                    'SelectionMode', 'single',...
+                    'ListString', eventTypes));
+                if isempty(args.event)
+                    return
+                end
+        end
+    end
+
+    if isempty(args.lims)
+        switch args.mapping
+            case 'one:one'
+                args.lims = (inputdlg(...
+                    {sprintf('Baselines start at this time relative to events that define trials:')
+                    'Baselines end at this time relative to events that define trials:'}));
+                if isempty(args.lims)
+                    return
+                end
+            otherwise
+                args.lims = (inputdlg(...
+                    {sprintf('Baselines start at this time relative to event:')
+                    'Baselines end at this time relative to event:'}));
+                if isempty(args.lims)
+                    return
+                end
+        end
     end
 end
-args.event = event;
-args.lims = lims;
-args.mapping = mapping;
 
 outargs = args;
 
@@ -104,15 +110,12 @@ function EYE = sub_baseline(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-correctionType = args.correctionType;
-lims = args.lims;
-event = args.event;
-mapping = args.mapping;
-
-switch correctionType
+% get functions that will perform baseline correction and the new string
+% that will describe the correction
+switch args.correction
     case 'subtract baseline mean'
         correctionFunc = @(tv, bv) tv - nanmean_bc(bv);
-        relstr = 'relative to baseline mean';
+        relstr = 'change from baseline mean';
     case 'change from baseline mean'
         correctionFunc = @(tv, bv) 100 * (tv - nanmean_bc(bv)) / nanmean_bc(bv);
         relstr = '% change from baseline mean';
@@ -121,44 +124,59 @@ switch correctionType
         relstr = [];
 end
 
-currLims = parsetimestr(lims, EYE.srate, 'smp');
-if isnumeric(event) % Baselines defined relative to each epoch-defining event
-    baselinelims = num2cell(bsxfun(@plus, mergefields(EYE, 'epoch', 'event', 'latency'), currLims(:)), 1);
-    epochsToCorrect = 1:numel(EYE.epoch);
-else % Baselines defined relative to their own events
-    epochlats = [EYE.epoch.eventLat]; % Event latencies for epochs
-    baselineEventLats = [EYE.event(...
-        ismember({EYE.event.type}, event)).eventLat];
-    if strcmp(mapping, 'one:all')
-        baselineEventLats = baselineEventLats(1);
+% At the end of this there will be 2 arrays a cell array called
+% baseline_lims, each element of which will be a 2-element numeric vector
+% with the time limits, in seconds, of a baseline period such that epoch(n)
+% will be corrected using baseline period baselinelims{n}
+
+curr_lims = parsetimestr(args.lims, EYE.srate); % Doubles, in seconds
+epoch_times = mergefields(EYE.epoch, 'event', 'time'); % Event latencies for epochs
+if isnumeric(args.event) % Baselines defined relative to each epoch-defining event
+    baselinelims = bsxfun(@plus, epoch_times(:), curr_lims(:)');
+    baselinelims = mat2cell(baselinelims, ones(size(baselinelims, 1), 1), 2);
+else % Baselines defined relative to their own events (other than those that define epochs)
+    baseline_times = [EYE.event(ismember({EYE.event.type}, args.event)).time];
+    if strcmp(args.mapping, 'one:all')
+        baseline_times = baseline_times(1);
     end
-    % Figure out which baselines correspond to which epochs
+    % Figure out which epochs occur after which baseline period
     baselinelims = {};
-    epochsToCorrect = [];
-    for baselineidx = 1:numel(baselineEventLats)
-        currBaselineLats = baselineEventLats(baselineidx) + currLims;
-        if baselineidx == 1 && any(epochlats < baselineEventLats(baselineidx))
-            error('Some epochs occur before the first baseline period')
+    for baselineidx = 1:numel(baseline_times)
+        curr_baselinelims = baseline_times(baselineidx) + curr_lims;
+        if baselineidx == 1 % Ensure no epochs are missed
+            early_epoch_idx = epoch_times < baseline_times(baselineidx);
+            if any(early_epoch_idx)
+                error_txt = [
+                    'The following epochs occur before the first baseline period:\n'...
+                    sprintf('\t%s\n', EYE.epoch(early_epoch_idx).name)
+                ];
+                error(error_txt)
+            end
         end
-        currEpochsToCorrect = epochlats >= baselineEventLats(baselineidx);
-        if baselineidx < numel(baselineEventLats)
-            currEpochsToCorrect = currEpochsToCorrect & ...
-                epochlats < baselineEventLats(baselineidx + 1);
+        % Correct all epochs whose defining events occur after the defining
+        % event of the baseline period
+        curr_epochstocorrect = epoch_times >= baseline_times(baselineidx);
+        if baselineidx < numel(baseline_times)
+            % But don't correct the epochs that occur after the next
+            % baseline period
+            curr_epochstocorrect = curr_epochstocorrect & ...
+                epoch_times < baseline_times(baselineidx + 1);
         end
-        currEpochsToCorrect = find(currEpochsToCorrect);
         baselinelims = [
             baselinelims
-            repmmat({currBaselineLats}, numel(currEpochsToCorrect), 1)
+            repmat({curr_baselinelims}, nnz(curr_epochstocorrect), 1)
         ];
-        epochsToCorrect = [epochsToCorrect currEpochsToCorrect];
     end
 end
-for correctionidx = 1:numel(epochsToCorrect)
-    EYE.epoch(epochsToCorrect(correctionidx)).baseline = struct(...
-        'abslims', baselinelims{correctionidx},...
+
+for epochidx = 1:numel(EYE.epoch)
+    EYE.epoch(epochidx).baseline = struct(...
+        'lims', baselinelims{epochidx},...
         'func', correctionFunc);
 end
 
-EYE.units.epoch{end} = relstr;
+if ~isempty(relstr)
+    EYE.units.epoch{end} = relstr;
+end
 
 end

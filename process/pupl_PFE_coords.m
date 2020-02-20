@@ -2,7 +2,7 @@
 function out = pupl_PFE_coords(EYE, varargin)
 
 if nargin == 0
-    out = getargs;
+    out = @getargs;
 else
     EYE.coords = parseargs(varargin{:});
     out = EYE;
@@ -20,7 +20,7 @@ args = pupl_args2struct(varargin, {
 
 end
 
-function outargs = getargs(varargin)
+function outargs = getargs(EYE, varargin)
 
 outargs = [];
 args = parseargs(varargin{:});
@@ -55,6 +55,9 @@ if any(structfun(@isempty, args))
             end
             coords = inputdlg(instr);
             if isempty(coords)
+                if isgraphics(f)
+                    delete(f);
+                end
                 return
             end
             coords = str2double(coords);

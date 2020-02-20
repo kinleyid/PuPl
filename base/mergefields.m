@@ -1,4 +1,4 @@
-function currArray = mergefields(currArray, varargin)
+function array = mergefields(array, varargin)
 
 % Recursively merges fields and their subfields to return a single array
 %   Inputs
@@ -12,14 +12,19 @@ function currArray = mergefields(currArray, varargin)
 % mergefields(superStruct, 'sub', 'x')
 % >> 1 2 3 1 2 3
 
-for i = 1:numel(varargin)
-    currArray = struct(varargin{i},...
-        arrayfun(@(x) reshape(x.(varargin{i}), 1, []), currArray, 'un', 0));
-    if ischar(currArray(1).(varargin{i}))
-        currArray = {currArray.(varargin{i})};
-    else
-        currArray = [currArray.(varargin{i})];
+for ii1 = 1:numel(varargin)
+    curr_args = all2cell(varargin{ii1});
+    sub_arrays = cell(size(curr_args));
+    for ii2 = 1:numel(curr_args)
+        field = curr_args{ii2};
+        sub_arrays{ii2} = struct(field,... % Reshape the current field within the structure
+            arrayfun(@(x) reshape(x.(field), 1, []), array, 'UniformOutput', false));
+        sub_arrays{ii2} = {sub_arrays{ii2}.(field)};
+        if ~any(cellfun(@ischar, sub_arrays{ii2})) % If no chars, can safely convert to a scalar array
+            sub_arrays{ii2} = [sub_arrays{ii2}{:}];
+        end
     end
+    array = [sub_arrays{:}];
 end
 
 end

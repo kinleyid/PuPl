@@ -79,8 +79,9 @@ if isempty(args.cfg)
                 'dataname', 'epochs',...
                 'threshname', 'Reaction time');
             if isempty(thresh)
-                args.cfg.thresh = thresh;
+                return
             end
+            args.cfg.thresh = thresh;
     end
 end
 

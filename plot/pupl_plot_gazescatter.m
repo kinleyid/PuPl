@@ -1,5 +1,5 @@
 
-function gazescatter(a, EYE)
+function pupl_plot_gazescatter(a, EYE)
 
 axes(a)
 s = scatter(...

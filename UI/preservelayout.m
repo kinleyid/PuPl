@@ -4,10 +4,8 @@ sep = 2;
 buttonHeight = 20;
 
 global pupl_globals
-eyeData = evalin('base', pupl_globals.datavarname);
 userInterface = pupl_globals.UI;
-
-currData = eyeData;
+currData = evalin('base', pupl_globals.datavarname);
 dataPanel = findobj(userInterface, 'tag', 'activeEyeDataPanel');
 activeIdx = getfield(get(userInterface, 'UserData'), 'activeEyeDataIdx');
 if ~isempty(get(dataPanel, 'Children'))
@@ -45,7 +43,7 @@ for dataidx = 1:numel(currData)
     end
     currPos = [sep, top - (buttonHeight+sep)*dataidx, buttonWidth, buttonHeight];
     uicontrol(dataPanel,...
-        'Style', 'checkbox',...
+        'Style', 'checkbox',...       
         'Position', currPos,...
         'String', currData(dataidx).name,...
         'Value', value,...

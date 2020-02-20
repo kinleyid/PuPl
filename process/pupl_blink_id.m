@@ -25,7 +25,7 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.method)
-    method_opts = {'Amount of consecutive missing data' 'Pupillometry noise'};
+    method_opts = {'Amount of consecutive missing data' 'Pupillometry noise' 'Dilation velocity threshold'};
     sel = listdlgregexp(...
         'PromptString', 'Identify blinks by which criterion?',...
         'ListString', method_opts,...
@@ -39,6 +39,8 @@ if isempty(args.method)
             sel = 'missing';
         case 2
             sel = 'noise';
+        case 3
+            sel = 'velocity';
     end
     args.method = sel;
 end
@@ -58,12 +60,53 @@ end
 if isempty(args.cfg)
     switch args.method
         case 'missing'
-            params = inputdlg({sprintf('Blink length\n\nMin') 'Max'}, '', 1, {'10ms' '500ms'}); 
+            params = inputdlg({sprintf('Blink length\n\nMin') 'Max'}, '', 1, {'50ms' '200ms'});
+            if isempty(params)
+                return
+            end
             args.cfg = struct(...
                 'min', params{1},... 
                 'max', params{2});
+            fprintf('Identifying blinks by consecutive missing data\nMin. blink length: %s\nMax. blink length: %s\n', args.cfg.min, args.cfg.max);
         case 'noise'
             % No configuration necessary
+            fprintf('Identifying blinks by pupillometry noise\n');
+        case 'velocity'
+            vel = cell(size(EYE));
+            for dataidx = 1:numel(EYE)
+                EYE(dataidx).pupil.both = mergelr(EYE(dataidx));
+                vel{dataidx} = diff(EYE(dataidx).pupil.both);
+            end
+            onset_lim = UI_cdfgetrej(vel,...
+                'dataname', 'dilation velocity samples',...
+                'threshname', 'Blink onset threshold',...
+                'names', {EYE.name},...
+                'outcomename', 'marked as blink onsets',...
+                'func', @le);
+            if isempty(onset_lim)
+                return
+            end
+            offset_lim = UI_cdfgetrej(vel,...
+                'dataname', 'dilation velocity samples',...
+                'threshname', 'Blink offset threshold',...
+                'names', {EYE.name},...
+                'outcomename', 'marked as blink offsets',...
+                'func', @ge);
+            if isempty(offset_lim)
+                return
+            end
+            max_len = inputdlg('Max blink length', '', 1, {'200ms'});
+            if isempty(max_len)
+                return
+            end
+            args.cfg = struct(...
+                'onset_lim', onset_lim,... 
+                'offset_lim', offset_lim,...
+                'max_len', max_len);
+            fprintf('Identifying blinks by dilation velocity.\n');
+            fprintf('Blinks begin when dilation speed becomes less than or equal to %s\n', args.cfg.onset_lim);
+            fprintf('Blinks end when dilation speed becomes greater than or equal to %s\n', args.cfg.offset_lim);
+            fprintf('Blinks are constrained to a max length of %s\n', args.cfg.max_len);
     end
 end
 
@@ -87,6 +130,43 @@ switch args.method
     case 'noise'
         pupil(isnan(pupil)) = 0;
         blinkidx = based_noise_blinks_detection(pupil(:), EYE.srate);
+    case 'velocity'
+        vel = diff(pupil);
+        onset_lim = parsedatastr(args.cfg.onset_lim, vel);
+        offset_lim = parsedatastr(args.cfg.offset_lim, vel);
+        max_len = parsetimestr(args.cfg.max_len, EYE.srate, 'smp');
+        blinkidx = false(size(pupil));
+        isblink = false;
+        si = 0; % Sample index
+        while true
+            if si == numel(vel)
+                break
+            else
+                si = si + 1;
+            end
+            
+            if vel(si) <= onset_lim
+                isblink = true; % A new blink has begun
+                onsetidx = si + 1; % The point that was jumped to
+            elseif vel(si) >= offset_lim
+                % Find latest offset sample
+                while true
+                    if si == numel(vel) || vel(si) < offset_lim
+                        si = si - 1; % Go back to when the threshold was exceeded
+                        break
+                    else
+                        si = si + 1;
+                    end
+                end
+                if isblink % Onset already occured, therefore this is a reversal
+                    offsetidx = si;
+                    if offsetidx - onsetidx - 1 < max_len
+                        blinkidx(onsetidx:offsetidx) = true;
+                    end
+                    isblink = false;
+                end
+            end
+        end
 end
 
 if ~islogical(blinkidx)
@@ -105,9 +185,30 @@ end
 nblinks = numel(blinkstarts);
 nmins = EYE.ndata / EYE.srate / 60;
 
+if isgraphics(gcbf)
+    fprintf('\n')
+end
+fprintf('\t\tAccording to method "%s":\n', args.method);
+fprintf('\t\t\t%f%% of data marked as blinks using this method\n', 100 * nnz(blinkidx) / EYE.ndata);
+fprintf('\t\t\t%d blinks in %0.2f minutes of recording (%.2f blinks/min)\n', nblinks, nmins, nblinks/nmins)
+
+if ~args.overwrite % Only mark unlabeled points as blinks
+    blinkidx = blinkidx & EYE.datalabel == ' ';
+end
 EYE.datalabel(blinkidx) = 'b';
-fprintf('\t\t%f%% of data marked as blinks\n', 100 * nnz(blinkidx) / EYE.ndata);
-fprintf('\t\t%d blinks in %0.2f minutes of recording (%.2f blinks/min)\n', nblinks, nmins, nblinks/nmins)
+
+blinkidx = EYE.datalabel == 'b'; % Print info about the data overall
+blinkstarts = find(diff(blinkidx) == 1);
+blinkends = find(diff(blinkidx) == -1);
+if any(blinkidx)
+    if blinkstarts(1) > blinkends(1) % Recording starts with a blink
+        blinkstarts = [1 blinkstarts];
+    end
+end
+nblinks = numel(blinkstarts);
+fprintf('\t\tIn total:\n');
+fprintf('\t\t\t%f%% of data marked as blinks\n', 100 * nnz(blinkidx) / EYE.ndata);
+fprintf('\t\t\t%d blinks in %0.2f minutes of recording (%.2f blinks/min)\n', nblinks, nmins, nblinks/nmins)
 
 end
 

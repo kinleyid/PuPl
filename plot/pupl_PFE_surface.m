@@ -4,7 +4,7 @@ function pupl_PFE_surface(a, EYE, varargin)
 ngrid = 32;
 boxcar = 0.5;
 
-[surface, density, x, y] = compute_surface(EYE, ngrid, boxcar);
+[surface, x, y] = compute_surface(EYE, ngrid, boxcar);
 
 axes(a);
 if any(strcmpi(varargin, 'density'))
@@ -22,8 +22,8 @@ elseif any(strcmpi(varargin, 'error'))
     cbarLabel = sprintf('Average pupil %s (%s, %s)', EYE.units.pupil{:});
 end
 set(gca, 'YDir', 'normal');
-xlabel(sprintf('Gaze %s (%s, %s)', EYE.units.gaze.x{:});
-ylabel(sprintf('Gaze %s (%s, %s)', EYE.units.gaze.y{:});
+xlabel(sprintf('Gaze %s (%s, %s)', EYE.units.gaze.x{:}));
+ylabel(sprintf('Gaze %s (%s, %s)', EYE.units.gaze.y{:}));
 c = colorbar;
 l = get(c, 'Label');
 set(l, 'String', cbarLabel);
@@ -50,8 +50,5 @@ for xi = 1:numel(xgrid)
         surface(yi, xi) = nanmean_bc(data(curridx));
     end
 end
-
-xgrid = ranges.x;
-ygrid = ranges.y;
 
 end

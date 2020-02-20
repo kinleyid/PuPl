@@ -1,9 +1,10 @@
-function eyeheatmap(EYE, varargin)
+
+function pupl_plot_matrix(EYE, varargin)
 
 p = inputParser;
 addParameter(p, 'dataidx', []);
 addParameter(p, 'set', []);
-addParameter(p, 'byRT', []);
+% addParameter(p, 'byRT', []);
 addParameter(p, 'include', []);
 parse(p, varargin{:});
 
@@ -30,6 +31,7 @@ else
     set = p.Results.set;
 end
 
+%{
 if isempty(p.Results.byRT)
     q = 'Sort trials by reaction time?';
     a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'No');
@@ -44,6 +46,7 @@ if isempty(p.Results.byRT)
 else
     byRT = p.Results.byRT;
 end
+%}
 
 if isempty(p.Results.include)
     q = 'Plot which trials?';
@@ -67,6 +70,7 @@ switch include
 end
 data = data(~isrej, :);
 
+%{
 setidx = strcmp({EYE(dataidx).epochset.name}, set);
 if byRT
     RTs = mergefields(EYE(dataidx).epoch(EYE(dataidx).epochset(setidx).epochidx), 'event', 'rt');
@@ -77,15 +81,16 @@ if byRT
 else
     xlab = 'Trial';
 end
+%}
 
-rellims = EYE(1).epochset(setidx).rellims;
+rellims = EYE(1).epochset(strcmp({EYE(1).epochset.name}, set)).rellims;
 if ~isempty(rellims)
     x = unfold(rellims);
 else
     warning('Trial set contains epochs in which the relative positions of the events are different\nX-axis will begin at 0 seconds');
     x = 0:size(data, 2)-1;
 end
-times = x /unique([EYE(dataidx).srate]);
+times = x / unique([EYE(dataidx).srate]);
 figure;
 ii = image(times, 1:size(data, 1), data,'CDataMapping','scaled');
 try
@@ -93,10 +98,10 @@ try
 catch
     '';
 end
-ylabel(xlab)
+ylabel('Trial')
 xlabel('Time (s)')
 cb = colorbar;
-ylabel(cb, 'Pupil diameter')
+ylabel(cb, pupl_getunits(EYE, 'epoch'));
 title([EYE(dataidx).name ' ' set], 'Interpreter', 'none');
 
 if isgraphics(gcbf)

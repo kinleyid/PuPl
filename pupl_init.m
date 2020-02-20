@@ -14,7 +14,7 @@ end
 % Global settings
 pupl_globals.datavarname = 'eye_data'; % Name of the global data variable
 pupl_globals.catdim = 2; % Will the global data variable be a row (2) or column (1) vector?
-pupl_globals.ext = '.pupl'; % The extension to use for saving data files
+pupl_globals.ext = 'pupl'; % The extension to use for saving data files
 
 availableargs = {'noweb' 'noui' 'noglobals' 'noaddons'};
 badargidx = ~ismember(lower(varargin), availableargs);
@@ -98,9 +98,8 @@ if exist('OCTAVE_VERSION', 'builtin') ~= 0
     pupl_globals.isoctave = true;
     fprintf('Octave detected. Loading packages:\n');
     for package = {'statistics' 'data-smoothing'}
-        fprintf('\t%s...', package{:})
+        fprintf('\t%s...\n', package{:})
         pkg('load', package{:})
-        fprintf('done\n')
     end
 else
     pupl_globals.isoctave = false;

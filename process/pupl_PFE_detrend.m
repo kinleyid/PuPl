@@ -1,7 +1,7 @@
 function out = pupl_PFE_detrend(EYE, varargin)
 
 if nargin == 0
-    out = getargs(varargin{:});
+    out = @getargs;
 else
     out = sub_PFE_detrend(EYE, varargin{:});
 end
@@ -16,7 +16,7 @@ args = pupl_args2struct(varargin, {
 
 end
 
-function outargs = getargs(varargin)
+function outargs = getargs(EYE, varargin)
 
 outargs = [];
 args = parseargs(varargin{:});
@@ -39,18 +39,16 @@ function EYE = sub_PFE_detrend(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-ax = p.Results.axis;
-
-params = pupl_PFE_detrend_getparams(EYE(dataidx), args.ax);
+params = pupl_PFE_detrend_getparams(EYE, args.axis);
 fprintf('Correcting for the following equation:\n\tDiam = C + ')
-switch ax
+switch args.axis
     case 'y'
         fprintf('%f*gaze_y', params(1))
     case 'x'
         fprintf('%f*gaze_x + %f*gaze_x^2', params(2), params(1))
 end
 fprintf('\n')
-est = polyval(params, EYE.gaze.(ax));
+est = polyval(params, EYE.gaze.(args.axis));
 est = est - nanmean_bc(est);
 EYE = pupl_proc(EYE, @(x) x - est);
 

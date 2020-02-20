@@ -28,7 +28,11 @@ callstr = sprintf('%s = %s(@%s, %s%s);',....
     pupl_globals.datavarname, mfilename, func2str(func), pupl_globals.datavarname, args_str);
 
 % Apply the function
-fprintf('Running %s...\n', func2str(func))
+if pupl_globals.isoctave
+    fprintf('Running %s...\n', func2str(func));
+else
+    fprintf('Running <a href="matlab:edit %s">%s</a>...\n', func2str(func), func2str(func));
+end
 for dataidx = 1:numel(EYE)
     fprintf('\t%s...', EYE(dataidx).name);
     tmp = func(EYE(dataidx), args{:});

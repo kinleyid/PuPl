@@ -2,7 +2,7 @@
 function out = pupl_trim_short(EYE, varargin)
 
 if nargin == 0
-    out = getargs;
+    out = @getargs;
 else
     out = sub_trim_short(EYE, varargin{:});
 end
@@ -18,13 +18,15 @@ args = pupl_args2struct(varargin, {
 
 end
 
-function outargs = getargs(varargin)
+function outargs = getargs(EYE, varargin)
+
+outargs = [];
 
 args = parseargs(varargin{:});
 
 if isempty(args.lenthresh)
     prompt = 'Trim islands of data shorter than or equal to:';
-    lenthresh = inputdlg(prompt, prompt, [1 50], {'150ms'});
+    lenthresh = inputdlg(prompt, prompt, [1 50], {'50ms'});
     if isempty(lenthresh)
         return
     end
@@ -33,14 +35,14 @@ end
 
 if isempty(args.septhresh)
     prompt = sprintf('Trim islands of data shorter than or equal to %s AND at least this far from the nearest other datapoint:', args.lenthresh);
-    septhresh = inputdlg(prompt, prompt, [1 50], {'50ms'});
+    septhresh = inputdlg(prompt, prompt, [1 50], {'10ms'});
     if isempty(septhresh)
         return
     end
     args.septhresh = septhresh{:};
 end
 
-fprintf('Trimming islands of data shorter than or equal to %s and at least %s from the nearest other datapoint\n', args.lenthresh, args.septhresh)
+fprintf('Invalid islands of data are shorter than or equal to %s and at least %s from the nearest other datapoint\n', args.lenthresh, args.septhresh)
 outargs = args;
 
 end
@@ -52,19 +54,23 @@ args = parseargs(varargin{:});
 lenthresh = parsetimestr(args.lenthresh, EYE.srate, 'smp');
 septhresh = parsetimestr(args.septhresh, EYE.srate, 'smp');
 
-EYE = pupl_proc(EYE, @(x) trim_islands(x, lenthresh, septhresh), 'all');
-
+if isgraphics(gcbf)
+    fprintf('\n')
 end
 
-function x = trim_islands(x, lenthresh, septhresh)
-
-lenviolators = identifyconsecutive(x, lenthresh, @(x) ~isnan(x));
-sepviolators = identifyconsecutive(x, septhresh, @isnan, 'least');
-bookends = (lenviolators & [sepviolators(2:end) false]) | ...
-    (lenviolators & [false sepviolators(1:end-1)]);
-trimidx = findbookended(lenviolators, bookends) | ...
-    findbookended(fliplr(lenviolators), fliplr(bookends));
-x(trimidx) = nan;
+for field = reshape(fieldnames(EYE.pupil), 1, [])
+    data = EYE.pupil.(field{:});
+    lenviolators = identifyconsecutive(data, lenthresh, @(x) ~isnan(x));
+    sepviolators = identifyconsecutive(data, septhresh, @isnan, 'least');
+    bookends = (lenviolators & [sepviolators(2:end) false]) | ...
+        (lenviolators & [false sepviolators(1:end-1)]);
+    badidx = findbookended(lenviolators, bookends) | ...
+        findbookended(fliplr(lenviolators), fliplr(bookends));
+    badidx = badidx & ~isnan(badidx);
+    data(badidx) = nan;
+    EYE.pupil.(field{:}) = data;
+    fprintf('\t\t%s:\t%f%% previously extant data removed\n', field{:}, 100*nnz(badidx)/numel(badidx));
+end
 
 end
 

@@ -4,8 +4,7 @@ function out = pupl_trim_pupil(EYE, varargin)
 if nargin == 0
     out = @getargs;
 else
-    args = parseargs(varargin{:});
-    out = pupl_proc(EYE, @(x) sub_trim_pupil(x, args.lims));
+    out = sub_trim_pupil(EYE, varargin{:});
 end
 
 end
@@ -41,13 +40,26 @@ if isempty(args.lims)
 end
 
 outargs = args;
+fprintf('Valid pupil size measurements are between %s and %s\n', args.lims{:});
 
 end
 
-function data = sub_trim_pupil(data, lims)
+function EYE = sub_trim_pupil(EYE, varargin)
 
-lims = cellfun(@(x) parsedatastr(x, data), lims);
+args = parseargs(varargin{:});
 
-data(data < lims(1) | data > lims(2)) = nan;
+if isgraphics(gcbf)
+    fprintf('\n');
+end
+
+for field = reshape(fieldnames(EYE.pupil), 1, [])
+    data = EYE.pupil.(field{:});
+    lims = cellfun(@(x) parsedatastr(x, data), args.lims);
+    badidx = data < lims(1) | data > lims(2);
+    badidx = badidx & ~isnan(data);
+    fprintf('\t\t%s:\t%f%% previously extant data removed\n', field{:}, 100*nnz(badidx)/numel(badidx))
+    data(badidx) = nan;
+    EYE.pupil.(field{:}) = data;
+end
 
 end

@@ -1,5 +1,5 @@
 
-function pupilsizehist(f, EYE)
+function pupl_plot_sizehist(f, EYE)
 
 l = EYE.pupil.left;
 r = EYE.pupil.right;

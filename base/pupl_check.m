@@ -53,7 +53,7 @@ for dataidx = 1:numel(EYE)
         EYE(dataidx).units.epoch(1:2) = EYE(dataidx).units.pupil(1:2);
         % The third element, the relative size, may have been set by the
         % baseline correction:
-        if ~isfield(EYE.epoch, 'baseline') || isempty(EYE(dataidx).units.epoch(3))
+        if ~isfield(EYE(dataidx).epoch, 'baseline') || isempty(EYE(dataidx).units.epoch(3))
             EYE(dataidx).units.epoch(3) = EYE(dataidx).units.pupil(3);
         end
     end
@@ -81,11 +81,15 @@ if ~isempty([EYE.event])
     end
 end
 
-% Sorts events by time
+% Sorts events and epochs by time of occurrence
 for dataidx = 1:numel(EYE)
     if ~isempty(EYE(dataidx).event)
         [~, I] = sort([EYE(dataidx).event.latency]);
         EYE(dataidx).event = EYE(dataidx).event(I);
+    end
+    if ~isempty(EYE(dataidx).epoch)
+        [~, I] = sort(mergefields(EYE(dataidx).epoch, 'event', 'latency'));
+        EYE(dataidx).epoch = EYE(dataidx).epoch(I);
     end
 end
 
