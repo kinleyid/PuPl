@@ -4,25 +4,38 @@ function update_UI
 
 global pupl_globals
 userInterface = pupl_globals.UI;
-eyeData = evalin('base', pupl_globals.datavarname);
+eyedata = evalin('base', pupl_globals.datavarname);
 activeEyeDataPanel = findobj(userInterface, 'Tag', 'activeEyeDataPanel');
 
 UserData = get(userInterface, 'UserData');
-if UserData.dataCount ~= numel(eyeData)
+if UserData.dataCount ~= numel(eyedata)
     % Data added or deleted
-    UserData.dataCount = numel(eyeData);
+    UserData.dataCount = numel(eyedata);
     set(userInterface, 'UserData', UserData);
     preservelayout
 end
 set(userInterface, 'UserData', UserData);
 
-%% Set activeidx to checkbox values
+%% Set activeidx to checkbox values and tooltips
 
 UserData = get(userInterface, 'UserData');
 children = get(activeEyeDataPanel, 'Children');
 for i = 1:numel(children)
+    % Set activeidx
     UserData.activeEyeDataIdx(numel(children) + 1 - i) = ...
         logical(get(children(i), 'Value'));
+    % Set tooltip
+    txt = {
+        'Name' sprintf('%s', eyedata(i).name)
+        'Sample rate' sprintf('%d Hz', eyedata(i).srate)
+        'Recording length' sprintf('%f mins', eyedata(i).ndata / eyedata(i).srate / 60)
+        'N. events' sprintf('%d', numel(eyedata(i).event))
+        'N. epochs' sprintf('%d', numel(eyedata(i).epoch))
+        'Pupil data missing' sprintf('%f %%',...
+            100*(nnz(isnan(eyedata(i).pupil.left)) + nnz(isnan(eyedata(i).pupil.right)))/(2*eyedata(i).ndata))
+    }';
+    txt = [sprintf('%s: %s\n', txt{1:end - 1}) sprintf('%s: %s', txt{end})];
+    set(children(i), 'ToolTipString', txt);
 end
 set(userInterface, 'UserData', UserData);
 

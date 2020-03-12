@@ -122,7 +122,7 @@ for plotidx = 1:numel(plotstruct)
 end
 
 xlabel('Time (s)');
-ylabel(sprintf('Mean %s', pupl_getunits(EYE, 'epoch')));
+ylabel(sprintf('Mean %s', lower(pupl_getunits(EYE, 'epoch'))));
 
 legend(plotstruct.legendentry, 'Interpreter', 'none');
 

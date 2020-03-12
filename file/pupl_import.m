@@ -5,6 +5,8 @@ function EYE = pupl_import(varargin)
 
 global pupl_globals
 
+EYE = [];
+
 args = pupl_args2struct(varargin, {
     'eyedata' struct([]) % optional, only required if adding event logs
     'loadfunc' []; % required
@@ -104,8 +106,13 @@ else
                     curr = tsv2eventlog(args.filepath{dataidx});
             end
         else
+            data = args.loadfunc(args.filepath{dataidx}, args.args{:});
+            if isempty(data)
+                fprintf('\n');
+                return
+            end
             curr = pupl_checkraw(...
-                args.loadfunc(args.filepath{dataidx}, args.args{:}),...
+                data,...
                 'src', args.filepath{dataidx},...
                 'type', type_opts{args.type});
             curr.getraw = sprintf('@() pupl_import(''type'', %s, ''loadfunc'', %s, ''filepath'', %s, ''args'', %s)',... % Brings us back here next time
@@ -140,6 +147,10 @@ else
                 EYE(dataidx) = pupl_check(EYE(dataidx));
         end
         fprintf('done\n');
+    end
+    % Clear persistent variables
+    if isa(args.loadfunc, 'function_handle')
+        clear(func2str(args.loadfunc));
     end
 end
 

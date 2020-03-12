@@ -26,7 +26,6 @@ end
 
 plotinfo = [];
 if strcmpi(type, 'pupil')
-    
     plotinfo.data = {
         getfield(getfromur(EYE, 'pupil'), 'left')
         getfield(getfromur(EYE, 'pupil'), 'right')
@@ -65,6 +64,12 @@ elseif strcmpi(type, 'gaze')
         'x'
         'y'};
     plotinfo.ylim = [min(structfun(@min, EYE.gaze)) max(structfun(@max, EYE.gaze))];
+elseif strcmpi(type, 'id')
+    dl = double(EYE.datalabel);
+    plotinfo.data = {dl};
+    plotinfo.colours = {'r'};
+    plotinfo.legendentries = {'Data label'};
+    plotinfo.ylim = [min(dl) max(dl)];
 end
 
 %% Prepare plot
@@ -90,13 +95,13 @@ uicontrol(control_panel,...
     'Style', 'checkbox',...
     'Tag', 'displayevents',...
     'String', 'Display events',...
-    'Value', 1,...
+    'Value', 0,...
     'Units', 'normalized',...
     'Position', [0.51 0.01 0.48 0.98],...
     'Callback', @(a, b) sub_render(h));
 uicontrol('Parent', h,...
     'Style', 'slider',...
-    'SliderStep', [0.001 0.01],...
+    'SliderStep', [0.002 0.02],...
     'Units', 'normalized',...
     'Position', [0.01 0.11 0.98 0.08],...
     'Callback', @(a, b) sub_render(h));
@@ -126,7 +131,7 @@ catch
 end
 sliderval = get(findobj(h, 'Style', 'slider'), 'Value'); % Between 0 and 1;
 x = x + round(sliderval * (ud.EYE.ndata - numel(x)) + 1);
-x = x(x > 1 & x < ud.EYE.ndata);
+x = x(x >= 1 & x <= ud.EYE.ndata);
 xtimes = (x - 1) / ud.EYE.srate;
 plotinfo = ud.plotinfo;
 
@@ -159,25 +164,38 @@ if get(findobj(h, 'Tag', 'displayevents'), 'Value')
     % Display events
     if ~isempty(ud.EYE.event)
         currevents = find(ismember([ud.EYE.event.latency], x));
-        for idx = 1:numel(currevents)
-            eventIdx = currevents(idx);
-            t = (ud.EYE.event(eventIdx).latency - 1)/ud.EYE.srate;
-            plot(repmat(t, 1, 2), plotinfo.ylim, 'k');
+        cont = true;
+        warn_events = 50;
+        if numel(currevents) > warn_events
+            q = sprintf('Attempt to display over %d events?', warn_events);
+            a = questdlg(q, q, 'Yes', 'No', 'No');
+            if strcmp(a, 'Yes')
+                cont = true;
+            else
+                cont = false;
+            end
+        end
+        if cont
             % Jitter Y location in case many events occur in rapid
             % succession
-            n = 30;
-            spn = 0.8;
-            currYlims = plotinfo.ylim;
-            yLoc = currYlims(1) + abs(diff(currYlims)) * (spn - mod(idx, n) * spn / n);
-            try
-                text(t, yLoc, num2str(ud.EYE.event(eventIdx).type),...
-                    'FontSize', 8,...
-                    'Rotation', 10,...
-                    'Interpreter', 'none');
-            catch
-                text(t, yLoc, num2str(ud.EYE.event(eventIdx).type),...
-                    'FontSize', 8,...
-                    'Rotation', 10);
+            spn = 0.8; % Y-axis span
+            n = 30; % Max events to draw before restarting from top of span
+            for idx = 1:numel(currevents)
+                eventIdx = currevents(idx);
+                t = (ud.EYE.event(eventIdx).latency - 1)/ud.EYE.srate;
+                plot(repmat(t, 1, 2), plotinfo.ylim, 'k');
+                currYlims = plotinfo.ylim;
+                yLoc = currYlims(1) + abs(diff(currYlims)) * (spn - mod(idx, n) * spn / n);
+                try
+                    text(t, yLoc, ud.EYE.event(eventIdx).type,...
+                        'FontSize', 8,...
+                        'Rotation', 10,...
+                        'Interpreter', 'none');
+                catch
+                    text(t, yLoc, ud.EYE.event(eventIdx).type,...
+                        'FontSize', 8,...
+                        'Rotation', 10);
+                end
             end
         end
     end

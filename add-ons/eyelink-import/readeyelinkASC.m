@@ -1,31 +1,48 @@
 
+% Based on
+% http://sr-research.jp/support/EyeLink%201000%20User%20Manual%201.5.0.pdf,
+% section 4.9
+
 function EYE = readeyelinkASC(fullpath)
 
 EYE = [];
 
 %% Read raw
 
+printprog('setmax', 14)
+printprog(1)
 rawdata = fastfileread(fullpath);
+printprog(2)
 % Get data lines
 lines = regexp(rawdata, '.*', 'match', 'dotexceptnewline');
+printprog(3)
 % Get first characters of lines
 tokens = regexp(rawdata, '^.', 'match', 'lineanchors');
+printprog(4)
 nonemptyidx = ~cellfun(@isempty, lines);
+printprog(5)
 tokens = tokens(nonemptyidx);
 lines = lines(nonemptyidx);
+printprog(6)
 
 issample = ismember([tokens{:}], '123456789'); % Lines beginning with a number are data samples
+printprog(7)
 samples = lines(issample); % Data sample lines
 infolines = lines(~issample); % All other lines contain metadata/events
+printprog(8)
 firstwords = cellfun(@(x) sscanf(x, '%s', 1), infolines, 'UniformOutput', false); % Other lines are identified by their first words
+printprog(9)
 
 %% Find data
 
 samples = regexprep(samples, '\s\.\s', ' nan '); % Missing data are dots, replace with space-padded nan
+printprog(10)
 datamat = cell2mat(cellfun(@(x) sscanf(x, '%g'), samples, 'UniformOutput', false));
+printprog(11)
 
 % Find an info line beginning with "samples"
 sampleinfo = lower(regexp(infolines{find(strcontains(lower(firstwords), 'samples'), 1)}, '\t', 'split'));
+printprog(12)
 for ii = 1:numel(sampleinfo)
     switch sampleinfo{ii}
         case 'gaze'
@@ -45,16 +62,16 @@ if neyes == 1
     fields = {
         {'urgaze' 'x' whicheye}
         {'urgaze' 'y' whicheye}
-        {'urdiam' whicheye}
+        {'urpupil' whicheye}
     };
 else
     fields = {
         {'urgaze' 'x' 'left'}
         {'urgaze' 'y' 'left'}
-        {'urdiam' 'left'}
+        {'urpupil' 'left'}
         {'urgaze' 'x' 'right'}
         {'urgaze' 'y' 'right'}
-        {'urdiam' 'right'}
+        {'urpupil' 'right'}
     };
 end
 
@@ -63,31 +80,49 @@ for ii = 1:numel(fields)
     EYE = setfield(EYE, fields{ii}{:}, datamat(ii+1, :));
 end
 
-EYE.srate = srate;
-
 %% Find events
 
+printprog(13)
 eventlines = infolines(strcontains(lower(firstwords), 'msg'));
-eventtimes = nan(size(eventlines));
-eventtypes = cell(size(eventlines));
+event_times = nan(size(eventlines));
+event_types = cell(size(eventlines));
 for ii = 1:numel(eventlines)
     curreventinfo = regexp(eventlines{ii}, '\t', 'split');
     curreventinfo = regexp(curreventinfo{2}, '\s', 'split');
-    eventtimes(ii) = sscanf(curreventinfo{1}, '%g');
-    eventtypes{ii} = strtrim(sprintf('%s ', curreventinfo{2:end}));
+    event_times(ii) = sscanf(curreventinfo{1}, '%g');
+    event_types{ii} = strtrim(sprintf('%s ', curreventinfo{2:end}));
 end
+printprog(14)
+%% Process timestamps
 
-% Find latencies
-timestamps = datamat(1, :);
-latencies = nan(size(eventtimes));
-for ii = 1:numel(latencies)
-    [~, latencies(ii)] = min(abs(timestamps - eventtimes(ii)));
-end
+EYE.srate = srate;
+sample_times = datamat(1, :);
+EYE.t1 = sample_times(1);
+[~, event_times, event_lats] = processtimestamps(sample_times, event_times, srate);
+fprintf(' ');
+
+%% Get events
 
 EYE.event = struct(...
-    'type', eventtypes,...
-    'time', num2cell(eventtimes / 1000),...
-    'latency', num2cell(latencies),...
-    'rt', repmat({NaN}, size(latencies)));
+    'type', event_types,...
+    'time', num2cell(event_times/1000),...
+    'latency', num2cell(event_lats),...
+    'rt', repmat({NaN}, size(event_lats)));
+
+end
+
+function printprog(varargin)
+
+persistent m; % Max
+if strcmp(varargin{1}, 'setmax')
+    m = varargin{2};
+    str = ['[' repmat(' ', 1, m) ']'];
+    fprintf(str);
+else
+    fprintf(repmat('\b', 1, m + 2));
+    n = varargin{1};
+    str = ['[' repmat(':', 1, n) repmat(' ', 1, m - n) ']'];
+    fprintf(str);
+end
 
 end

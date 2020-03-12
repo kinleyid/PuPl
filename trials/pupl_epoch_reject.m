@@ -58,7 +58,8 @@ if isempty(args.cfg)
         case 'extremepupil'
             units = sprintf('%s (%s, %s)', EYE(1).units.epoch{:});
             if numel(EYE) > 1
-                if ~isequal(EYE.units.epoch)
+                tmp = [EYE.units];
+                if ~isequal(tmp.epoch)
                     units = 'size';
                 end
             end

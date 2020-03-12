@@ -50,8 +50,7 @@ for dataidx = 1:numel(EYE)
         
         % Baseline correction
         if strcmp(data_fields{1}, 'pupil') && isfield(curr_epoch, 'baseline')
-            baseline_lims = parsetimestr(curr_epoch.baseline.lims, EYE(dataidx).srate, 'smp', 'abs');
-            baseline_data = all_data(baseline_lims);
+            baseline_data = all_data(curr_epoch.baseline.lims); % Already as latencies
             curr_data{ii} = curr_epoch.baseline.func(curr_data{ii}, baseline_data);
         end
     end

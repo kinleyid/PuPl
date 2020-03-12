@@ -16,6 +16,7 @@ args = pupl_args2struct(varargin, {
     'win' []
     'avfunc' []
     'width' []
+    'cfg' []
 });
 
 end
@@ -40,7 +41,7 @@ end
 
 if ~strcmp(args.avfunc, 'median')
     if isempty(args.win)
-        winOptions = {'Flat' 'Hann' 'Hamming'};
+        winOptions = {'Flat' 'Hann' 'Hamming' 'Gaussian'};
         sel = listdlgregexp(...
             'PromptString', 'What type of window?',...
             'ListString', winOptions,...
@@ -50,6 +51,14 @@ if ~strcmp(args.avfunc, 'median')
             return
         else
             args.win = lower(winOptions{sel});
+        end
+        if strcmp(args.win, 'gaussian')
+            args.cfg.sd = inputdlg(sprintf('Half width of Gaussian window (in standard deviations)\n'));
+            if isempty(args.cfg.sd)
+                return
+            else
+                args.cfg.sd = str2double(args.cfg.sd{:});
+            end
         end
     end
 elseif strcmp(args.avfunc, 'median')
@@ -118,6 +127,10 @@ switch lower(args.win)
         win = 0.5 * (1 - cos(2*pi * (0:width - 1)/(width - 1)));
     case 'hamming'
         win = 0.54 - 0.46 * cos(2*pi * (0:width - 1)/(width - 1));
+    case 'gaussian'
+        sd = args.cfg.sd;
+        x = linspace(-sd, sd, width);
+        win = 1 / sqrt(2*pi) * exp( -x.^2 / 2 );
 end
 
 for stream = reshape(fieldnames(EYE.(args.data)), 1, [])

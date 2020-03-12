@@ -11,14 +11,14 @@ args = pupl_args2struct(varargin, {
 
 stat_opts = [
 %   {Name presented to user} {function} {column name in spreadsheet}
-    {'Mean'} {@nanmean_bc} {'Mean'};...
-    {'Peak-to-peak difference'} {@(x)(max(x) - min(x))} {'PeakToPeakDiff'};...
-    {'Max'} {@max} {'Max'};...
-    {'Min'} {@min} {'Min'};...
-    {'Median'} {@nanmedian_bc} {'Median'};...
-    {'Standard deviation'} {@nanstd_bc} {'StDev'};...
-    {'Variance'} {@nanvar_bc} {'Variance'};...
-    {'Percent missing'} {@(x)100*nnz(isnan(x))/numel(x)} {'PctMissing'};...
+    {'Mean'} {@nanmean_bc} {'mean'};...
+    {'Peak-to-peak difference'} {@(x)(max(x) - min(x))} {'peak_to_peak_diff'};...
+    {'Max'} {@max} {'max'};...
+    {'Min'} {@min} {'min'};...
+    {'Median'} {@nanmedian_bc} {'median'};...
+    {'Standard deviation'} {@nanstd_bc} {'stdev'};...
+    {'Variance'} {@nanvar_bc} {'variance'};...
+    {'Percent missing'} {@(x)100*nnz(isnan(x))/numel(x)} {'pct_missing'};...
 ];
 
 % Store names as variables in case I decide to change them
@@ -101,13 +101,15 @@ if isempty(args.cfg)
                     return
                 else
                     stats = reshape(stat_opts(sel, 1), 1, []);
+                    statsnames = reshape(stat_opts(sel, 3), 1, []);
                 end
                 args.cfg = [
                     args.cfg...
                     struct(...
                         'name', name,...
                         'win', {win},...
-                        'stats', {stats})
+                        'stats', {stats},...
+                        'statsnames', {statsnames})
                 ];
                 q = 'Compute more statistics in another time window?';
                 a = questdlg(q);
@@ -138,7 +140,7 @@ cond_colnames = unique(mergefields(EYE, 'cond')); % Condition membership
 set_colnames = unique(mergefields(EYE, 'epochset', 'name')); % Set membership
 switch args.trialwise
     case per_epoch
-        trial_colnames = {'trial_idx' 'trial_type' 'rejected' 'rt'};
+        trial_colnames = {'trial_type' 'trial_idx' 'rejected' 'rt'};
     otherwise
         trial_colnames = {'mean_rt' 'median_rt' 'mean_log_rt'};
 end
@@ -257,17 +259,17 @@ for dataidx = 1:numel(EYE)
                     win_step = parsetimestr(args.cfg.step, EYE(dataidx).srate, 'smp');
                 end
 
-                win = 1:win_width;
+                ur_win = 1:win_width;
 
                 curr_ds = {};
                 ii = 0;
                 while true
-                    curr_win = win + win_step * ii;
+                    curr_win = ur_win + win_step * ii;
                     ii = ii + 1;
                     if curr_win(end) > numel(curr_data)
                         break
                     else
-                        curr_ds{end + 1} = nanmean_bc(EYE(dataidx).pupil.both(curr_win));
+                        curr_ds{end + 1} = nanmean_bc(curr_data(curr_win));
                     end
                 end
                 all_data{end + 1} = [curr_ds{:}];
@@ -297,9 +299,9 @@ switch args.which
             all_data{idx} = [all_data{idx} nan(1, n_missing)];
         end
     case 'stats'
-        data_colnames = [];
+        data_colnames = {};
         for ii = 1:numel(args.cfg)
-            data_colnames = [data_colnames strcat(args.cfg(ii).name, '_', args.cfg(ii).stats)];
+            data_colnames = [data_colnames strcat(args.cfg(ii).name, '_', args.cfg(ii).statsnames)];
         end
 end
 all_data = num2cell(cell2mat(all_data(:)));
@@ -315,5 +317,11 @@ bigtable = [
 fprintf('Writing to %s...\n', args.path);
 writecell2delim(args.path, bigtable, ',');
 fprintf('Done\n');
+
+if ~isempty(gcbf)
+    global pupl_globals
+    args = pupl_struct2args(args);
+    fprintf('Equivalent command: %s(%s, %s)\n', mfilename, pupl_globals.datavarname, all2str(args{:}));
+end
 
 end

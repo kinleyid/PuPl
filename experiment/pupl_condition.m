@@ -50,6 +50,11 @@ if isempty(args.overwrite)
     end
 end
 
+for i = 1:numel(args.conditions)
+    fprintf('Condition %s contains:\n', args.conditions(i).name);
+    fprintf('\t%s\n', args.conditions(i).members{:});
+end
+
 outargs = args;
 
 end
@@ -59,16 +64,13 @@ function EYE = sub_condition(EYE, varargin)
 args = parseargs(varargin{:});
 
 if args.overwrite
-    [EYE.cond] = deal('');
+    EYE.cond = '';
 end
 
 for condidx = 1:numel(args.conditions)
-    membersidx = ismember({EYE.name}, args.conditions(condidx).members);
-    for dataidx = find(membersidx)
-        EYE(dataidx).cond = [EYE(dataidx).cond {args.conditions(condidx).name}];
+    if ismember(EYE.name, args.conditions(condidx).members)
+        EYE.cond{end+1} = args.conditions(condidx).name;
     end
-    fprintf('Condition ''%s'' contains:\n', args.conditions(condidx).name);
-    fprintf('\t%s\n', args.conditions(condidx).members{:});
 end
 
 end

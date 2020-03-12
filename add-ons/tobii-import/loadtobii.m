@@ -41,6 +41,8 @@ while srate == 0
     srate = estimatesrate(timestamps);
 end
 
+t1 = timestamps(1);
+
 %% Get events
 
 % Get event types, timestamps, and latencies
@@ -140,6 +142,7 @@ end
 %% Generate final output
 
 outStruct = struct(...
+    't1', t1,...
     'urpupil', urpupil,...
     'srate', srate,...
     'urgaze', urgaze,...

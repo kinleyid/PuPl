@@ -63,7 +63,6 @@ end
 
 function x = rmblinks(x, blink, trimlen)
 
-x(max(1, blink(1)-trimlen):blink(1)) = NaN;
-x(blink(2):min(blink(2)+trimlen, numel(x))) = NaN;
+x(max(1, blink(1)-trimlen):min(blink(2)+trimlen, numel(x))) = NaN;
 
 end

@@ -51,6 +51,11 @@ if isempty(args.setdescriptions)
     end
 end
 
+for i = 1:numel(args.setdescriptions)
+    fprintf('Set %s contains:\n', args.setdescriptions(i).name);
+    fprintf('\t%s\n', args.setdescriptions(i).members{:});
+end
+
 outargs = args;
 
 end
@@ -65,6 +70,7 @@ setdescriptions = args.setdescriptions;
 if overwrite
     EYE.epochset = [];
 end
+fprintf('\n');
 for setidx = 1:numel(setdescriptions)
     epochidx = getepochidx(EYE, setdescriptions(setidx));
     rellims = {EYE.epoch(epochidx).rellims};

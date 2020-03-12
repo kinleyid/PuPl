@@ -12,9 +12,26 @@ if ~isfield(pupl_globals, 'UI')
     pupl_globals.UI = []; % The handle to the GUI is stored here
 end
 % Global settings
+fprintf('Setting global configuration...\n')
 pupl_globals.datavarname = 'eye_data'; % Name of the global data variable
 pupl_globals.catdim = 2; % Will the global data variable be a row (2) or column (1) vector?
 pupl_globals.ext = 'pupl'; % The extension to use for saving data files
+n_save = inf; % How many steps to save for undo/redo operations?
+pupl_globals.timeline = struct(...
+    'n', n_save,...
+    'data', {{'curr'}});
+
+% Is octave?
+if exist('OCTAVE_VERSION', 'builtin') ~= 0
+    pupl_globals.isoctave = true;
+    fprintf('Octave detected. Loading packages:\n');
+    for package = {'statistics' 'data-smoothing'}
+        fprintf('\t%s...\n', package{:})
+        pkg('load', package{:})
+    end
+else
+    pupl_globals.isoctave = false;
+end
 
 availableargs = {'noweb' 'noui' 'noglobals' 'noaddons'};
 badargidx = ~ismember(lower(varargin), availableargs);
@@ -48,7 +65,7 @@ addpath(pdir)
 
 % Add built-in subdirectories
 fprintf('Loading source');
-for subdir = {'base' 'UI' 'file' 'tools' 'process' 'trials' 'experiment' 'plot'}
+for subdir = {'base' 'UI' 'file' 'tools' 'process' 'trials' 'experiment' 'plot' 'edit'}
     addpath(genpath(fullfile(pdir, subdir{:}))) % Add folder and subfolders
     fprintf('.');
 end
@@ -91,18 +108,6 @@ if ~any(strcmpi(varargin, 'noAddOns'))
             fprintf('\n')
         end
     end
-end
-
-% Is octave?
-if exist('OCTAVE_VERSION', 'builtin') ~= 0
-    pupl_globals.isoctave = true;
-    fprintf('Octave detected. Loading packages:\n');
-    for package = {'statistics' 'data-smoothing'}
-        fprintf('\t%s...\n', package{:})
-        pkg('load', package{:})
-    end
-else
-    pupl_globals.isoctave = false;
 end
 
 fprintf('Done\n')

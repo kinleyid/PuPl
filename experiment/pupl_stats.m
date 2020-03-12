@@ -2,9 +2,6 @@
 function pupl_stats(EYE, varargin)
 
 %   Inputs
-% stat--
-% win--either a numeric vector of 2 latencies or a cell array of 2 time strings
-% byTrial--true or false
 
 stat_opts = [
 %   {Name presented to user} {function} {column name in spreadsheet}
@@ -101,7 +98,7 @@ all_condmemberships = {};
 all_setmemberships = {};
 all_data = {};
 
-switch trialwise
+switch args.trialwise
     case per_epoch
         trial_colnames = {'trial_idx' 'trial_type' 'rejected' 'rt'};
     otherwise
@@ -117,7 +114,7 @@ fprintf('Computing statistics...\n');
 for dataidx = 1:numel(EYE)
     fprintf('\t%s...', EYE(dataidx).name);
     
-    switch cfg.trialwise % How to iterate through data?
+    switch args.trialwise % How to iterate through data?
         case per_epoch % Iterate over epochs
             itermax = numel(EYE(dataidx).epoch);
         otherwise % Iterate over trial sets
@@ -133,7 +130,7 @@ for dataidx = 1:numel(EYE)
         repmat({curr_condmemberships}, itermax, 1)
     ];
     
-    switch cfg.trialwise
+    switch args.trialwise
         case per_epoch
             
         case set_avg
@@ -145,10 +142,10 @@ for dataidx = 1:numel(EYE)
             currwin = parsetimestr(args.cfg(winidx).win, EYE(dataidx).srate, 'smp');
             % Get data as vector, plus other columns of the new data table
             % row:
-            switch trialwise
+            switch args.trialwise
                 case per_epoch
                     rellats = unfold(EYE(dataidx).epoch(iterator).rellims);
-                    data = EYE(dataidx).diam.both(unfold(EYE(dataidx).epoch(epochidx).abslims));
+                    data = EYE(dataidx).pupil.both(unfold(EYE(dataidx).epoch(epochidx).abslims));
                     isrej = EYE(dataidx).epoch(epochidx).reject;
                     latidx = find(rellats == currwin(1)):find(rellats == currwin(2));
                     data = data(latidx);
@@ -193,7 +190,7 @@ for dataidx = 1:numel(EYE)
                 trialSetVec... Logical vector indicating trial set membership
                 rtstat... Reaction time, either individual or trial set average
             ];
-            switch trialwise
+            switch args.trialwise
                 case per_epoch
                     newCols = [
                         isrej... Rejected
@@ -217,7 +214,9 @@ writecell2delim(fullpath, statsTable, ',');
 fprintf('Done\n');
 
 if ~isempty(gcbf)
-    fprintf('Equivalent command: %s\n', getcallstr(p, false));
+    global pupl_globals
+    args = pupl_struct2args(args);
+    fprintf('Equivalent command: %s(%s, %s)\n', mfilename, pupl_globals.datavarname, args{:});
 end
 
 end

@@ -68,6 +68,7 @@ ud = get(f, 'UserData');
 
 % Get consistent xlims
 alldata = [ud.data{:}];
+alldata = alldata(:);
 if isempty(ud.args.lims)
     lims = [min(alldata) max(alldata)];
 else

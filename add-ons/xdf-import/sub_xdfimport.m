@@ -1,6 +1,8 @@
 
 function EYE = sub_xdfimport(fullpath)
 
+EYE = [];
+
 %% Get raw and identify streams
 
 streams = load_xdf(fullpath);
@@ -114,11 +116,13 @@ else
         % stamps so that time 0 is the first data sample from the
         % eye data.
         timestamps = eyeDataStruct.time_stamps;
+        t1 = timestamps(1);
+        timestamps = timestamps - t1;
+        eventtimes = eventtimes - t1;
         latencies = nan(size(eventtimes));
         for ii = 1:numel(latencies)
             [~, latencies(ii)] = min(abs(timestamps - eventtimes(ii)));
         end
-        eventtimes = eventtimes - eyeDataStruct.time_stamps(1);
         event = struct(...
             'type', eventtypes(:)',...
             'time', num2cell(eventtimes(:)'),...
@@ -126,7 +130,8 @@ else
             'rt', repmat({nan}, size(latencies(:)')));
     end
     EYE = struct(...
-        'urdiam', diam,...
+        't1', t1,...
+        'urpupil', diam,...
         'urgaze', gaze,...
         'srate', srate);
 end

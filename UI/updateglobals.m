@@ -1,48 +1,82 @@
-function updateglobals(globalVarName, idx, func, outputidx)
+function updateglobals(idx, func, outputidx, varargin)
 
 % Updates global variables
 %   Inputs
-% globalVarName--string, ignored
-% idx--logical or integer array or 'append'
-% func--function handle
+% idx--logical or integer array or 'append'/'a' or 'write'/'w'
+% func--function handle or data
 % outputidx--which serial output of func to use
+% varargin--update the timeline? true by default
 
 global pupl_globals
-pupl_globals.datavarname = pupl_globals.datavarname;
 
-if isempty(pupl_globals.datavarname) ||...
-        isempty(idx) ||...
+if isempty(idx) ||...
         isempty(outputidx)
     % Function has no outputs
     feval(func)
 else
+    old_data = evalin('base', pupl_globals.datavarname); % Keep a copy for undo/redo timeline
+    
     % Get the outputs
     outputs = cell(1, outputidx);
     [outputs{:}] = feval(func);
     
     % Subset the outputs
+    rm = false;
     outputs = outputs{outputidx};
     if isempty(outputs)
         return
+    elseif ischar(outputs)
+        if ismember(outputs, {'rm' 'del'})
+            rm = true;
+        else
+            outputs = eval(outputs);
+        end
     end
     
     % Get the global data variable
-    tmp_datavar = evalin('base', pupl_globals.datavarname);
+    new_data = evalin('base', pupl_globals.datavarname);
+    
+    % Update undo/redo timeline
+    if numel(varargin) > 0
+        update_timeline = varargin{1};
+    else
+        update_timeline = true;
+    end
+    if update_timeline
+        pupl_timeline('a', old_data);
+    end
     
     % Make sure the new structs are consistent with the old ones
-    [tmp_datavar, outputs] = fieldconsistency(tmp_datavar, outputs);
+    if isstruct(outputs)
+        [new_data, outputs] = fieldconsistency(new_data, outputs);
+    end
     
     % Are we subsetting or appending?
-    if strcmpi(idx, 'append')
-        % We are appending
-        tmp_datavar = cat(pupl_globals.catdim, tmp_datavar, outputs);
+    if ischar(idx)
+        switch idx
+            case {'append' 'a'}
+                new_data = cat(pupl_globals.catdim, new_data, outputs);
+            case {'write' 'w'}
+                if rm
+                    new_data = struct([]);
+                else
+                    new_data = outputs;
+                end
+        end
     else
-        % We are subsetting
-        tmp_datavar(idx) = outputs;
+        if rm
+            new_data(idx) = [];
+        else
+            new_data(idx) = outputs;
+        end
+    end
+    
+    if isempty(new_data)
+        new_data = struct([]); % So that it's 0x0
     end
     
     % Update the global variable
-    assignin('base', pupl_globals.datavarname, tmp_datavar);
+    assignin('base', pupl_globals.datavarname, new_data);
 end
 
 % Update the user interface

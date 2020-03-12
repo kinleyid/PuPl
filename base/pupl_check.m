@@ -19,7 +19,7 @@ defaults = {
     'coords'    @(x)[]
     'units'     @(x)defunitstruct
     'epoch'     @(x)struct([])
-    'trialset'  @(x)struct([])
+    'epochset'  @(x)struct([])
     'cond'      @(x)''
     'event'     @(x)struct([])
     'history'   @(x){}

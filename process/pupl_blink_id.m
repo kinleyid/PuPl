@@ -60,7 +60,7 @@ end
 if isempty(args.cfg)
     switch args.method
         case 'missing'
-            params = inputdlg({sprintf('Blink length\n\nMin') 'Max'}, '', 1, {'50ms' '200ms'});
+            params = inputdlg({sprintf('Blink length\n\nMin') 'Max'}, '', 1, {'100ms' '400ms'});
             if isempty(params)
                 return
             end
@@ -95,7 +95,7 @@ if isempty(args.cfg)
             if isempty(offset_lim)
                 return
             end
-            max_len = inputdlg('Max blink length', '', 1, {'200ms'});
+            max_len = inputdlg('Max blink length', '', 1, {'400ms'});
             if isempty(max_len)
                 return
             end
@@ -146,8 +146,10 @@ switch args.method
             end
             
             if vel(si) <= onset_lim
+                if ~isblink
+                    onsetidx = si + 1; % The point that was jumped to
+                end
                 isblink = true; % A new blink has begun
-                onsetidx = si + 1; % The point that was jumped to
             elseif vel(si) >= offset_lim
                 % Find latest offset sample
                 while true

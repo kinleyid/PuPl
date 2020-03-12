@@ -1,4 +1,4 @@
-function idx = identifyconsecutive(vec, n, func, varargin)
+function [idx, starts, ends] = identifyconsecutive(vec, n, func, varargin)
 
 if numel(varargin) == 1
     t = varargin{1};
@@ -17,6 +17,8 @@ end
 % t: 'least': at least n elements
 % t: 'most': at most n elements
 
+starts = [];
+ends = [];
 idx = false(size(vec));
 i = 0;
 flag = false;
@@ -30,6 +32,7 @@ while true
         fprintf('%6.2f%%', 100*i/nv);
     end
     if func(vec(i))
+        starts(end + 1) = i;
         j = 0; % N. consecutive - 1
         while true
             j = j + 1;
@@ -38,10 +41,16 @@ while true
                     case 'most'
                         if j <= n
                             idx(i:(i+j-1)) = true;
+                            ends(end + 1) = i + j - 1;
+                        else
+                            starts(end) = []; % False start
                         end
                     case 'least'
                         if j >= n
                             idx(i:(i+j-1)) = true;
+                            ends(end + 1) = i + j - 1;
+                        else
+                            starts(end) = []; % False start
                         end
                 end
                 flag = true;
@@ -55,10 +64,16 @@ while true
                     case 'most'
                         if j <= n
                             idx(i:(i+j-1)) = true;
+                            ends(end + 1) = i + j - 1;
+                        else
+                            starts(end) = [];
                         end
                     case 'least'
                         if j >= n
                             idx(i:(i+j-1)) = true;
+                            ends(end + 1) = i + j - 1;
+                        else
+                            starts(end) = [];
                         end
                 end
                 i = i + j;

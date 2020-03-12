@@ -51,7 +51,7 @@ if strcmp(args.correction, 'none') % Any baseline correction?
     % If none, fill in defaults
     args.mapping = 'one:all';
     args.event = EYE(1).event(1).type; % Should be 'beginning of recording'
-    args.lims = {'0' '0'};
+    args.lims = {'1d' '1d'};
 else
     if isempty(args.mapping)
         mappingOptions = {'one:one'
@@ -129,22 +129,22 @@ end
 % with the time limits, in seconds, of a baseline period such that epoch(n)
 % will be corrected using baseline period baselinelims{n}
 
-curr_lims = parsetimestr(args.lims, EYE.srate); % Doubles, in seconds
-epoch_times = mergefields(EYE.epoch, 'event', 'time'); % Event latencies for epochs
+curr_lims = parsetimestr(args.lims, EYE.srate, 'smp'); % As latencies
+epoch_lats = mergefields(EYE.epoch, 'event', 'latency'); % Event latencies for epochs
 if isnumeric(args.event) % Baselines defined relative to each epoch-defining event
-    baselinelims = bsxfun(@plus, epoch_times(:), curr_lims(:)');
+    baselinelims = bsxfun(@plus, epoch_lats(:), curr_lims(:)');
     baselinelims = mat2cell(baselinelims, ones(size(baselinelims, 1), 1), 2);
 else % Baselines defined relative to their own events (other than those that define epochs)
-    baseline_times = [EYE.event(ismember({EYE.event.type}, args.event)).time];
+    baseline_lats = [EYE.event(ismember({EYE.event.type}, args.event)).time];
     if strcmp(args.mapping, 'one:all')
-        baseline_times = baseline_times(1);
+        baseline_lats = baseline_lats(1);
     end
     % Figure out which epochs occur after which baseline period
     baselinelims = {};
-    for baselineidx = 1:numel(baseline_times)
-        curr_baselinelims = baseline_times(baselineidx) + curr_lims;
+    for baselineidx = 1:numel(baseline_lats)
+        curr_baselinelims = baseline_lats(baselineidx) + curr_lims;
         if baselineidx == 1 % Ensure no epochs are missed
-            early_epoch_idx = epoch_times < baseline_times(baselineidx);
+            early_epoch_idx = epoch_lats < baseline_lats(baselineidx);
             if any(early_epoch_idx)
                 error_txt = [
                     'The following epochs occur before the first baseline period:\n'...
@@ -155,12 +155,12 @@ else % Baselines defined relative to their own events (other than those that def
         end
         % Correct all epochs whose defining events occur after the defining
         % event of the baseline period
-        curr_epochstocorrect = epoch_times >= baseline_times(baselineidx);
-        if baselineidx < numel(baseline_times)
+        curr_epochstocorrect = epoch_lats >= baseline_lats(baselineidx);
+        if baselineidx < numel(baseline_lats)
             % But don't correct the epochs that occur after the next
             % baseline period
             curr_epochstocorrect = curr_epochstocorrect & ...
-                epoch_times < baseline_times(baselineidx + 1);
+                epoch_lats < baseline_lats(baselineidx + 1);
         end
         baselinelims = [
             baselinelims
