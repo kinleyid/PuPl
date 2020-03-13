@@ -26,7 +26,8 @@ args = parseargs(varargin{:});
 if isempty(args.onsets)
     [~, args.onsets] = listdlgregexp(...
         'PromptString', 'Which events mark the onset of a trial?',...
-        'ListString', unique(mergefields(EYE, 'event', 'type')));
+        'ListString', unique(mergefields(EYE, 'event', 'type')),...
+        'AllowRegexp', true);
     if isempty(args.onsets)
         return
     end
@@ -53,9 +54,10 @@ function EYE = sub_getrt(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-onset_idxs = find(ismember({EYE.event.type}, args.onsets));
+allevents = {EYE.event.type};
+onset_idxs = find(regexpsel(allevents, args.onsets));
 onset_times = [EYE.event(onset_idxs).time];
-response_idxs = find(ismember({EYE.event.type}, args.responses));
+response_idxs = find(regexpsel(allevents, args.responses));
 response_times = [EYE.event(response_idxs).time];
 all_rts = cell(size(onset_times));
 n_rts = 0;
@@ -65,9 +67,11 @@ for trialidx = 1:numel(onset_times)
         is_resp = is_resp & response_times < onset_times(trialidx + 1);
     end
     if any(is_resp)
+        is_resp = find(is_resp);
+        is_resp = is_resp(1);
         rt = response_times(is_resp) - onset_times(trialidx);
-        EYE.event(onset_idxs(is_resp)).rt = rt;
-        EYE.event(response_idxs(trialidx)).rt = rt;
+        EYE.event(onset_idxs(trialidx)).rt = rt;
+        EYE.event(response_idxs(is_resp)).rt = rt;
         n_rts = n_rts + 1;
         all_rts{trialidx} = rt;
     end

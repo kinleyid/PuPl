@@ -38,8 +38,9 @@ end
 
 if isempty(args.timelocking)
     eventTypes = unique(mergefields(EYE, 'event', 'type'));
-    args.timelocking = eventTypes(listdlgregexp('PromptString', 'Epoch relative to which events?',...
-        'ListString', eventTypes));
+    [~, args.timelocking] = listdlgregexp('PromptString', 'Epoch relative to which events?',...
+        'ListString', eventTypes,...
+        'AllowRegexp', true);
     if isempty(args.timelocking)
         return
     end
@@ -54,7 +55,11 @@ if isempty(args.lims)
     end
 end
 
-fprintf('Epoch-defining events:\n%s', sprintf('\t%s\n', args.timelocking{:}));
+if any(cellfun(@isnumeric, args.timelocking))
+    fprintf('Epoch-defining events selected by regexp "%s"\n', args.timelocking{2});
+else
+    fprintf('Epoch-defining events:\n%s', sprintf('\t%s\n', args.timelocking{:}));
+end
 fprintf('Epochs defined from [event] + [%s] to [event] + [%s]\n', args.lims{:});
 
 outargs = args;
@@ -70,8 +75,9 @@ if args.overwrite
 end
 
 currlims = EYE.srate * parsetimestr(args.lims, EYE.srate);
-for eventType = reshape(args.timelocking, 1, [])
-    for eventidx = find(strcmp({EYE.event.type}, eventType))
+allevents = {EYE.event.type};
+for eventType = allevents(regexpsel(allevents, args.timelocking))
+    for eventidx = find(strcmp(allevents, eventType))
         currEpoch = struct(...
             'reject', false,...
             'lims', {args.lims},...

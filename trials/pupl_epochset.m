@@ -53,7 +53,11 @@ end
 
 for i = 1:numel(args.setdescriptions)
     fprintf('Set %s contains:\n', args.setdescriptions(i).name);
-    fprintf('\t%s\n', args.setdescriptions(i).members{:});
+    if any(cellfun(@isnumeric, args.setdescriptions(i).members))
+        fprintf('\t"%s" (regexp)\n', args.setdescriptions(i).members{2});
+    else
+        fprintf('\t%s\n', args.setdescriptions(i).members{:});
+    end
 end
 
 outargs = args;

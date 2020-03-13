@@ -39,10 +39,10 @@ if strcmp(args.type, 'eye')
         end
     end
     
-    data = pupl_check(data);
     for field = {'gaze' 'pupil'}
         data.(field{:}) = getfromur(data, field{:});
     end
+    data = pupl_check(data);
     
 else
     data.event = data.event(:);

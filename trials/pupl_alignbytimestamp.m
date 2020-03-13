@@ -5,7 +5,7 @@ if nargin == 0
     out = @getargs;
 else
     args = parseargs(varargin{:});
-    event_idx = ismember({EYE.eventlog.event.type}, args.attach);
+    event_idx = regexpsel({EYE.eventlog.event.type}, args.attach);
     event_times = [EYE.eventlog.event(event_idx).time] - EYE.t1;
     event_latencies = round(event_times * EYE.srate + 1);
     new_events = struct(...
@@ -39,7 +39,8 @@ if isempty(args.attach)
     unique_types = unique(mergefields(EYE, 'eventlog', 'event', 'type'));
     sel = listdlgregexp(...
         'PromptString', 'Which events from the event log should be attached to the eye data?',...
-        'ListString', unique_types);
+        'ListString', unique_types,...
+        'AllowRegexp', true);
     if isempty(sel)
         return
     else

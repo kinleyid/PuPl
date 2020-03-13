@@ -3,6 +3,8 @@ function EYE = pupl_check(EYE)
 
 % Ensures that the EYE struct array conforms to this code's expectations
 
+global pupl_globals
+
 % Fill in default values
 defunitstruct = struct(...
     'gaze', struct(...
@@ -47,6 +49,12 @@ for defidx = 1:size(defaults, 1)
     end
 end
 
+% Set precision
+
+for dataidx = 1:numel(EYE)
+    EYE(dataidx) = pupl_proc(EYE(dataidx), str2func(pupl_globals.precision), 'all');
+end
+
 % Keep units of epochs consistent with pupil size units
 for dataidx = 1:numel(EYE)
     if isfield(EYE, 'epoch')
@@ -63,7 +71,7 @@ end
 for dataidx = 1:numel(EYE)
     for field = {'left' 'right'}
         data = EYE(dataidx).urpupil.(field{:});
-        data(data < eps) = nan;
+        data(round(data) == 0) = nan;
         EYE(dataidx).urpupil.(field{:}) = data;
     end
 end

@@ -52,7 +52,11 @@ end
 
 for i = 1:numel(args.conditions)
     fprintf('Condition %s contains:\n', args.conditions(i).name);
-    fprintf('\t%s\n', args.conditions(i).members{:});
+    if any(cellfun(@isnumeric, args.conditions(i).members))
+        fprintf('\t"%s" (regexp)\n', args.conditions(i).members{2});
+    else
+        fprintf('\t%s\n', args.conditions(i).members{:});
+    end
 end
 
 outargs = args;
@@ -68,7 +72,7 @@ if args.overwrite
 end
 
 for condidx = 1:numel(args.conditions)
-    if ismember(EYE.name, args.conditions(condidx).members)
+    if regexpsel(EYE.name, args.conditions(condidx).members)
         EYE.cond{end+1} = args.conditions(condidx).name;
     end
 end

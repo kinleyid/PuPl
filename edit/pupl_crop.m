@@ -22,7 +22,7 @@ function outargs = getargs(EYE, varargin)
 outargs = [];
 
 if isnonemptyfield(EYE, 'epoch')
-    q = 'Cropping data will delete epochs and epoch sets. Continue?';
+    q = 'Cropping data will delete all epochs and epoch sets. Continue?';
     a = questdlg(q, q, 'Yes', 'No', 'Yes');
     if strcmp(a, 'No')
         return

@@ -28,7 +28,7 @@ for dataidx = 1:numel(EYE)
     elseif ischar(sel) % Return data from all epochs belonging to a set
         epochset = EYE(dataidx).epochset(strcmp({EYE(dataidx).epochset.name}, sel));
         idx = find(...
-            ismember({EYE(dataidx).epoch.name}, epochset.description.members));
+            regexpsel({EYE(dataidx).epoch.name}, epochset.description.members));
     else
         if islogical(sel)
             sel = find(sel);

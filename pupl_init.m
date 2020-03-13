@@ -14,6 +14,7 @@ end
 % Global settings
 fprintf('Setting global configuration...\n')
 pupl_globals.datavarname = 'eye_data'; % Name of the global data variable
+pupl_globals.precision = 'single'; % Should data be stored in single or double precision?
 pupl_globals.catdim = 2; % Will the global data variable be a row (2) or column (1) vector?
 pupl_globals.ext = 'pupl'; % The extension to use for saving data files
 n_save = inf; % How many steps to save for undo/redo operations?

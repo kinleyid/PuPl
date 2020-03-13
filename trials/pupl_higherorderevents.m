@@ -40,7 +40,8 @@ end
 if isempty(args.timelocking)
     [sel, args.timelocking] = listdlgregexp(...
         'PromptString', 'What are the time-locking events?',...
-        'ListString', unique(mergefields(EYE, 'event', 'type')));
+        'ListString', unique(mergefields(EYE, 'event', 'type')),...
+        'AllowRegexp', true);
     if isempty(sel)
         return
     end
@@ -49,7 +50,8 @@ end
 if isempty(args.checkfor)
     [sel, args.checkfor] = listdlgregexp(...
         'PromptString', 'Search for which events?',...
-        'ListString', unique(mergefields(EYE, 'event', 'type')));
+        'ListString', unique(mergefields(EYE, 'event', 'type')),...
+        'AllowRegexp', true);
     if isempty(sel)
         return
     end
@@ -123,7 +125,7 @@ if ~strcmp([args.lims{:}], 'none')
 else
     currlims = [];
 end
-tlockidx = ismember({EYE.event.type}, args.timelocking);
+tlockidx = regexpsel({EYE.event.type}, args.timelocking);
 foundidx = false(size(EYE.event));
 for eventidx = find(tlockidx)
     windowidx = true(size(EYE.event));
@@ -139,7 +141,7 @@ for eventidx = find(tlockidx)
         windowidx = windowidx &...
             ismember(relinds, args.relindices);
     end
-    if args.presence == any(ismember({EYE.event(windowidx).type}, args.checkfor))
+    if args.presence == any(regexpsel({EYE.event(windowidx).type}, args.checkfor))
         foundidx(eventidx) = true;
     end
 end
