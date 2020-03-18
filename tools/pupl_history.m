@@ -32,7 +32,7 @@ if numel(datavar) > 1
     if ~isequal(datavar.history)
         fprintf(fid, 'Not all datasets have the same processing history\n');
         for idx = 1:numel(datavar)
-            fprintf(fid, '\n\%\t%s:\n\n', datavar(idx).name);
+            fprintf(fid, '\n\t%s:\n\n', datavar(idx).name);
             fprintf(fid, '%s\n', datavar(idx).history{:});
         end
     else

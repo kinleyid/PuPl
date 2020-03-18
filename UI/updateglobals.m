@@ -21,18 +21,12 @@ else
     [outputs{:}] = feval(func);
     
     % Subset the outputs
-    rm = false;
     outputs = outputs{outputidx};
-    if isempty(outputs)
-        return
-    elseif ischar(outputs)
-        if ismember(outputs, {'rm' 'del'})
-            rm = true;
-        else
-            outputs = eval(outputs);
+    if isnumeric(outputs)
+        if outputs == 0
+            return % Do nothing
         end
     end
-    
     % Get the global data variable
     new_data = evalin('base', pupl_globals.datavarname);
     
@@ -54,18 +48,22 @@ else
     % Are we subsetting or appending?
     if ischar(idx)
         switch idx
-            case {'append' 'a'}
+            case {'append' 'a'} % append
+                % Keep track of where the new data will be on the UI
+                new_UI_n = num2cell(numel(new_data)+1:numel(new_data)+numel(outputs));
+                [outputs.UI_n] = new_UI_n{:};
                 new_data = cat(pupl_globals.catdim, new_data, outputs);
-            case {'write' 'w'}
-                if rm
-                    new_data = struct([]);
-                else
-                    new_data = outputs;
-                end
+            case {'write' 'w'} % overwrite
+                new_data = outputs;
         end
-    else
-        if rm
+    else % Logical indexing
+        if numel(outputs) < nnz(idx)
+            % Less data came out than went in
+            % Delete idx, append new data, then sort by UI_n
             new_data(idx) = [];
+            new_data = cat(pupl_globals.catdim, new_data, outputs);
+            [~, I] = sort([new_data.UI_n]);
+            new_data = new_data(I);
         else
             new_data(idx) = outputs;
         end

@@ -66,7 +66,7 @@ for dataidx = 1:numel(EYE)
         % Get epoch info
         all_info(end + 1, :) = {
             EYE(dataidx).name
-            EYE(dataidx).epoch(epochidx).name
+            cellfun(@(n) sprintf('"%s"', n), {EYE(dataidx).epoch(epochidx).name})
             epochidx
             EYE(dataidx).epoch(epochidx).reject
             EYE(dataidx).epoch(epochidx).event.rt

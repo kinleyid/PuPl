@@ -1,5 +1,7 @@
 function preservelayout(varargin)
 
+% Redraws the data panel, if necessary
+
 sep = 2;
 buttonHeight = 20;
 
@@ -11,16 +13,18 @@ activeIdx = getfield(get(userInterface, 'UserData'), 'activeEyeDataIdx');
 if ~isempty(get(dataPanel, 'Children'))
     delete(get(dataPanel, 'Children'));
 end
-activeIdx(numel(activeIdx)+1:numel(currData)) = true;
 
 dataPanelPixelPos = getDataPanelPixelPos;
 top = dataPanelPixelPos(4) - buttonHeight;
 buttonWidth = dataPanelPixelPos(3) - sep;
 lowestButtonPos = top - (buttonHeight + sep)*numel(currData);
+extraSpace = dataPanelPixelPos(2) - lowestButtonPos;
+relExtraSpace = extraSpace/(dataPanelPixelPos(4) - dataPanelPixelPos(2));
 if lowestButtonPos < dataPanelPixelPos(2)
-    % Extend user interface if there is enough data to do so
+    % Extend data panel until it hold all the data
     dataPanelRelPos = get(dataPanel, 'Position');
-    d = 0.5;
+    d = relExtraSpace / 2 * (dataPanelRelPos(4) - dataPanelRelPos(2)); % Relative amount to increase the size by (may be negative);
+    % d = 0.5;
     dataPanelRelPos(2) = dataPanelRelPos(2) - d;
     dataPanelRelPos(4) = dataPanelRelPos(4) + d;
     set(dataPanel, 'Position', dataPanelRelPos);
@@ -31,8 +35,6 @@ if lowestButtonPos < dataPanelPixelPos(2)
     dataPanelPixelPos = getDataPanelPixelPos;
     top = dataPanelPixelPos(4) - buttonHeight;
     buttonWidth = dataPanelPixelPos(3) - sep;
-else
-    % Shorten user interface
 end
 
 for dataidx = 1:numel(currData)

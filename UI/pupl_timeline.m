@@ -47,9 +47,6 @@ new_idx = old_idx + d;
 pupl_globals.timeline.data{old_idx} = evalin('base', pupl_globals.datavarname);
 if nargout > 0
     varargout{1} = pupl_globals.timeline.data{new_idx};
-    if isempty(varargout{1})
-        varargout{1} = 'rm';
-    end
 end
 pupl_globals.timeline.data{new_idx} = 'curr';
 

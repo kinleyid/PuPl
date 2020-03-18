@@ -1,5 +1,13 @@
 
-function EYE = pupl_applytoarray(func, EYE, varargin)
+function out = pupl_feval(urfunc, EYE, varargin)
+
+if iscell(urfunc)
+    macro = true; % Function takes entire array, not just a single struct
+    func = urfunc{:};
+else
+    macro = false;
+    func = urfunc;
+end
 
 % Get arguments
 args = func(); % nargin = 0
@@ -13,6 +21,7 @@ end
 if isstruct(args)
     args = pupl_struct2args(args);    
 elseif isempty(args)
+    out = 0; % User exited
     return
 end
 
@@ -24,8 +33,8 @@ else
     args_str = sprintf(', %s', args_str{:});
 end
 global pupl_globals;
-callstr = sprintf('%s = %s(@%s, %s%s);',....
-    pupl_globals.datavarname, mfilename, func2str(func), pupl_globals.datavarname, args_str);
+callstr = sprintf('%s = %s(%s, %s%s);',....
+    pupl_globals.datavarname, mfilename, all2str(urfunc), pupl_globals.datavarname, args_str);
 
 % Apply the function
 if pupl_globals.isoctave
@@ -34,14 +43,20 @@ else
     fprintf('Running <a href="matlab:edit %s">%s</a>...\n', func2str(func), func2str(func));
 end
 for dataidx = 1:numel(EYE)
-    fprintf('\t%s...', EYE(dataidx).name);
-    tmp = func(EYE(dataidx), args{:});
-    [tmp, EYE] = fieldconsistency(tmp, EYE);
-    tmp.history{end + 1} = callstr;
-    EYE(dataidx) = tmp;
-    fprintf('\t\tdone\n');
+    EYE(dataidx).history{end + 1} = callstr;
+    if ~macro
+        fprintf('\t%s...', EYE(dataidx).name);
+        tmp = func(EYE(dataidx), args{:});
+        [tmp, EYE] = fieldconsistency(tmp, EYE);
+        EYE(dataidx) = tmp;
+        fprintf('\t\tdone\n');
+    end
+end
+if macro
+    EYE = func(EYE, args{:});
 end
 fprintf('Done\n');
 EYE = pupl_check(EYE);
+out = EYE;
 
 end

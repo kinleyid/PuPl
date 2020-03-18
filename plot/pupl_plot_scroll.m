@@ -185,7 +185,7 @@ if get(findobj(h, 'Tag', 'displayevents'), 'Value')
                 t = (ud.EYE.event(eventIdx).latency - 1)/ud.EYE.srate;
                 plot(repmat(t, 1, 2), plotinfo.ylim, 'k');
                 currYlims = plotinfo.ylim;
-                yLoc = currYlims(1) + abs(diff(currYlims)) * (spn - mod(idx, n) * spn / n);
+                yLoc = double(currYlims(1) + abs(diff(currYlims)) * (spn - mod(idx, n) * spn / n));
                 try
                     text(t, yLoc, ud.EYE.event(eventIdx).type,...
                         'FontSize', 8,...

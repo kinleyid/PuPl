@@ -1,7 +1,9 @@
 
 function out = all2str(varargin)
 
-if nargin > 1
+if nargin == 0
+    out = '';
+elseif nargin > 1
     out = '';
     out = cellfun(@(x) sprintf('%s, ', all2str(x)), varargin, 'UniformOutput', false);
     out = [out{:}];

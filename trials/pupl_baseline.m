@@ -116,12 +116,12 @@ switch args.correction
     case 'subtract baseline mean'
         correctionFunc = @(tv, bv) tv - nanmean_bc(bv);
         relstr = 'change from baseline mean';
-    case 'change from baseline mean'
+    case 'percent change from baseline mean'
         correctionFunc = @(tv, bv) 100 * (tv - nanmean_bc(bv)) / nanmean_bc(bv);
         relstr = '% change from baseline mean';
     case 'none'
         correctionFunc = @(tv, bv) tv;
-        relstr = [];
+        relstr = EYE.units.pupil{3};
 end
 
 % At the end of this there will be 2 arrays a cell array called
@@ -170,6 +170,12 @@ else % Baselines defined relative to their own events (other than those that def
 end
 
 for epochidx = 1:numel(EYE.epoch)
+    if baselinelims{epochidx}(1) < 1
+        error('Trying to create a baseline period starting at latency %d (earliest possible latency is 1)', baselinelims{epochidx}(1))
+    end
+    if baselinelims{epochidx}(2) > EYE.ndata
+        error('Trying to create a baseline period ending at latency %d (earliest possible latency for this recording is %d)', baselinelims{epochidx}(2), EYE.ndata)
+    end
     EYE.epoch(epochidx).baseline = struct(...
         'lims', baselinelims{epochidx},...
         'func', correctionFunc);

@@ -94,7 +94,9 @@ xlim(lims);
 ylim([0 1]);
 xlabel(ud.args.threshname);
 ylabel(sprintf('Proportion of %s above threshold', ud.args.dataname));
-title(sprintf('%d %s (%.2f%%) would be %s', nnz(data >= currThreshold), ud.args.dataname, 100*currPpnViolating, ud.args.outcomename));
+nmissing = sum(cellfun(@(x) nnz(ud.args.func(x, currThreshold)), ud.data));
+ntotal = sum(cellfun(@numel, ud.data));
+title(sprintf('%d %s (%.2f%%) would be %s', nmissing, ud.args.dataname, 100*nmissing/ntotal, ud.args.outcomename));
 if ~isempty(ud.args.names)
     legend(ud.args.names, 'Interpreter', 'none');
 end

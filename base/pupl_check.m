@@ -13,6 +13,7 @@ defunitstruct = struct(...
     'pupil', {{'diameter' 'unknown units' 'assumed absolute'}});
 
 defaults = {
+    'rm'        @(x)false
     't1'        @(x)[]
     'srate'     @(x)[]
     'src'       @(x)[]

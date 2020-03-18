@@ -14,7 +14,7 @@ if isempty(p.Results.plotstruct)
     while true
         plotidx = numel(plotstruct) + 1;
         if bycond
-            [~, cond] = listdlgregexp('PromptString', 'Plot from which dataset?',...
+            [~, cond] = listdlgregexp('PromptString', 'Plot from which condition?',...
                 'ListString', unique(mergefields(EYE, 'cond')));
             if isempty(cond)
                 return
@@ -94,9 +94,8 @@ for plotidx = 1:numel(plotstruct)
     else
         names = {EYE(dataidx).name};
     end
-    names = sprintf('%s &', names{:});
-    names(end-numel(' &')+1:end) = [];
-    plotstruct(plotidx).legendentry = sprintf('%s %s n = %d trials (showing %s trials)',...
+    names = sprintf('%s ', names{:});
+    plotstruct(plotidx).legendentry = sprintf('%s%s n = %d trials (showing %s trials)',...
         names, plotstruct(plotidx).set, nnz(~isrej), plotstruct(plotidx).include);
     
     data = data(~isrej, :);

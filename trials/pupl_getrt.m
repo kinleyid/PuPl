@@ -36,7 +36,8 @@ end
 if isempty(args.responses)
     [~, args.responses] = listdlgregexp(...
         'PromptString', 'Which events mark a response?',...
-        'ListString', unique(mergefields(EYE, 'event', 'type')));
+        'ListString', unique(mergefields(EYE, 'event', 'type')),...
+        'AllowRegexp', true);
     if isempty(args.responses)
         return
     end
@@ -44,7 +45,11 @@ end
 
 outargs = args;
 fprintf('Trial onsets marked by:\n');
-fprintf('\t%s\n', args.onsets{:});
+if any(cellfun(@isnumeric, args.onsets))
+    fprintf('\t"%s" (regexp)\n', args.onsets{2});
+else
+    fprintf('\t%s\n', args.onsets{:});
+end
 fprintf('Responses marked by:\n');
 fprintf('\t%s\n', args.responses{:});
 

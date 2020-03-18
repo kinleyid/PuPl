@@ -170,7 +170,7 @@ for dataidx = 1:numel(EYE)
                 % Get epoch info
                 all_info{end + 1} = EYE(dataidx).name;
                 all_trialinfo(end + 1, :) = {
-                    EYE(dataidx).epoch(epochidx).name
+                    sprintf('"%s"', EYE(dataidx).epoch(epochidx).name)
                     epochidx
                     EYE(dataidx).epoch(epochidx).reject
                     EYE(dataidx).epoch(epochidx).event.rt
