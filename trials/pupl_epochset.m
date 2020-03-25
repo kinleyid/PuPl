@@ -1,3 +1,4 @@
+
 function out = pupl_epochset(EYE, varargin)
 
 %  Inputs
@@ -31,7 +32,7 @@ args = parseargs(varargin{:});
 
 if isempty(args.overwrite)
     if any(arrayfun(@(x) ~isempty(x.epochset), EYE))
-        q = 'Overwrite existing trial sets?';
+        q = 'Overwrite existing epoch sets?';
         a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
         switch a
             case 'Yes'
@@ -45,12 +46,34 @@ if isempty(args.overwrite)
 end
 
 if isempty(args.setdescriptions)
-    args.setdescriptions = UI_getsets(unique(mergefields(EYE, 'epoch', 'name')), 'trial set');
-    if isempty(args.setdescriptions)
-        return
+    while true
+        currname = inputdlg('Name of epoch set?');
+        if isempty(currname)
+            return
+        else
+            currname = currname{:};
+        end
+        currmembers = pupl_event_UIget(pupl_epoch_get(EYE, [], '_ev'), sprintf('Events in set "%s"', currname));
+        if isempty(currmembers)
+            return
+        end
+        args.setdescriptions = [
+            args.setdescriptions
+            struct(...
+                'name', currname,...
+                'members', {currmembers})];
+            a = questdlg('Add another epoch set?');
+        switch a
+            case 'Yes'
+                continue
+            case 'No'
+                break
+            otherwise
+                return
+        end
     end
 end
-
+%{
 for i = 1:numel(args.setdescriptions)
     fprintf('Set %s contains:\n', args.setdescriptions(i).name);
     if any(cellfun(@isnumeric, args.setdescriptions(i).members))
@@ -59,7 +82,7 @@ for i = 1:numel(args.setdescriptions)
         fprintf('\t%s\n', args.setdescriptions(i).members{:});
     end
 end
-
+%}
 outargs = args;
 
 end
@@ -74,25 +97,14 @@ setdescriptions = args.setdescriptions;
 if overwrite
     EYE.epochset = [];
 end
-fprintf('\n');
 for setidx = 1:numel(setdescriptions)
-    epochidx = getepochidx(EYE, setdescriptions(setidx));
-    rellims = {EYE.epoch(epochidx).rellims};
-    if numel(unique(cellfun(@num2str, rellims, 'UniformOutput', 0))) > 1
-        warning('You are combining epochs into a bin that do not all begin and end at the same time relative to their events');
-        rellims = [];
-    else
-        rellims = EYE.epoch(1).rellims;
-    end
+    epochidx = find(pupl_epoch_sel(EYE, [], setdescriptions(setidx).members));
     if args.verbose
-        fprintf('\t\tSet %s contains %d trials\n',...
+        fprintf('Set %s contains %d trials\n',...
             setdescriptions(setidx).name,...
             numel(epochidx));
     end
-    EYE.epochset = [EYE.epochset struct(...
-        'name', setdescriptions(setidx).name,... Redundant with description, but good for backwards compatibility
-        'rellims', rellims,...
-        'description', setdescriptions(setidx))];
+    EYE.epochset = [EYE.epochset setdescriptions(setidx)];
 end
 
 end

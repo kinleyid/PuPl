@@ -24,34 +24,32 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.onsets)
-    [~, args.onsets] = listdlgregexp(...
-        'PromptString', 'Which events mark the onset of a trial?',...
-        'ListString', unique(mergefields(EYE, 'event', 'type')),...
-        'AllowRegexp', true);
+    args.onsets = pupl_event_UIget([EYE.event], 'Which events mark the onset of a trial?');
     if isempty(args.onsets)
         return
     end
 end
 
 if isempty(args.responses)
-    [~, args.responses] = listdlgregexp(...
-        'PromptString', 'Which events mark a response?',...
-        'ListString', unique(mergefields(EYE, 'event', 'type')),...
-        'AllowRegexp', true);
+    args.responses = pupl_event_UIget([EYE.event], 'Which events mark a response?');
     if isempty(args.responses)
         return
     end
 end
 
 outargs = args;
+%{
 fprintf('Trial onsets marked by:\n');
 if any(cellfun(@isnumeric, args.onsets))
     fprintf('\t"%s" (regexp)\n', args.onsets{2});
 else
     fprintf('\t%s\n', args.onsets{:});
 end
+%}
+%{
 fprintf('Responses marked by:\n');
 fprintf('\t%s\n', args.responses{:});
+%}
 
 end
 
@@ -59,10 +57,9 @@ function EYE = sub_getrt(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-allevents = {EYE.event.type};
-onset_idxs = find(regexpsel(allevents, args.onsets));
+onset_idxs = find(pupl_event_sel(EYE.event, args.onsets));
 onset_times = [EYE.event(onset_idxs).time];
-response_idxs = find(regexpsel(allevents, args.responses));
+response_idxs = find(pupl_event_sel(EYE.event, args.responses));
 response_times = [EYE.event(response_idxs).time];
 all_rts = cell(size(onset_times));
 n_rts = 0;

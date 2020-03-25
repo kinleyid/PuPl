@@ -1,5 +1,7 @@
 function pupl(varargin)
 
+global pupl_globals
+
 args = lower(varargin);
 
 if isempty(args)
@@ -13,11 +15,12 @@ else
         case 'redraw'
             update_UI;
         case {'settings' 'globals'}
-            global pupl_globals
             fprintf('PuPl''s global settings and variables, as set in pupl_init.m:\n\n')
             disp(pupl_globals)
         case 'path'
             fprintf('%s\n', fileparts(mfilename('fullpath')));
+        case {'save' 'cache'}
+            pupl_timeline('a', evalin('base', pupl_globals.datavarname));
         otherwise
             fprintf('Unrecognized command line argument ''%s''\n', args{1});
     end

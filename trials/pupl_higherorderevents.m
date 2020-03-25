@@ -12,13 +12,13 @@ end
 function args = parseargs(varargin)
 
 args = pupl_args2struct(varargin, {
-    'name' [] % Name of higher-order event; char array
-	'timelocking' [] % Names of time-locking events; cell array of char arrays
-	'checkfor' [] % Names of events to search for near time-locking events; cell array of char arrays
+	'primary' [] % Names of time-locking events; cell array of char arrays
+	'secondary' [] % Names of events to search for near time-locking events; cell array of char arrays
 	'lims' [] % Window-defining time limits within which to look for searched-for events; cell array of char arrays
-	'relindices' [] % Relative indices of searched-for events; numerical array
+	'relidx' [] % Relative indices of searched-for events; numerical array
 	'presence' [] % Mark higher-order events by presence or absence of searched-for events; true or false
-	'overwrite' [] % Overwrite pre-existing time-locking events; true or false
+	'method' [] % What to do once a higher-order event has been found
+    'cfg' [] % Configuration that controls the action taken once a higher-order event has been found
 });
 
 end
@@ -28,31 +28,16 @@ function outargs = getargs(EYE, varargin)
 outargs = [];
 args = parseargs(varargin{:});
 
-if isempty(args.name)
-    args.name = inputdlg('Name of higher-order event');
-    if isempty(args.name)
-        return
-    else
-        args.name = args.name{:};
-    end
-end
-
-if isempty(args.timelocking)
-    [sel, args.timelocking] = listdlgregexp(...
-        'PromptString', 'What are the time-locking events?',...
-        'ListString', unique(mergefields(EYE, 'event', 'type')),...
-        'AllowRegexp', true);
-    if isempty(sel)
+if isempty(args.primary)
+    args.primary = pupl_event_UIget([EYE.event], 'Which are the primary events?');
+    if isempty(args.primary)
         return
     end
 end
 
-if isempty(args.checkfor)
-    [sel, args.checkfor] = listdlgregexp(...
-        'PromptString', 'Search for which events?',...
-        'ListString', unique(mergefields(EYE, 'event', 'type')),...
-        'AllowRegexp', true);
-    if isempty(sel)
+if isempty(args.secondary)
+    args.secondary = pupl_event_UIget([EYE.event], 'Which are the secondary events?');
+    if isempty(args.secondary)
         return
     end
 end
@@ -60,7 +45,7 @@ end
 if isempty(args.lims)
     args.lims = inputdlg(...
         {
-            sprintf('Search for events within this time window relative to time-locking events\n(Leave empty to not use a time window)\n\nStart')
+            sprintf('Search for secondary events within this time window relative to primary events\n(Leave empty to not use a time window)\n\nStart')
             'End'
         });
     if isempty(args.lims)
@@ -71,21 +56,21 @@ if isempty(args.lims)
 end
 args.lims = cellstr(args.lims);
 
-if isempty(args.relindices)
-    args.relindices = inputdlg(...
-        sprintf('Search for events occurring at these indices relative to time-locking events\n(Leave empty to not use relative indices)'));
-    if isempty(args.relindices)
+if isempty(args.relidx)
+    args.relidx = inputdlg(...
+        sprintf('Search for secondary events occurring at these indices relative to primary events\n(Leave empty to not use relative indices)'));
+    if isempty(args.relidx)
         return
     else
-        args.relindices = str2num(args.relindices{:});
-        if isempty(args.relindices)
-            args.relindices = 'none';
+        args.relidx = str2num(args.relidx{:});
+        if isempty(args.relidx)
+            args.relidx = 'none';
         end
     end
 end
 
 if isempty(args.presence)
-    q = 'Mark by presence or absence of searched-for events?';
+    q = 'Check for presence or absence of secondary events?';
     a = questdlg(q, q, 'Presence', 'Absence', 'Cancel', 'Presence');
     switch a
         case 'Presence'
@@ -98,19 +83,59 @@ if isempty(args.presence)
 end
 args.presence = logical(args.presence);
 
-if isempty(args.overwrite)
-    q = 'Overwrite time-locking events?';
-    a = questdlg(q);
-    switch a
-        case 'Yes'
-            args.overwrite = true;
-        case 'No'
-            args.overwrite = false;
+if isempty(args.method)
+    opts = {
+        'Rename primary events'
+        'Add trial vars to primary events'
+    };
+    sel = listdlg(...
+        'PromptString', 'What should be done when a higher-order event is found?',...
+        'ListString', opts,...
+        'SelectionMode', 'single');
+    switch sel
+        case 1
+            args.method = 'rename';
+        case 2
+            args.method = 'tvar';
         otherwise
             return
     end
 end
-args.overwrite = logical(args.overwrite);
+
+if isempty(args.cfg)
+    switch args.method
+        case 'rename'
+            args.cfg.name = inputdlg('What should the primary events be renamed to?');
+            if isempty(args.cfg.name)
+                return
+            else
+                args.cfg.name = args.cfg.name{:};
+            end
+        case 'tvar'
+            args.cfg.expr = inputdlg(sprintf('Input an expression to compute new trial variable(s)\n\nTrial variables preceded by "#1" (e.g. #1rt) will be read from the primary event, those preceded by #2 will be read from the earliest secondary event found'));
+            if isempty(args.cfg.expr)
+                return
+            else
+                args.cfg.expr = args.cfg.expr{:};
+            end
+            args.cfg.var = inputdlg('Name of resulting variable');
+            if isempty(args.cfg.var)
+                return
+            else
+                args.cfg.var = args.cfg.var{:};
+            end
+            opts = {'Numeric' 'String'};
+            sel = listdlg(...
+                'PromptString', sprintf('What type of variable is #%s?', args.cfg.var),...
+                'ListString', opts,...
+                'SelectionMode', 'single');
+            if isempty(sel)
+                return
+            else
+                args.cfg.type = opts(sel);
+            end
+    end
+end
 
 outargs = args;
 
@@ -121,35 +146,50 @@ function EYE = sub_higherorderevents(EYE, varargin)
 args = parseargs(varargin{:});
 
 if ~strcmp([args.lims{:}], 'none')
-    currlims = parsetimestr(args.lims, EYE.srate, 'smp');
+    tlims = parsetimestr(args.lims, EYE.srate);
 else
-    currlims = [];
+    tlims = [];
 end
-tlockidx = regexpsel({EYE.event.type}, args.timelocking);
-foundidx = false(size(EYE.event));
-for eventidx = find(tlockidx)
+primary_idx = pupl_event_sel(EYE.event, args.primary);
+n_found = 0;
+for eventidx = find(primary_idx)
+    pri_ev = EYE.event(eventidx);
     windowidx = true(size(EYE.event));
-    if ~isempty(currlims)
-        tlock = EYE.event(eventidx).latency;
-        rellats = [EYE.event.latency] - tlock;
+    if ~isempty(tlims)
+        primary_time = EYE.event(eventidx).time;
+        rel_times = [EYE.event.time] - primary_time; % Event times relative to primary
         windowidx = windowidx & ...
-            rellats >= currlims(1) &...
-            rellats <= currlims(2);
+            rel_times >= tlims(1) &...
+            rel_times <= tlims(2);
     end
-    if ~ischar(args.relindices)
+    if ~ischar(args.relidx)
         relinds = (1:numel(EYE.event)) - eventidx;
         windowidx = windowidx &...
-            ismember(relinds, args.relindices);
+            ismember(relinds, args.relidx);
     end
-    if args.presence == any(regexpsel({EYE.event(windowidx).type}, args.checkfor))
-        foundidx(eventidx) = true;
+    found = pupl_event_sel(EYE.event(windowidx), args.secondary);
+    if args.presence == any(found)
+        n_found = n_found + 1;
+        switch args.method
+            case 'rename'
+                EYE.event(eventidx).type = args.cfg.name;
+            case 'tvar'
+                sec_ev = EYE.event(windowidx);
+                sec_ev = sec_ev(find(found, 1)); % In case there are multiple events found
+                var = pupl_tvar_get(args.cfg.expr, pri_ev, sec_ev);
+                if isnumeric(var)
+                    if strcmp(args.cfg.type, 'String')
+                        var = num2str(var);
+                    end
+                elseif isstr(var)
+                    if strcmp(args.cfg.type, 'Numeric')
+                        var = str2num(var);
+                    end
+                end
+                EYE.event(eventidx).(args.cfg.var) = var;
+        end
     end
 end
-fprintf('\t\t%d higher-order events defined\n', nnz(foundidx));
-newnames = repmat(cellstr(args.name), 1, nnz(foundidx));
-if ~args.overwrite
-    newnames = strcat({EYE.event(foundidx).type}, newnames);
-end
-[EYE.event(foundidx).type] = newnames{:};
+fprintf('\t\t%d higher-order events found\n', n_found);
 
 end

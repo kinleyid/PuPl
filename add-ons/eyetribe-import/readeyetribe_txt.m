@@ -1,35 +1,56 @@
 function out = readeyetribe_txt(fullpath)
 
-json = readdelim2cell(fullpath, 'extremely unlikely delimiter so I can import text as columns');
+printprog('setmax', 16)
 
+json = readdelim2cell(fullpath, 'extremely unlikely delimiter so I can import text as columns');
+printprog(1)
 issample = ~cellfun(@isempty, regexp(json, '"category":"tracker"', 'once'));
+printprog(2)
 samples = json(issample);
-timestamps = regexp2num(regexp(samples, '"time":(\d+\.*\d*)', 'tokens'));
+timestamps = regexp2num(regexp(samples, '"time":(\d+)', 'tokens'));
 srate = estimatesrate(timestamps);
 while srate == 0
     timestamps = timestamps / 1000;
     srate = estimatesrate(timestamps);
 end
-'(\d+-\d+-d+ \d+:\d+:\d+\.d+)';
-t1 = regexp(samples(1), '"timestamp":"(\d+-\d+-\d+ \d+\:\d+\:\d+\.\d+)', 'tokens');
-t1 = 86400 * datenum(t1{:}{:}{:}, 'yyyy-mm-dd HH:MM:SS.FFF');
+printprog(3)
+timestamps = regexp(samples, '"timestamp":"....-..-.. (\d+):(\d+):(\d+)\.(\d+)"', 'tokens');
+printprog(4)
+timestamps = cat(1, timestamps{:});
+printprog(5)
+timestamps = cat(1, timestamps{:});
+printprog(6)
+h = cellstr2num(timestamps(:, 1)) * 60*60;
+printprog(7)
+m = cellstr2num(timestamps(:, 2)) * 60;
+printprog(8)
+s = cellstr2num(timestamps(:, 3));
+printprog(9)
+ms = cellstr2num(timestamps(:, 4)) / 1000;
+printprog(10)
+times = h + m + s + ms;
 
-urpupil = [];
-urgaze = [];
+pupil = [];
+gaze = [];
+n = 10;
 for side = {'left' 'right'}
     diam_expr = [side{:} 'eye.*?"psize":(\d+\.*\d*)'];
-    urpupil.(side{:}) = regexp2num(regexp(samples, diam_expr, 'tokens'));
+    pupil.(side{:}) = regexp2num(regexp(samples, diam_expr, 'tokens'));
+    n = n + 1;
+    printprog(n);
     for ax = {'x' 'y'}
         gaze_expr = [side{:} 'eye.*?"raw":.*?"' ax{:} '":(\d+\.*\d*)'];
-        urgaze.(ax{:}).(side{:}) = regexp2num(regexp(samples, gaze_expr, 'tokens'));
+        gaze.(ax{:}).(side{:}) = regexp2num(regexp(samples, gaze_expr, 'tokens'));
+        n = n + 1;
+        printprog(n);
     end
 end
 
 out = struct(...
-    'urpupil', urpupil,...
+    'pupil', pupil,...
     'srate', srate,...
-    'urgaze', urgaze,...
-    't1', t1);
+    'gaze', gaze,...
+    'times', times);
 
 end
 

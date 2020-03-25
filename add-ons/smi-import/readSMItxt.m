@@ -9,7 +9,6 @@ cols = lower(raw(1, :));
 contents = raw(2:end, :);
 
 timestamps = cellstr2num(contents(:, strcmp(cols, 'time')));
-timestamps = timestamps - timestamps(1);
 
 srate = estimatesrate(timestamps);
 while srate == 0
@@ -23,7 +22,7 @@ units = [];
 
 %% Get diameter
 
-urdiam = [];
+pupil = [];
 for fields = {
         'left'  'right'
         'l'     'r'}
@@ -37,7 +36,7 @@ for fields = {
         diamunits = token{1}{1};
         currsamples = samples(:, sideidx);
         currdata = mean(reshape(cellstr2num(currsamples), size(currsamples)), 2);
-        urdiam.(fields{1}) = currdata;
+        pupil.(fields{1}) = currdata;
     end
 end
 
@@ -45,7 +44,7 @@ units.diam = {'diameter' diamunits 'absolute'};
 
 %% Get gaze
 
-urgaze = [];
+gaze = [];
 for ax = {'x' 'y'}
     for fields = {
             'left'  'right'
@@ -56,7 +55,7 @@ for ax = {'x' 'y'}
         if ~any(curridx)
             continue
         end
-        urgaze.(ax{:}).(fields{1}) = cellstr2num(samples(:, curridx));
+        gaze.(ax{:}).(fields{1}) = cellstr2num(samples(:, curridx));
     end
 end
 
@@ -67,22 +66,19 @@ units.gaze.y = units.gaze.x;
 
 triggers = samples(:, strcmp(cols, 'trigger'));
 onsets = [false; diff(cellstr2num(triggers)) > 0];
-latencies = find(onsets);
 
 event = struct(...
-    'type', triggers(onsets),...
-    'time', num2cell(timestamps(onsets)),...
-    'latency', num2cell(latencies),...
-    'rt', repmat({NaN}, size(latencies)))';
+    'name', triggers(onsets),...
+    'time', num2cell(timestamps(onsets)));
 [~, I] = sort([event.time]);
 event = event(I);
 
 %% Generate final output
 
 out = struct(...
-    'urdiam', urdiam,...
+    'pupil', pupil,...
     'srate', srate,...
-    'urgaze', urgaze,...
+    'gaze', gaze,...
     'event', event,...
     'units', units);
 

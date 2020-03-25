@@ -29,6 +29,7 @@ if isempty(args.method)
         'Extreme pupil size' 'extremepupil'
         'Blink proximity' 'blink'
         'Reaction time' 'rt'
+        'Event attributes', 'event'
     };
     sel = listdlgregexp(...
         'PromptString', 'Reject trials on what basis?',...
@@ -83,6 +84,11 @@ if isempty(args.cfg)
                 return
             end
             args.cfg.thresh = thresh;
+        case 'event'
+            args.cfg.sel = pupl_event_UIget(pupl_epoch_get(EYE, [], '_ev'), 'Reject epochs associated with which events?');
+            if isempty(args.cfg.sel)
+                return
+            end
     end
 end
 
@@ -106,6 +112,8 @@ switch args.method
     case 'rt'
         data = mergefields(EYE, 'epoch', 'event', 'rt');
         rejidx = data > parsedatastr(args.cfg.thresh, data);
+    case 'event'
+        rejidx = pupl_event_sel(pupl_epoch_get(EYE, [], '_ev'), args.cfg.sel);
     case 'undo'
         rejidx = false(1, numel(EYE.epoch));
         [EYE.epoch.reject] = deal(false);

@@ -1,3 +1,4 @@
+
 function out = pupl_epoch(EYE, varargin)
 
 if nargin == 0
@@ -37,10 +38,7 @@ if any(arrayfun(@(x) ~isempty(x.epoch), EYE)) && isempty(args.overwrite)
 end
 
 if isempty(args.timelocking)
-    eventTypes = unique(mergefields(EYE, 'event', 'type'));
-    [~, args.timelocking] = listdlgregexp('PromptString', 'Epoch relative to which events?',...
-        'ListString', eventTypes,...
-        'AllowRegexp', true);
+    args.timelocking = pupl_event_UIget([EYE.event], 'Epoch relative to which events?');
     if isempty(args.timelocking)
         return
     end
@@ -54,12 +52,13 @@ if isempty(args.lims)
         return
     end
 end
-
+%{
 if any(cellfun(@isnumeric, args.timelocking))
     fprintf('Epoch-defining events selected by regexp "%s"\n', args.timelocking{2});
 else
     fprintf('Epoch-defining events:\n%s', sprintf('\t%s\n', args.timelocking{:}));
 end
+%}
 fprintf('Epochs defined from [event] + [%s] to [event] + [%s]\n', args.lims{:});
 
 outargs = args;
@@ -75,48 +74,43 @@ if args.overwrite
 end
 
 currlims = EYE.srate * parsetimestr(args.lims, EYE.srate);
-allevents = {EYE.event.type};
-for eventType = allevents(regexpsel(allevents, args.timelocking))
-    for eventidx = find(strcmp(allevents, eventType))
-        currEpoch = struct(...
-            'reject', false,...
-            'lims', {args.lims},...
-            'rellims', currlims,...
-            'abslims', EYE.event(eventidx).latency + currlims,...
-            'name', EYE.event(eventidx).type,...
-            'event', EYE.event(eventidx));
-        
-        badlimidx = 0;
-        if currEpoch.abslims(1) < 1
-            badlimidx = 1;
-        elseif currEpoch.abslims(2) > EYE.ndata
-            badlimidx = 2;
-        end
-        if badlimidx
-            error('Event "%s" occurs at %f seconds into the recording "%s". %s from this event reaches outside the bounds of that recording (0 seconds to %f seconds).',...
-                EYE.event(eventidx).type,...
-                (EYE.event(eventidx).latency - 1) / EYE.srate,...
-                EYE.name,...
-                args.lims{badlimidx},...
-                (EYE.ndata - 1) / EYE.srate)
-        else
-            EYE.epoch = [EYE.epoch, currEpoch];
-        end
+found = find(pupl_event_sel(EYE.event, args.timelocking));
+for eventidx = found
+    currEpoch = struct(...
+        'reject', false,...
+        'lims', {args.lims},...
+        'event', EYE.event(eventidx).uniqid);
+    abslims = pupl_event_getlat(EYE, eventidx) + currlims;
+    badlimidx = 0;
+    if abslims(1) < 1
+        badlimidx = 1;
+    elseif abslims(2) > EYE.ndata
+        badlimidx = 2;
+    end
+    if badlimidx
+        error('Event "%s" occurs at %f seconds into the recording "%s". %s from this event reaches outside the bounds of that recording (0 seconds to %f seconds).',...
+            EYE.event(eventidx).name,...
+            EYE.event(eventidx).time - EYE.times(1),...
+            EYE.name,...
+            args.lims{badlimidx},...
+            EYE.times(end) - EYE.times(1))
+    else
+        EYE.epoch = [EYE.epoch, currEpoch];
     end
 end
 
 % Sort epochs by event time
-[~, I] = sort(mergefields(EYE, 'epoch', 'event', 'latency'));
+[~, I] = sort(pupl_epoch_get(EYE, [], 'time'));
 EYE.epoch = EYE.epoch(I);
 
 % Set units for epochs
 EYE.units.epoch = EYE.units.pupil;
 
 % Set preliminary 1:1 trial set-to-trial relationship
-trialnames = unique({EYE.epoch.name});
+trialnames = unique(pupl_epoch_get(EYE, [], 'name'));
 epochsetdescriptions = struct(...
     'name', trialnames,...
-    'members', cellfun(@cellstr, trialnames, 'UniformOutput', false));
+    'members', cellfun(@(x) {x}, trialnames, 'UniformOutput', false));
 EYE = pupl_epochset(EYE,...
     'setdescriptions', epochsetdescriptions,...
     'overwrite', true,...

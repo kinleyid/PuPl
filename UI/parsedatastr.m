@@ -31,7 +31,9 @@ subs = {
 };
 
 for ii = 1:size(subs, 1)
-    cmd = strsubconstval(cmd, subs{ii, 1}, all2str(subs{ii, 2}(data)));
+    if numel(regexp(cmd, subs{ii, 1})) > 0
+        cmd = strsubconstval(cmd, subs{ii, 1}, all2str(subs{ii, 2}(data)));
+    end
 end
 
 try

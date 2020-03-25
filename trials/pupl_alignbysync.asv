@@ -86,15 +86,15 @@ if isempty(offset_params)
     error('Could not align sync markers');
 else
     fprintf('Sync markers aligned with MSE %f s^2\n', err);
-    fprintf('Offset: %f s\n', offset_params(2));
-    fprintf('Drift parameter: %f s\n', offset_params(1));
+    fprintf('Offset: %f s\b', offset_params(2));
+    drifted_diff = 
+    fprintf('Offset: %f s\b', offset_params(2));
 end
 
-attach_idx = pupl_event_sel(EYE.eventlog.event, args.attach);
-elog_events = EYE.eventlog.event(attach_idx);
+elog_events = EYE.eventlog.event;
 elog_events = fieldconsistency(elog_events, EYE.event);
-elog_times = [elog_events.time];
-new_times = num2cell(elog_times * offset_params(1) + offset_params(2));
+elog_times = elog_events.time;
+new_times = num2cell(elog_times * params(1) + params(2));
 [elog_events.time] = new_times{:};
 
 EYE.event = [EYE.event(:)' elog_events(:)'];

@@ -5,8 +5,6 @@ function EYE = pupl_import(varargin)
 
 global pupl_globals
 
-EYE = [];
-
 args = pupl_args2struct(varargin, {
     'eyedata' struct([]) % optional, only required if adding event logs
     'loadfunc' []; % required
@@ -36,6 +34,7 @@ if isempty(args.filepath) % Get path
     if args.bids
         datapath = uigetdir(pwd, 'Select data folder (e.g. sourcedata/ or raw/)');
         if isnumeric(datapath)
+            EYE = 0;
             return
         end
         switch args.type
@@ -52,6 +51,7 @@ if isempty(args.filepath) % Get path
                 [filenames, directory] = uigetfile(args.filefilt,...
                     'MultiSelect', 'on');
                 if isnumeric(filenames)
+                    EYE = 0;
                     return
                 end
                 args.filepath = strcat(directory, cellstr(filenames));
@@ -63,6 +63,7 @@ if isempty(args.filepath) % Get path
                         sprintf('Event log for %s', EYE(dataidx).name),...
                         'MultiSelect', 'off');
                     if isnumeric(filename)
+                        EYE = 0;
                         return
                     end
                     args.filepath{dataidx} = fullfile(directory, filename);
@@ -109,6 +110,7 @@ else
             data = args.loadfunc(args.filepath{dataidx}, args.args{:});
             if isempty(data)
                 fprintf('\n');
+                EYE = 0;
                 return
             end
             curr = pupl_checkraw(...

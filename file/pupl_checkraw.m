@@ -8,6 +8,23 @@ args = pupl_args2struct(varargin, {
     'type' 'eye'
 });
 
+if isfield(data, 'event')
+    data.event = data.event(:)';
+end
+
+if isfield(data, 'pupil')
+    ur = [];
+    for f = {'pupil' 'gaze' 'times' 'srate'}
+        ur.(f{:}) = data.(f{:});
+    end
+    data.ur = ur;
+    % Assign unique ID's to events
+    if isfield(data, 'event')
+        uniqid = num2cell(1:numel(data.event));
+        [data.event.uniqid] = uniqid{:};
+    end
+end
+
 data.src = args.src;
 [~, n] = fileparts(data.src);
 data.name = n;
@@ -17,9 +34,9 @@ if strcmp(args.type, 'eye')
     
     sides = {'left' 'right'};
     fields = {
-        {'urpupil'}
-        {'urgaze' 'x'}
-        {'urgaze' 'y'}
+        {'ur' 'pupil'}
+        {'ur' 'gaze' 'x'}
+        {'ur' 'gaze' 'y'}
     };
     for ii1 = 1:numel(sides)
         otherside = sides{~strcmp(sides, sides{ii1})};

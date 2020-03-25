@@ -2,26 +2,27 @@
 function out = getfromur(EYE, type)
 
 switch(type)
-    case {'diam' 'pupil'}
+    case 'pupil'
         try
-            out = struct(...
-                'left', EYE.urpupil.left,...
-                'right', EYE.urpupil.right);
+            out = [];
+            for field = reshape(fieldnames(EYE.ur.pupil), 1, [])
+                out.(field{:}) = EYE.ur.pupil.(field{:});
+            end
         catch
             out = struct(...
-                'left', mean([
-                    EYE.urpupil.left.x
-                    EYE.urpupil.left.y]),...
-                'right', mean([
-                    EYE.urpupil.right.x
-                    EYE.urpupil.right.y]));
+                'left', nanmean_bc([
+                    EYE.ur.pupil.left.x
+                    EYE.ur.pupil.left.y], 1),...
+                'right', nanmean_bc([
+                    EYE.ur.pupil.right.x
+                    EYE.ur.pupil.right.y], 1));
         end
     case 'gaze'
         out = struct(...
             'x', mean([
-                EYE.urgaze.x.left
-                EYE.urgaze.x.right]),...
+                EYE.ur.gaze.x.left
+                EYE.ur.gaze.x.right]),...
             'y', mean([
-                EYE.urgaze.y.left
-                EYE.urgaze.y.right]));
+                EYE.ur.gaze.y.left
+                EYE.ur.gaze.y.right]));
 end

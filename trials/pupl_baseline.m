@@ -37,6 +37,7 @@ if isempty(args.correction)
     correctionOptions = {
         'subtract baseline mean'
         'percent change from baseline mean'
+        'z-score based on baseline statistics'
         'none'};
     correction = correctionOptions(...
         listdlg('PromptString', 'Baseline correction type',...
@@ -68,14 +69,11 @@ else
     end
 
     if isempty(args.event)
-        eventTypes = unique(mergefields(EYE, 'event', 'type'));
         switch args.mapping
             case 'one:one'
                 args.event = 0;
             otherwise
-                args.event = eventTypes(listdlgregexp('PromptString', 'Baselines are defined relative to which events?',...
-                    'SelectionMode', 'single',...
-                    'ListString', eventTypes));
+                args.event = pupl_event_UIget(mergefields(EYE, 'event'), 'Baselines are defined relative to which events?');
                 if isempty(args.event)
                     return
                 end
@@ -119,70 +117,74 @@ switch args.correction
     case 'percent change from baseline mean'
         correctionFunc = @(tv, bv) 100 * (tv - nanmean_bc(bv)) / nanmean_bc(bv);
         relstr = '% change from baseline mean';
+    case 'z-score based on baseline statistics'
+        correctionFunc = @(tv, bv) 100 * (tv - nanmean_bc(bv)) / nanstd_bc(bv);
+        relstr = {'z-scores' 'based on baseline stats'};
     case 'none'
         correctionFunc = @(tv, bv) tv;
         relstr = EYE.units.pupil{3};
 end
 
-% At the end of this there will be 2 arrays a cell array called
-% baseline_lims, each element of which will be a 2-element numeric vector
-% with the time limits, in seconds, of a baseline period such that epoch(n)
-% will be corrected using baseline period baselinelims{n}
+% At the end of this there will be an array called baseline_uniqids, such
+% that epoch(n) will be corrected by a baseline period centered on the
+% event with uniqid baseline_uniqids(n)
 
-curr_lims = parsetimestr(args.lims, EYE.srate, 'smp'); % As latencies
-epoch_lats = mergefields(EYE.epoch, 'event', 'latency'); % Event latencies for epochs
+epoch_times = pupl_epoch_get(EYE, [], 'time'); % Latencies of epoch-defining events
 if isnumeric(args.event) % Baselines defined relative to each epoch-defining event
-    baselinelims = bsxfun(@plus, epoch_lats(:), curr_lims(:)');
-    baselinelims = mat2cell(baselinelims, ones(size(baselinelims, 1), 1), 2);
+    baseline_uniqids = [EYE.epoch.event]; % Uniqids
 else % Baselines defined relative to their own events (other than those that define epochs)
-    baseline_lats = [EYE.event(ismember({EYE.event.type}, args.event)).time];
+    baseline_events = EYE.event(pupl_event_sel(EYE.event, args.event));
     if strcmp(args.mapping, 'one:all')
-        baseline_lats = baseline_lats(1);
+        baseline_events = baseline_events(1);
     end
     % Figure out which epochs occur after which baseline period
-    baselinelims = {};
-    for baselineidx = 1:numel(baseline_lats)
-        curr_baselinelims = baseline_lats(baselineidx) + curr_lims;
-        if baselineidx == 1 % Ensure no epochs are missed
-            early_epoch_idx = epoch_lats < baseline_lats(baselineidx);
+    baseline_uniqids = [];
+    for baseline_idx = 1:numel(baseline_events)
+        if baseline_idx == 1 % Ensure no epochs are missed
+            early_epoch_idx = epoch_times < EYE.event(baseline_idx).time;
             if any(early_epoch_idx)
                 error_txt = [
                     'The following epochs occur before the first baseline period:\n'...
-                    sprintf('\t%s\n', EYE.epoch(early_epoch_idx).name)
+                    sprintf('\t%s\n', pupl_epoch_get(EYE, early_epoch_idx, 'name'))
                 ];
-                error(error_txt)
+                error(error_txt) % This should probably just be a warning
             end
         end
         % Correct all epochs whose defining events occur after the defining
         % event of the baseline period
-        curr_epochstocorrect = epoch_lats >= baseline_lats(baselineidx);
-        if baselineidx < numel(baseline_lats)
+        correct_idx = epoch_times >= baseline_events(baseline_idx).time;
+        if baseline_idx < numel(baseline_events)
             % But don't correct the epochs that occur after the next
             % baseline period
-            curr_epochstocorrect = curr_epochstocorrect & ...
-                epoch_lats < baseline_lats(baselineidx + 1);
+            correct_idx = correct_idx & ...
+                epoch_times < baseline_events(baseline_idx + 1).time;
         end
-        baselinelims = [
-            baselinelims
-            repmat({curr_baselinelims}, nnz(curr_epochstocorrect), 1)
+        baseline_uniqids = [
+            baseline_uniqids;
+            repmat(baseline_events(baseline_idx).uniqid, nnz(correct_idx), 1)
         ];
     end
 end
 
+rel_lats = parsetimestr(args.lims, EYE.srate, 'smp');
+event_ids = [EYE.event.uniqid];
 for epochidx = 1:numel(EYE.epoch)
-    if baselinelims{epochidx}(1) < 1
+    abs_lats = rel_lats + pupl_event_getlat(EYE, baseline_uniqids(epochidx) == event_ids);
+    if abs_lats(1) < 1
         error('Trying to create a baseline period starting at latency %d (earliest possible latency is 1)', baselinelims{epochidx}(1))
     end
-    if baselinelims{epochidx}(2) > EYE.ndata
+    if abs_lats(2) > EYE.ndata
         error('Trying to create a baseline period ending at latency %d (earliest possible latency for this recording is %d)', baselinelims{epochidx}(2), EYE.ndata)
     end
     EYE.epoch(epochidx).baseline = struct(...
-        'lims', baselinelims{epochidx},...
+        'lims', {args.lims},...
+        'event', baseline_uniqids(epochidx),...
         'func', correctionFunc);
 end
 
 if ~isempty(relstr)
-    EYE.units.epoch{end} = relstr;
+    relstr = cellstr(relstr);
+    EYE.units.epoch(end-(numel(relstr)-1):end) = relstr;
 end
 
 end

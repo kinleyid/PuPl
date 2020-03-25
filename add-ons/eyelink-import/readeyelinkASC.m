@@ -60,18 +60,18 @@ end
 
 if neyes == 1
     fields = {
-        {'urgaze' 'x' whicheye}
-        {'urgaze' 'y' whicheye}
-        {'urpupil' whicheye}
+        {'gaze' 'x' whicheye}
+        {'gaze' 'y' whicheye}
+        {'pupil' whicheye}
     };
 else
     fields = {
-        {'urgaze' 'x' 'left'}
-        {'urgaze' 'y' 'left'}
-        {'urpupil' 'left'}
-        {'urgaze' 'x' 'right'}
-        {'urgaze' 'y' 'right'}
-        {'urpupil' 'right'}
+        {'gaze' 'x' 'left'}
+        {'gaze' 'y' 'left'}
+        {'pupil' 'left'}
+        {'gaze' 'x' 'right'}
+        {'gaze' 'y' 'right'}
+        {'pupil' 'right'}
     };
 end
 
@@ -98,31 +98,13 @@ printprog(14)
 EYE.srate = srate;
 sample_times = datamat(1, :);
 EYE.t1 = sample_times(1);
-[~, event_times, event_lats] = processtimestamps(sample_times, event_times, srate);
-fprintf(' ');
+[sample_times, event_times] = processtimestamps(sample_times, event_times, srate);
+EYE.times = sample_times;
 
 %% Get events
 
 EYE.event = struct(...
-    'type', event_types,...
-    'time', num2cell(event_times/1000),...
-    'latency', num2cell(event_lats),...
-    'rt', repmat({NaN}, size(event_lats)));
-
-end
-
-function printprog(varargin)
-
-persistent m; % Max
-if strcmp(varargin{1}, 'setmax')
-    m = varargin{2};
-    str = ['[' repmat(' ', 1, m) ']'];
-    fprintf(str);
-else
-    fprintf(repmat('\b', 1, m + 2));
-    n = varargin{1};
-    str = ['[' repmat(':', 1, n) repmat(' ', 1, m - n) ']'];
-    fprintf(str);
-end
+    'name', event_types,...
+    'time', num2cell(event_times/1000));
 
 end

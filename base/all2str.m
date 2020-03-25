@@ -13,6 +13,7 @@ else
     if isnumeric(in) || islogical(in)
         out = mat2str(in);
     elseif ischar(in)
+        in = regexprep(in, '''', ''''''); % Replace single quotes with double quotes
         out = sprintf('''%s''', in);
     elseif iscell(in)
         if isempty(in)

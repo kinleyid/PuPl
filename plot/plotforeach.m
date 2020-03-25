@@ -66,6 +66,6 @@ ud.dataidx = ii;
 set(f, 'UserData', ud);
 set(f, 'Name', data(ii).name);
 ud.plotfunc(h, data(ii), ud.varargin{:});
-title(data(ii).name, 'Interpreter', 'none');
+% title(data(ii).name, 'Interpreter', 'none');
 
 end

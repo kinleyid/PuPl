@@ -49,8 +49,7 @@ for panelidx = 1:numel(children)
         'Recording length' sprintf('%f mins', eyedata(dataidx).ndata / eyedata(dataidx).srate / 60)
         'N. events' sprintf('%d', numel(eyedata(dataidx).event))
         'N. epochs' sprintf('%d', numel(eyedata(dataidx).epoch))
-        'Pupil data missing' sprintf('%f %%',...
-            100*(nnz(isnan(eyedata(dataidx).pupil.left)) + nnz(isnan(eyedata(dataidx).pupil.right)))/(2*eyedata(dataidx).ndata))
+        'Pupil data missing' sprintf('%f %%', 100 * eyedata(dataidx).ppnmissing)
     }';
     txt = [sprintf('%s: %s\n', txt{1:end - 1}) sprintf('%s: %s', txt{end})];
     set(children(panelidx), 'ToolTipString', txt);
@@ -79,6 +78,8 @@ if strcmp(get(currMenu, 'Type'), 'uimenu')
             if feval(get(currMenu, 'UserData'))
                 set(currMenu, 'Enable', 'on');
             end
+        catch
+            x = 10;
         end
     end
 end

@@ -83,9 +83,9 @@ else
 end
 %}
 
-rellims = EYE(1).epochset(strcmp({EYE(1).epochset.name}, set)).rellims;
-if ~isempty(rellims)
-    x = unfold(rellims);
+lims = EYE(1).epochset(strcmp({EYE(1).epochset.name}, set)).lims;
+if ~isempty(lims)
+    x = unfold(parsetimestr(lims, EYE(1).srate, 'smp'));
 else
     warning('Trial set contains epochs in which the relative positions of the events are different\nX-axis will begin at 0 seconds');
     x = 0:size(data, 2)-1;

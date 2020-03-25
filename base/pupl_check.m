@@ -13,8 +13,6 @@ defunitstruct = struct(...
     'pupil', {{'diameter' 'unknown units' 'assumed absolute'}});
 
 defaults = {
-    'rm'        @(x)false
-    't1'        @(x)[]
     'srate'     @(x)[]
     'src'       @(x)[]
     'name'      @(x)getname(x)
@@ -32,14 +30,6 @@ defaults = {
     'BIDS'      @(x)struct('sub', x.name)
 };
 
-if isfield(EYE, 'diam') && ~isfield(EYE, 'pupil')
-    [EYE.pupil] = EYE.diam;
-end
-
-if isfield(EYE, 'urdiam') && ~isfield(EYE, 'urpupil')
-    [EYE.urpupil] = EYE.urdiam;
-end
-
 % Fill in defaults
 for defidx = 1:size(defaults, 1)
     currfield = defaults{defidx, 1};
@@ -50,15 +40,57 @@ for defidx = 1:size(defaults, 1)
     end
 end
 
-% Set precision
-
 for dataidx = 1:numel(EYE)
+    % Set precision
     EYE(dataidx) = pupl_proc(EYE(dataidx), str2func(pupl_globals.precision), 'all');
-end
-
-% Keep units of epochs consistent with pupil size units
-for dataidx = 1:numel(EYE)
-    if isfield(EYE, 'epoch')
+    
+    % Set event to row vector
+    EYE(dataidx).event = EYE(dataidx).event(:)';
+    
+    baseeventstruct = [];
+    if ~isempty(EYE(dataidx).event)
+        % Convert event names to strings
+        newEvents = cellfun(@num2str, {EYE(dataidx).event.name}, 'UniformOutput', false);
+        [EYE(dataidx).event.name] = newEvents{:};
+        % Sort events by time of occurrence
+        [~, I] = sort([EYE(dataidx).event.time]);
+        EYE(dataidx).event = EYE(dataidx).event(I);
+        
+        ids = [EYE(dataidx).event.uniqid];
+        for field = reshape(fieldnames(EYE(dataidx).event(1)), 1, [])
+            baseeventstruct.(field{:}) = [];
+        end
+    else
+        ids = 0;
+    end
+    % Add "beginning of recording" and "end of recording" as events if they don't exist
+    % Add fieldnames of other events
+    startev = baseeventstruct;
+    startev.name = 'Start of recording';
+    startev.time = EYE(dataidx).times(1);
+    startev.uniqid = max(ids) + 1;
+    endev = baseeventstruct;
+    endev.name = 'End of recording';
+    endev.time = EYE(dataidx).times(end);
+    endev.uniqid = max(ids) + 2;
+    if isempty(EYE(dataidx).event)
+        EYE(dataidx).event = [startev endev];
+    else
+        if ~strcmp(EYE(dataidx).event(1).name, 'Start of recording')
+            startev = fieldconsistency(startev, EYE(dataidx).event);
+            EYE(dataidx).event = cat(2, startev, reshape(EYE(dataidx).event, 1, []));
+        end
+        if ~strcmp(EYE(dataidx).event(end).name, 'End of recording')
+            endev = fieldconsistency(endev, EYE(dataidx).event);
+            EYE(dataidx).event(end+1) = endev;
+        end
+    end
+    
+    if ~isempty(EYE(dataidx).epoch)
+        % Sort epochs by event time
+        [~, I] = sort(pupl_epoch_get(EYE(dataidx), [], 'time'));
+        EYE(dataidx).epoch = EYE(dataidx).epoch(I);
+        % Keep units of epochs consistent with pupil size units
         EYE(dataidx).units.epoch(1:2) = EYE(dataidx).units.pupil(1:2);
         % The third element, the relative size, may have been set by the
         % baseline correction:
@@ -66,65 +98,17 @@ for dataidx = 1:numel(EYE)
             EYE(dataidx).units.epoch(3) = EYE(dataidx).units.pupil(3);
         end
     end
-end
-
-% Ensure zero diameter measurements are set to nan
-for dataidx = 1:numel(EYE)
-    for field = {'left' 'right'}
-        data = EYE(dataidx).urpupil.(field{:});
-        data(round(data) == 0) = nan;
-        EYE(dataidx).urpupil.(field{:}) = data;
-    end
-end
-
-% Set event to row vector
-for dataidx = 1:numel(EYE)
-    EYE(dataidx).event = EYE(dataidx).event(:)';
-end
-
-% Ensure event labels are strings
-if ~isempty([EYE.event])
-    for dataidx = 1:numel(EYE)
-        newEvents = cellfun(@num2str, {EYE(dataidx).event.type}, 'un', 0);
-        [EYE(dataidx).event.type] = newEvents{:};
-    end
-end
-
-% Sorts events and epochs by time of occurrence
-for dataidx = 1:numel(EYE)
-    if ~isempty(EYE(dataidx).event)
-        [~, I] = sort([EYE(dataidx).event.latency]);
-        EYE(dataidx).event = EYE(dataidx).event(I);
-    end
-    if ~isempty(EYE(dataidx).epoch)
-        [~, I] = sort(mergefields(EYE(dataidx).epoch, 'event', 'latency'));
-        EYE(dataidx).epoch = EYE(dataidx).epoch(I);
-    end
-end
-
-% Adds "beginning of recording" and "end of recording" as events if they
-% don't exist
-for dataidx = 1:numel(EYE)
-    startev = struct('type', 'Start of recording',...
-        'time', 0,...
-        'latency', 1,...
-        'rt', NaN);
-    endev = struct(...
-        'type', 'End of recording',...
-        'time', (EYE(dataidx).ndata - 1) / EYE(dataidx).srate,...
-        'latency', EYE(dataidx).ndata,...
-        'rt', NaN);
-    if isempty(EYE(dataidx).event)
-        EYE(dataidx).event = [startev endev];
-    else
-        if ~strcmp(EYE(dataidx).event(1).type, 'Start of recording')
-            EYE(dataidx).event = cat(2, startev, reshape(EYE(dataidx).event, 1, []));
-
-        end
-        if ~strcmp(EYE(dataidx).event(end).type, 'End of recording')
-            EYE(dataidx).event(end+1) = endev;
+    
+    % Compute amount of data missing
+    nmissing = 0;
+    nstreams = 0;
+    for field = reshape(fieldnames(EYE(dataidx).pupil), 1, [])
+        if ~isempty(EYE(dataidx).pupil.(field{:}))
+            nmissing = nmissing + nnz(isnan(EYE(dataidx).pupil.(field{:})));
+            nstreams = nstreams + 1;
         end
     end
+    EYE(dataidx).ppnmissing = nmissing / nstreams / EYE(dataidx).ndata;
 end
 
 end
@@ -134,9 +118,9 @@ function ndata = getndata(EYE)
 if isfield(EYE, 'ndata')
     ndata = EYE.ndata;
 else
-    for field = reshape(fieldnames(EYE.urpupil), 1, [])
-        if ~isempty(EYE.urpupil.(field{:}))
-            ndata = numel(EYE.urpupil.(field{:}));
+    for field = reshape(fieldnames(EYE.ur.pupil), 1, [])
+        if ~isempty(EYE.ur.pupil.(field{:}))
+            ndata = numel(EYE.ur.pupil.(field{:}));
             return
         end
     end

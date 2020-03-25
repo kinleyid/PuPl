@@ -10,15 +10,15 @@ args = pupl_args2struct(varargin, {
 });
 
 stat_opts = [
-%   {Name presented to user} {function} {column name in spreadsheet}
-    {'Mean'} {@nanmean_bc} {'mean'};...
-    {'Peak-to-peak difference'} {@(x)(max(x) - min(x))} {'peak_to_peak_diff'};...
-    {'Max'} {@max} {'max'};...
-    {'Min'} {@min} {'min'};...
-    {'Median'} {@nanmedian_bc} {'median'};...
-    {'Standard deviation'} {@nanstd_bc} {'stdev'};...
-    {'Variance'} {@nanvar_bc} {'variance'};...
-    {'Percent missing'} {@(x)100*nnz(isnan(x))/numel(x)} {'pct_missing'};...
+%   {Name presented to user} {function} {column name in spreadsheet} {type of data used for computation (if empty, {'pupil' 'both'})}
+    {'Mean'} {@nanmean_bc} {'mean'} {[]};...
+    {'Peak-to-peak difference'} {@(x)(max(x) - min(x))} {'peak_to_peak_diff'} {[]};...
+    {'Max'} {@max} {'max'} {[]};...
+    {'Min'} {@min} {'min'} {[]};...
+    {'Median'} {@nanmedian_bc} {'median'} {[]};...
+    {'Standard deviation'} {@nanstd_bc} {'stdev'} {[]};...
+    {'Variance'} {@nanvar_bc} {'variance'} {[]};...
+    {'Percent missing'} {@(x)100*nnz(isnan(x))/numel(x)} {'pct_missing'} {[]}
 ];
 
 % Store names as variables in case I decide to change them
@@ -51,6 +51,10 @@ if isempty(args.trialwise)
     else
         args.trialwise = trialwise_opts{sel};
     end
+end
+
+if strcmp(args.trialwise, per_epoch)
+    stat_opts(end + 1, :) = [{'Number of blinks'} {@(x)nnz(diff(x=='b')==1)} {'n_blinks'} {{'datalabel'}}];
 end
 
 if isempty(args.cfg)
@@ -141,13 +145,25 @@ set_colnames = unique(mergefields(EYE, 'epochset', 'name')); % Set membership
 switch args.trialwise
     case per_epoch
         trial_colnames = {'trial_type' 'trial_idx' 'rejected' 'rt'};
+        all_fields = unique(fieldnames(mergefields(EYE, 'event')));
+        default_fields = { % Those the user didn't add
+            'type'
+            'name'
+            'time'
+            'uniqid'
+            'rt'
+        };
+        tvar_colnames = all_fields(~ismember(all_fields, default_fields));
+        tvar_colnames = tvar_colnames(:)';
     otherwise
         trial_colnames = {'mean_rt' 'median_rt' 'mean_log_rt'};
+        tvar_colnames = [];
 end
 all_info = {};
 all_condmemberships = {};
 all_setmemberships = {};
 all_trialinfo = {};
+all_tvars = {};
 all_data = {};
 
 % All data will be windowed. 
@@ -159,35 +175,44 @@ switch args.which
 end
 
 fprintf('Getting data...\n');
+rec_idx = {};
 for dataidx = 1:numel(EYE)
     fprintf('\t%s...\n', EYE(dataidx).name);
-    
-    %% First, collect windowed data in a cell array
+    EYE(dataidx) = pupl_mergelr(EYE(dataidx));
+    %% First, collect indices to windowed data in a cell array
     switch args.trialwise
         case per_epoch
-            data = cell(numel(EYE(dataidx).epoch), numel(win));
-            for epochidx = 1:numel(EYE(dataidx).epoch)
+            fprintf('Collecting indices to windowed data\t\t');
+            collected_windows = cell(numel(EYE(dataidx).epoch), numel(win));
+            n_epochs = numel(EYE(dataidx).epoch);
+            printprog('setmax', n_epochs);
+            for epochidx = 1:n_epochs
                 % Get epoch info
                 all_info{end + 1} = EYE(dataidx).name;
+                curr_epoch = EYE(dataidx).epoch(epochidx);
+                curr_event = pupl_epoch_get(EYE(dataidx), curr_epoch, '_ev');
                 all_trialinfo(end + 1, :) = {
-                    sprintf('"%s"', EYE(dataidx).epoch(epochidx).name)
+                    sprintf('"%s"', curr_event.name)
                     epochidx
-                    EYE(dataidx).epoch(epochidx).reject
-                    EYE(dataidx).epoch(epochidx).event.rt
+                    curr_epoch.reject
+                    curr_event.rt
                 };
+                % Get trial vars
+                curr_tvars = {};
+                for tvar_idx = 1:numel(tvar_colnames)
+                    curr_tvars{end + 1} = curr_event.(tvar_colnames{tvar_idx});
+                end
+                all_tvars(end + 1, :) = curr_tvars;
                 % Determine set membership, lining up membership with column names
                 curr_setnames = {EYE(dataidx).epochset.name};
                 curr_setmembership = curr_setnames(...
                     arrayfun(...
                         @(desc) regexpsel(...
-                            EYE(dataidx).epoch(epochidx).name,...
+                            curr_event.name,...
                             desc.members),...
                         [EYE(dataidx).epochset.description]));
                 all_setmemberships{end + 1} = ismember(set_colnames, curr_setmembership);
-                % Get windowed data
-                curr_data = pupl_epoch_getdata(EYE(dataidx), epochidx);
-                curr_data = curr_data{1};
-                curr_epoch = EYE(dataidx).epoch(epochidx);
+                % Get indices to windowed data
                 for winidx = 1:numel(win)
                     str_win = win{winidx};
                     if isempty(str_win{1})
@@ -198,16 +223,22 @@ for dataidx = 1:numel(EYE)
                     end
                     curr_win = parsetimestr(str_win, EYE(dataidx).srate, 'smp');
                     rel_lats = unfold(parsetimestr(curr_epoch.lims, EYE(dataidx).srate, 'smp'));
-                    win_idx = rel_lats >= curr_win(1) & rel_lats <= curr_win(2);
-                    data{epochidx, winidx} = curr_data(win_idx);
+                    is_win = rel_lats >= curr_win(1) & rel_lats <= curr_win(2);
+                    abs_lats = rel_lats(is_win) + pupl_epoch_get(EYE(dataidx), curr_epoch, '_lat');
+                    collected_windows{epochidx, winidx} = abs_lats;
                 end
+                rec_idx{end + 1} = dataidx;
+                printprog(epochidx);
             end
         case set_avg
-            data = cell(numel(EYE(dataidx).epochset), numel(win));
-            for setidx = 1:numel(EYE(dataidx).epochset)
+            fprintf('Collecting windowed data\t\t\t\t');
+            collected_windows = cell(numel(EYE(dataidx).epochset), numel(win));
+            n_sets = numel(EYE(dataidx).epochset);
+            printprog('setmax', n_sets);
+            for setidx = 1:n_sets
                 curr_set = EYE(dataidx).epochset(setidx);
-                epochidx = ismember({EYE(dataidx).epoch.name}, curr_set.description.members);
-                rts = mergefields(EYE(dataidx).epoch(epochidx), 'event', 'rt');
+                epochidx = pupl_epoch_sel(EYE(dataidx), EYE(dataidx).epoch, curr_set.description.members);
+                rts = pupl_epoch_get(EYE(dataidx), EYE(dataidx).epoch(epochidx), 'rt');
                 % Get epoch info
                 all_info{end + 1} = EYE(dataidx).name;
                 all_trialinfo(end + 1, :) = {
@@ -224,15 +255,16 @@ for dataidx = 1:numel(EYE)
                     curr_win = nan(size(str_win));
                     for ii = 1:2
                         if isempty(str_win{ii})
-                            curr_win(ii) = EYE(dataidx).epochset(setidx).rellims(ii);
+                            curr_win(ii) = parsetimestr(EYE(dataidx).epochset(setidx).lims(ii), EYE(dataidx).srate, 'smp');
                         else
                             curr_win(ii) = parsetimestr(str_win{ii}, EYE(dataidx).srate, 'smp');
                         end
                     end
-                    rel_lats = unfold(EYE(dataidx).epochset(setidx).rellims);
+                    rel_lats = unfold(parsetimestr(EYE(dataidx).epochset(setidx).lims, EYE(dataidx).srate, 'smp'));
                     win_idx = rel_lats >= curr_win(1) & rel_lats <= curr_win(2);
-                    data{setidx, winidx} = curr_data(win_idx);
+                    collected_windows{setidx, winidx} = curr_data(win_idx);
                 end
+                printprog(setidx);
             end
     end
     %% Next, compute downsampling/statistics on data in cell array
@@ -243,14 +275,21 @@ for dataidx = 1:numel(EYE)
         EYE(dataidx).cond);
     all_condmemberships = [
         all_condmemberships
-        repmat({curr_condmemberships}, size(data, 1), 1)
+        repmat({curr_condmemberships}, size(collected_windows, 1), 1)
     ];
 
     % Use data
-    for trialidx = 1:size(data, 1)
+    fprintf('Computing statistics on windowed data\t');
+    printprog('setmax', size(collected_windows, 1))
+    for trialidx = 1:size(collected_windows, 1)
         switch args.which
             case 'downsampled'
-                curr_data = data{trialidx, 1};
+                if strcmp(args.trialwise, per_epoch)
+                    curr_data = getfield(EYE(dataidx), 'pupil', 'both');
+                    curr_data = curr_data(collected_windows{trialidx, winidx});
+                else
+                    curr_data = collected_windows{trialidx, 1};
+                end
                 win_width = parsetimestr(args.cfg.width, EYE(dataidx).srate, 'smp');
                 % 1s at 60Hz gives 60 datapoints
                 if isempty(args.cfg.step)
@@ -276,15 +315,27 @@ for dataidx = 1:numel(EYE)
             case 'stats'
                 % Compute statistics on vector
                 curr_stats = [];
-                for winidx = 1:size(data, 2)
+                for winidx = 1:size(collected_windows, 2)
                     for statidx = 1:numel(args.cfg(winidx).stats)
                         statname = args.cfg(winidx).stats{statidx};
                         statoptidx = strcmp(statname, stat_opts(:, 1));
-                        curr_stats = [curr_stats feval(stat_opts{statoptidx, 2}, data{trialidx, winidx})];
+                        switch args.trialwise
+                            case per_epoch
+                                data_type = stat_opts{statoptidx, 4};
+                                if isempty(data_type)
+                                    data_type = {'pupil' 'both'};
+                                end
+                                curr_data = getfield(EYE(dataidx), data_type{:});
+                                curr_win = curr_data(collected_windows{trialidx, winidx});
+                            case set_avg
+                                curr_win = collected_windows{trialidx, winidx};
+                        end
+                        curr_stats = [curr_stats feval(stat_opts{statoptidx, 2}, curr_win)];
                     end
                 end
                 all_data{end + 1} = curr_stats;
-        end     
+        end
+        printprog(trialidx);
     end
 end
 fprintf('Done\n');
@@ -309,9 +360,15 @@ all_info = all_info(:);
 all_setmemberships = num2cell(cell2mat(all_setmemberships(:)));
 all_condmemberships = num2cell(cell2mat(all_condmemberships(:)));
 
+if strcmp(args.trialwise, per_epoch)
+    tvar_colnames = strcat('tvar_', tvar_colnames);
+else
+    all_tvars = [];
+end
+
 bigtable = [
-    info_colnames   trial_colnames   strcat('cond_', cond_colnames)  strcat('set_', set_colnames)    data_colnames
-    all_info        all_trialinfo    all_condmemberships             all_setmemberships              all_data
+    info_colnames   trial_colnames  tvar_colnames   strcat('cond_', cond_colnames)  strcat('set_', set_colnames)    data_colnames
+    all_info        all_trialinfo   all_tvars       all_condmemberships             all_setmemberships              all_data
 ];
 
 fprintf('Writing to %s...\n', args.path);

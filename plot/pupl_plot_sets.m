@@ -7,7 +7,10 @@ parse(p, varargin{:});
 
 bycond = p.Results.bycond;
 
-f = figure('Visible', 'off'); hold on;
+f = figure(...
+    'UserData', struct('legend', []),... % Legend entries
+    'Visible', 'off');
+hold on;
 
 if isempty(p.Results.plotstruct)
     plotstruct = [];
@@ -36,8 +39,8 @@ if isempty(p.Results.plotstruct)
         if isempty(sel)
             return
         end
-        set = setopts{sel};
-        plotstruct(plotidx).set = set;
+        curr_set = setopts{sel};
+        plotstruct(plotidx).set = curr_set;
         
         q = 'Plot which trials?';
         a = questdlg(q, q, 'Unrejected', 'All', 'Rejected', 'Unrejected');
@@ -46,17 +49,33 @@ if isempty(p.Results.plotstruct)
         end
         plotstruct(plotidx).include = lower(a);
         
-        applyplotargs(f, EYE, plotstruct, bycond);
+        if nnz(dataidx) > 1
+            q = 'How should epochs be weighted?';
+            a = questdlg(q, q, 'Weight by trial', 'Weight by participant', 'Cancel', 'Weight by trial');
+            switch a
+                case 'Weight by trial'
+                    weight = 'trial';
+                case 'Weight by participant'
+                    weight = 'participant';
+                otherwise
+                    return
+            end
+            plotstruct(plotidx).weight = weight;
+        else
+            plotstruct(plotidx).weight = 'trial';
+        end
+        
+        set(f, 'Visible', 'on');
+        applyplotargs(f, EYE, plotstruct(plotidx), bycond);
         
         q = 'Add more data to this plot?';
         a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
         switch a
             case 'Yes'
+                plotidx = plotidx + 1;
                 continue
-            case 'No'
-                break
             otherwise
-                return
+                break
         end
     end
 else
@@ -65,7 +84,7 @@ else
 end
 
 if isgraphics(gcbf)
-    fprintf('Equivalent command: %s\n', getcallstr(p, false));
+    fprintf('Equivalent command:\n%s\n', getcallstr(p, false));
 end
 
 end
@@ -73,49 +92,86 @@ end
 function applyplotargs(f, EYE, plotstruct, bycond)
 
 figure(f);
-clf; hold on;
 
 for plotidx = 1:numel(plotstruct)
     dataidx = plotstruct(plotidx).dataidx;
-    set = plotstruct(plotidx).set;
+    currset = plotstruct(plotidx).set;
     
-    [data, isrej] = pupl_epoch_getdata(EYE(dataidx), set);
-    data = cell2mat(data);
-    
-    switch plotstruct(plotidx).include
-        case 'all'
-            isrej = false(size(isrej));
-        case 'rejected'
-            isrej = ~isrej;
+    switch plotstruct(plotidx).weight
+        case 'trial'
+            datasets = {dataidx};
+        case 'participant'
+            datasets = num2cell(dataidx);
     end
     
+    alldata = {};
+    ndata = 0;
+    all_lims = {};
+    for curr_idx = datasets(:)'
+        [data, isrej, lims] = pupl_epoch_getdata(EYE(curr_idx{:}), currset);
+        all_lims{end + 1} = lims;
+        data = cell2mat(data);
+        switch plotstruct(plotidx).include
+            case 'all'
+                isrej = false(size(isrej));
+            case 'rejected'
+                isrej = ~isrej;
+        end
+        data = data(~isrej, :);
+        switch plotstruct(plotidx).weight
+            case 'trial'
+                alldata{end + 1} = data;
+                ndata = ndata + size(data, 1);
+            case 'participant'
+                alldata{end + 1} = nanmean_bc(data, 1);
+        end
+    end
+    all_lims = cat(1, all_lims{:});
+    alldata = cat(1, alldata{~cellfun(@isempty, alldata)});
+    if strcmp(plotstruct(plotidx).weight, 'participant')
+        ndata = size(alldata, 1);
+    end
+    mu = nanmean_bc(alldata, 1);
+    nmu = sum(~isnan(alldata), 1);
+    if nmu > 1
+        sem = nanstd_bc(alldata, 0, 1) ./ sqrt(nmu);
+    else
+        sem = zeros(size(mu));
+    end
+    
+    % Get legend entries
     if bycond
         names = unique(mergefields(EYE(dataidx), 'cond'));
     else
         names = {EYE(dataidx).name};
     end
     names = sprintf('%s ', names{:});
-    plotstruct(plotidx).legendentry = sprintf('%s%s n = %d trials (showing %s trials)',...
-        names, plotstruct(plotidx).set, nnz(~isrej), plotstruct(plotidx).include);
+    switch plotstruct(plotidx).weight
+        case 'participant'
+            unitofanalysis = 'recordings';
+        case 'trial'
+            unitofanalysis = 'trials';
+    end
+    plotstruct(plotidx).legendentry = sprintf('%s%s n = %d %s (plotting %s trials)',...
+        names, plotstruct(plotidx).set, ndata, unitofanalysis, plotstruct(plotidx).include);
     
-    data = data(~isrej, :);
-    setidx = strcmp({EYE(1).epochset.name}, set);
-    rellims = EYE(1).epochset(setidx).rellims;
-    if ~isempty(rellims)
-        x = unfold(rellims);
+    if isequal(all_lims{:})
+        x = unfold(parsetimestr(all_lims{1}, EYE(1).srate, 'smp'));
     else
         warning('Epoch set contains epochs in which the relative positions of the events are different\nX-axis will begin at 0 seconds');
-        x = 0:size(data, 2)-1;
+        x = 0:size(mu, 2)-1;
     end
     t = x / unique([EYE.srate]);
-    currplot = plot(t, nanmean_bc(data));
+    currplot = plot(t, mu);
     x = [t t(end:-1:1)];
-    y = [nanmean_bc(data) + nanstd_bc(data) ./ sqrt(sum(~isnan(data)))...
-         fliplr(nanmean_bc(data) - nanstd_bc(data) ./ sqrt(sum(~isnan(data))))];
+    y = [
+        mu + sem...
+        fliplr(mu - sem)
+    ];
     fill(x, y, get(currplot, 'Color'),...
         'EdgeColor', get(currplot, 'Color'),...
         'FaceAlpha', 0.1,...
-        'EdgeAlpha', 0.1,...
+        'EdgeAlpha', 0.0,...
         'HandleVisibility', 'off');
     xlim([t(1) t(end)]);
 end
@@ -123,6 +179,10 @@ end
 xlabel('Time (s)');
 ylabel(sprintf('Mean %s', lower(pupl_getunits(EYE, 'epoch'))));
 
-legend(plotstruct.legendentry, 'Interpreter', 'none');
+% Append to legend
+ud = get(f, 'UserData');
+ud.legend = [ud.legend {plotstruct.legendentry}];
+legend(ud.legend{:}, 'Interpreter', 'none');
+set(f, 'UserData', ud);
 
 end

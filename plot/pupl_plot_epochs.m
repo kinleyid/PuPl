@@ -47,21 +47,22 @@ function sub_plot_epochs(h, n)
 ud = get(h, 'UserData');
 trialidx = ud.trialidx;
 EYE = ud.EYE;
-epoch = EYE.epoch(trialidx);
 
 trialidx = trialidx + n;
 if trialidx < 1
-    trialidx = 1;
-elseif trialidx > numel(EYE.epoch)
     trialidx = numel(EYE.epoch);
+elseif trialidx > numel(EYE.epoch)
+    trialidx = 1;
 end
 
 ud.trialidx = trialidx;
 
+epoch = EYE.epoch(trialidx);
+
 [pupil, urpupil] = deal([]);
 for field = {'left' 'right'}
     pupil.(field{:}) = cell2mat(pupl_epoch_getdata(EYE, trialidx, 'pupil', field{:}));
-    urpupil.(field{:}) = cell2mat(pupl_epoch_getdata(EYE, trialidx, 'urpupil', field{:}));
+    urpupil.(field{:}) = cell2mat(pupl_epoch_getdata(EYE, trialidx, 'ur', 'pupil', field{:}));
 end
 if isfield(EYE.pupil, 'both')
     pupil.both = cell2mat(pupl_epoch_getdata(EYE, trialidx, 'pupil', 'both'));
@@ -70,7 +71,7 @@ end
 axes(findobj(h, 'Tag', 'axes'));
 cla; hold on
 
-t = unfold(parsetimestr(epoch.lims, EYE.srate, 'smp') + epoch.event.latency) / EYE.srate; % Time in seconds
+t = unfold(parsetimestr(epoch.lims, EYE.srate, 'smp') + pupl_epoch_get(EYE, epoch, '_lat')) / EYE.srate; % Time in seconds
 eventidx = unfold(parsetimestr(epoch.lims, EYE.srate, 'smp')) == 0; % Find where the event occurs
 plot(repmat(t(eventidx), 1, 2), ud.ylims, 'k--');
 plot(t, pupil.left, 'b');
@@ -87,16 +88,17 @@ xlabel('Time (s)');
 ylabel(sprintf('Pupil %s (%s, %s)', EYE.units.epoch{:}));
 legendentries = {'Event', 'Left', 'Right', 'Unprocesssed left', 'Unprocessed right'};
 if isfield(pupil, 'both')
-    legendentries = [legendentries(1:3) 'both' legendentries(4:end)];
+    legendentries = [legendentries(1:3) 'Both' legendentries(4:end)];
 end
 legend(legendentries{:});
 
-currtitle = ud.EYE.epoch(ud.trialidx).name;
-
+currtitle = sprintf('Epoch %d.', trialidx);
 if EYE.epoch(trialidx).reject
-    currtitle = ['[REJECTED] ' currtitle];
+    currtitle = sprintf('%s [REJECTED]', currtitle);
 end
-title(currtitle);
+epoch_name = pupl_epoch_get(ud.EYE, ud.trialidx, 'name');
+currtitle = sprintf('%s\n%s', currtitle, epoch_name{:});
+title(currtitle, 'Interpreter', 'none');
 
 set(h, 'UserData', ud)
 

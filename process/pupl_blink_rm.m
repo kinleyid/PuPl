@@ -46,18 +46,20 @@ isblink = EYE.datalabel == 'b';
 
 blinkStarts = find(diff(isblink) == 1);
 blinkEnds = find(diff(isblink) == -1);
-if blinkStarts(1) > blinkEnds(1) % Recording starts with a blink
-    blinkStarts = [1 blinkStarts];
-end
-if blinkStarts(end) > blinkEnds(end) % Recording ends with a blink
-    blinkEnds = [blinkEnds EYE.ndata];
-end
+if ~isempty(blinkStarts)
+    if blinkStarts(1) > blinkEnds(1) % Recording starts with a blink
+        blinkStarts = [1 blinkStarts];
+    end
+    if blinkStarts(end) > blinkEnds(end) % Recording ends with a blink
+        blinkEnds = [blinkEnds EYE.ndata];
+    end
 
-nblinks = numel(blinkStarts);
-for blinkidx = 1:nblinks
-    EYE = pupl_proc(EYE, @(x) rmblinks(x, [blinkStarts(blinkidx) blinkEnds(blinkidx)], trimlen));
+    nblinks = numel(blinkStarts);
+    for blinkidx = 1:nblinks
+        EYE = pupl_proc(EYE, @(x) rmblinks(x, [blinkStarts(blinkidx) blinkEnds(blinkidx)], trimlen));
+    end
+    fprintf('\t\t%f%% of data is blink-adjacent\n', 2 * 100 * nblinks * trimlen / EYE.ndata)
 end
-fprintf('\t\t%f%% of data is blink-adjacent\n', 2 * 100 * nblinks * trimlen / EYE.ndata)
 
 end
 

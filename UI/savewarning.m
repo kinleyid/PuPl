@@ -4,7 +4,11 @@ global pupl_globals
 
 dontdelete = false;
 if ~isempty(pupl_globals) % will be empty if clear('all') happened
-    unsaved_data = evalin('base', pupl_globals.datavarname);
+    try
+        unsaved_data = evalin('base', pupl_globals.datavarname);
+    catch
+        unsaved_data = []; % Data has already been deleted
+    end
     if ~isempty(unsaved_data)
         a = questdlg(sprintf('Save data (variable "%s") from workspace?', pupl_globals.datavarname));
         switch a

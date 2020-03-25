@@ -205,23 +205,24 @@ while true
             end
     end
 end
-
+fprintf(' ');
 %% Process timestamps
 
 srate = double(srate);
 EYE.srate = srate;
 sample_times = double([sample_times{:}]);
-EYE.t1 = sample_times(1);
 event_times = double([event_times{:}]);
-[~, event_times, event_lats] = processtimestamps(sample_times, event_times, srate);
+
+[sample_times, event_times] = processtimestamps(sample_times, event_times, srate);
+EYE.times = sample_times/1000;
 
 %% Get events
 
+event_types = cellfun(@(x) regexprep(x, sprintf('\n'), ' '), event_types, 'UniformOutput', false);
+event_types = cellfun(@(x) regexprep(x, char(0), ''), event_types, 'UniformOutput', false);
 EYE.event = struct(...
-    'type', cellfun(@strtrim, event_types, 'UniformOutput', false),...
-    'time', num2cell(event_times/1000),...
-    'latency', num2cell(event_lats),...
-    'rt', repmat({NaN}, size(event_times)));
+    'name', event_types,...
+    'time', num2cell(event_times/1000));
 
 %% Get data
 
@@ -239,9 +240,9 @@ end
 sfac = double(sfac);
 if neyes == 1
     fields = {
-        {'urgaze' 'x' whicheye}
-        {'urgaze' 'y' whicheye}
-        {'urpupil' whicheye}
+        {'gaze' 'x' whicheye}
+        {'gaze' 'y' whicheye}
+        {'pupil' whicheye}
     };
     f = [
         1/sfac
@@ -250,12 +251,12 @@ if neyes == 1
     ];
 else
     fields = {
-        {'urgaze' 'x' 'left'}
-        {'urgaze' 'y' 'left'}
-        {'urpupil' 'left'}
-        {'urgaze' 'x' 'right'}
-        {'urgaze' 'y' 'right'}
-        {'urpupil' 'right'}
+        {'gaze' 'x' 'left'}
+        {'gaze' 'y' 'left'}
+        {'pupil' 'left'}
+        {'gaze' 'x' 'right'}
+        {'gaze' 'y' 'right'}
+        {'pupil' 'right'}
     };
     f = [
         1/sfac

@@ -24,27 +24,61 @@ else
     type = p.Results.type;
 end
 
-plotinfo = [];
+plotinfo = struct(...
+    'data', [],...
+    'legendentries', [],...
+    'colours', [],...
+    't', [],...
+    'srate', []);
+colours = {'b' 'r'};
+n = 1;
 if strcmpi(type, 'pupil')
-    plotinfo.data = {
-        getfield(getfromur(EYE, 'pupil'), 'left')
-        getfield(getfromur(EYE, 'pupil'), 'right')
-        EYE.pupil.left
-        EYE.pupil.right};
-    plotinfo.legendentries = {
-        'Unprocessed left'
-        'Unprocessed right'
-        'Left'
-        'Right'};
-    plotinfo.colours = {
-        'b:'
-        'r:'
-        'b'
-        'r'};
-    if isfield(EYE.pupil, 'both')
-        plotinfo.data{end + 1} = EYE.pupil.both;
+    for side = {'left' 'right'}
+        if isfield(EYE.pupil, side{:})
+            plotinfo.data = [
+                plotinfo.data
+                {
+                    getfield(getfromur(EYE, 'pupil'), side{:})
+                    EYE.pupil.(side{:})
+                }
+            ];
+            plotinfo.legendentries = [
+                plotinfo.legendentries
+                {
+                    ['Unprocessed ' side{:}]
+                    [upper(side{:}(1)) side{:}(2:end)]
+                }
+            ];
+            plotinfo.colours = [
+                plotinfo.colours
+                {
+                    sprintf('%s:', colours{n})
+                    colours{n}
+                }
+            ];
+            n = n + 1;
+            plotinfo.t = [
+                plotinfo.t
+                {
+                    EYE.ur.times
+                    EYE.times
+                }
+            ];
+            plotinfo.srate = [
+                plotinfo.srate
+                {
+                    EYE.ur.srate
+                    EYE.srate
+                }
+            ];
+        end
+    end
+    if n == 3 % Both fields present
+        plotinfo.data{end + 1} = mergelr(EYE);
         plotinfo.colours{end + 1} = 'k';
         plotinfo.legendentries{end + 1} = 'Both';
+        plotinfo.t{end + 1} = EYE.times;
+        plotinfo.srate{end + 1} = EYE.srate;
     end
     plotinfo.ylim = [min(structfun(@min, EYE.pupil)) max(structfun(@max, EYE.pupil))];
 elseif strcmpi(type, 'gaze')
@@ -63,6 +97,16 @@ elseif strcmpi(type, 'gaze')
         'Unprocessed y'
         'x'
         'y'};
+    plotinfo.t = {
+        EYE.ur.times
+        EYE.ur.times
+        EYE.times
+        EYE.times};
+    plotinfo.srate = {
+        EYE.ur.srate
+        EYE.ur.srate
+        EYE.srate
+        EYE.srate};
     plotinfo.ylim = [min(structfun(@min, EYE.gaze)) max(structfun(@max, EYE.gaze))];
 elseif strcmpi(type, 'id')
     dl = double(EYE.datalabel);
@@ -125,22 +169,27 @@ function sub_render(h)
 ud = get(h, 'UserData');
 
 try
-    x = 0:parsetimestr(get(findobj(h, 'Tag', 'xscale'), 'String'), ud.EYE.srate, 'smp');
+    % Test for typo in timestr
+    parsetimestr(get(findobj(h, 'Tag', 'xscale'), 'String'), 1);
 catch
     return % Typo in timestr
 end
 sliderval = get(findobj(h, 'Style', 'slider'), 'Value'); % Between 0 and 1;
-x = x + round(sliderval * (ud.EYE.ndata - numel(x)) + 1);
-x = x(x >= 1 & x <= ud.EYE.ndata);
-xtimes = (x - 1) / ud.EYE.srate;
-plotinfo = ud.plotinfo;
 
 cla; hold on
 % Display data
+plotinfo = ud.plotinfo;
 for dataidx = 1:numel(plotinfo.data)
-    plot(xtimes, plotinfo.data{dataidx}(x), plotinfo.colours{dataidx});
+    ndata = numel(plotinfo.data{dataidx});
+    srate = plotinfo.srate{dataidx};
+    x_scale = parsetimestr(get(findobj(h, 'Tag', 'xscale'), 'String'), ud.EYE.srate);
+    t_start = ud.EYE.ur.times(1) + sliderval * (ud.EYE.ur.times(end) - ud.EYE.ur.times(1) - x_scale);
+    t_end = t_start + x_scale;
+    win_idx = plotinfo.t{dataidx} >= t_start & plotinfo.t{dataidx} <= t_end;
+    plot(plotinfo.t{dataidx}(win_idx), plotinfo.data{dataidx}(win_idx), plotinfo.colours{dataidx});
 end
-xlim([xtimes(1) xtimes(end)]);
+x_limits = [t_start t_end];
+xlim(x_limits);
 xlabel('Time (s)');
 switch ud.type
     case 'gaze'
@@ -163,7 +212,8 @@ end
 if get(findobj(h, 'Tag', 'displayevents'), 'Value')
     % Display events
     if ~isempty(ud.EYE.event)
-        currevents = find(ismember([ud.EYE.event.latency], x));
+        event_times = [ud.EYE.event.time];
+        currevents = find(event_times >= x_limits(1) & event_times <= x_limits(end));
         cont = true;
         warn_events = 50;
         if numel(currevents) > warn_events
@@ -182,17 +232,18 @@ if get(findobj(h, 'Tag', 'displayevents'), 'Value')
             n = 30; % Max events to draw before restarting from top of span
             for idx = 1:numel(currevents)
                 eventIdx = currevents(idx);
-                t = (ud.EYE.event(eventIdx).latency - 1)/ud.EYE.srate;
+                t = ud.EYE.event(eventIdx).time;
                 plot(repmat(t, 1, 2), plotinfo.ylim, 'k');
                 currYlims = plotinfo.ylim;
-                yLoc = double(currYlims(1) + abs(diff(currYlims)) * (spn - mod(idx, n) * spn / n));
+                yLoc = double(currYlims(1) + abs(diff(currYlims)) * (spn - mod(currevents(idx), n) * spn / n));
+                txt = ud.EYE.event(eventIdx).name;
                 try
-                    text(t, yLoc, ud.EYE.event(eventIdx).type,...
+                    text(t, yLoc, txt,...
                         'FontSize', 8,...
                         'Rotation', 10,...
                         'Interpreter', 'none');
                 catch
-                    text(t, yLoc, ud.EYE.event(eventIdx).type,...
+                    text(t, yLoc, ud.EYE.event(eventIdx).name,...
                         'FontSize', 8,...
                         'Rotation', 10);
                 end

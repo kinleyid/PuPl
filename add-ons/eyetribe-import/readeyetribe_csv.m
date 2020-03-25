@@ -4,18 +4,20 @@ function out = readeyetribe_csv(fullpath)
 raw = readdelim2cell(fullpath, ',');
 cols = raw(1, :);
 contents = raw(2:end, :);
-times = 86400 * datenum(contents(:, strcmp(cols, 'timestamp')), 'yyyy-mm-dd HH:MM:SS.FFF');
-types = contents(:, strcmp(cols, 'message'));
 
-[~, filename] = fileparts(fullpath);
+timestamps = contents(:, strcmp(cols, 'timestamp'));
+timestamps = regexp(timestamps, '....-..-.. (\d+):(\d+):(\d+)\.(\d+)', 'tokens');
+timestamps = cat(1, timestamps{:});
+timestamps = cat(1, timestamps{:});
+h = cellstr2num(timestamps(:, 1)) * 60*60;
+m = cellstr2num(timestamps(:, 2)) * 60;
+s = cellstr2num(timestamps(:, 3));
+ms = cellstr2num(timestamps(:, 4)) / 1000;
 
+event = struct(...
+    'time', num2cell(h + m + s + ms),...
+    'name', contents(:, strcmp(cols, 'message')));
 out = struct(...
-    'name', filename,...
-    'src', fullpath,...
-    'event',...
-        struct(...
-            'time', num2cell(times),...
-            'type', types,...
-            'rt', repmat({NaN}, size(times))));
+    'event', event);
 
 end

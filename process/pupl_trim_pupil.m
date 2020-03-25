@@ -27,8 +27,10 @@ if isempty(args.lims)
     allnames = {};
     for dataidx = 1:numel(EYE)
         for side = {'left' 'right'}
-            alldata{end + 1} = EYE(dataidx).pupil.(side{:});
-            allnames{end + 1} = sprintf('%s %s pupil %s', EYE(dataidx).name, side{:}, EYE(dataidx).units.pupil{1});
+            if isfield(EYE(dataidx).pupil, side{:})
+                alldata{end + 1} = EYE(dataidx).pupil.(side{:});
+                allnames{end + 1} = sprintf('%s %s pupil %s', EYE(dataidx).name, side{:}, EYE(dataidx).units.pupil{1});
+            end
         end
     end
     args.lims = UI_histgetrej(alldata,...
