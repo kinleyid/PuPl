@@ -17,8 +17,15 @@ for dataidx = 1:numel(EYE) % Populate
     pupl_save(EYE(dataidx), sprintf('%s_eyetrack', currfilehead));
     curreventlog = EYE(dataidx).eventlog;
     if ~isempty(curreventlog)
+        fprintf('\t');
         eventlog2tsv(curreventlog, sprintf('%s_events.tsv', currfilehead));
     end
+    fprintf('done\n');
+end
+
+if ~isempty(gcbf)
+    global pupl_globals
+    fprintf('Equivalent command:\n%s(%s, %s)\n\n', mfilename, pupl_globals.datavarname, all2str(datapath));
 end
 
 end

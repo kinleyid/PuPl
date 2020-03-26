@@ -30,7 +30,11 @@ else
         for field = reshape(fieldnames(in), 1, [])
             out = sprintf('%s''%s'', %s, ', out, field{:}, all2str({in.(field{:})}));
         end
-        out = [out(1:end-2) ')']; % Remove last comma and space
+        if strcmp(out, 'struct(')
+            out = [out '[])'];
+        else
+            out = [out(1:end-2) ')']; % Remove last comma and space
+        end
     elseif isempty(in)
         out = '[]';
     elseif strcontains(class(in), 'function')

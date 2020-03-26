@@ -1,4 +1,4 @@
-function pupl_save(data, varargin)
+function pupl_save(EYE, varargin)
 
 % Save eye data or event logs
 %   Inputs
@@ -7,53 +7,110 @@ function pupl_save(data, varargin)
 
 global pupl_globals
 
-if isempty(data)
-    error('Data is empty, nothing to save')
-end
+args = pupl_args2struct(varargin, {
+    'path', []
+    'method', 'single' % 'single', 'batch', or 'bids'
+});
 
-if numel(varargin) == 1
-    args = struct(...
-        'path', varargin{1},...
-        'batch', false);
-else
-    args = pupl_args2struct(varargin, {
-        'path' [] % Either a string indicating the directory to save to or a cell array of these
-        'batch' false % If true, all data is saved in the same directory
-    });    
-end
-
+default_filenames = strcat({EYE.name}, ['.' pupl_globals.ext]);
 if isempty(args.path)
-    def_filenames = strcat({data.name}, ['.' pupl_globals.ext]);
-    if args.batch
-        args.path = uigetdir(pwd, 'Select a folder to put all the data in');
-        if isnumeric(args.path)
-            return
-        else
-            args.path = fullfile(args.path, def_filenames);
-        end
-    else
-        args.path = {};
-        for dataidx = 1:numel(data)
-            [f, p] = uiputfile(def_filenames{dataidx},...
-                sprintf('Save %s', data.name));
-            if isnumeric(f)
-                return
-            else
-                args.path{end + 1} = fullfile(p, f);
+    switch args.method
+        case 'single'
+            args.path = {};
+            for dataidx = 1:numel(EYE)
+                [f, p] = uiputfile(default_filenames{dataidx},...
+                    sprintf('Save %s', EYE(dataidx).name));
+                if isnumeric(f)
+                    if ~isempty(args.path)
+                        q = 'Save the data you''ve already selected locations for?';
+                        a = questdlg(q);
+                        switch a
+                            case 'Yes'
+                                break
+                            otherwise
+                                return
+                        end
+                    end
+                else
+                    args.path{end + 1} = fullfile(p, f);
+                end
             end
+        case 'batch'
+            args.path = uigetdir(pwd, 'Select a folder to put all the data in');
+            if isnumeric(args.path)
+                return
+            end
+        case 'bids'
+            args.path = uigetdir(pwd, 'Select data folder (e.g. sourcedata/)');
+            if isnumeric(args.path)
+                return
+            end         
+    end
+end
+
+switch args.method
+    case 'single'
+        filepath = args.path;
+    case 'batch'
+        filepath = fullfile(args.path, default_filenames);
+    case 'bids'
+        filepath = {};
+        for dataidx = 1:numel(EYE) % Populate
+            masterfilehead = getfilehead(EYE(dataidx).BIDS);
+            currfilehead = fullfile(args.path, masterfilehead);
+            filepath{end + 1} = currfilehead;
+        end
+end
+
+filepath = cellstr(filepath);
+
+for dataidx = 1:numel(filepath)
+    if strcmp(args.method, 'bids')
+        curr_path = sprintf('%s_eyetrack', filepath{dataidx});
+    else
+        curr_path = filepath{dataidx};
+    end
+    % Make sure there's only one file extension
+    [p, f] = fileparts(curr_path);
+    curr_path = fullfile(p, sprintf('%s.%s', f, pupl_globals.ext));
+    % Save data
+    fprintf('Saving %s...', curr_path);
+    tmp = EYE(dataidx);
+    save(curr_path, 'tmp', '-v6');
+    fprintf('done\n');
+    if strcmp(args.method, 'bids')
+        % Also save event log
+        if ~isempty(EYE(dataidx).eventlog)
+            fprintf('\t');
+            eventlog2tsv(EYE(dataidx).eventlog, sprintf('%s_eyetrack', filepath{dataidx}));
         end
     end
 end
 
-args.path = cellstr(args.path);
+if ~isempty(gcbf)
+    fprintf('\nEquivalent command:\n');
+    cellargs = pupl_struct2args(args);
+    fprintf('%s(%s, %s)\n\n', mfilename, pupl_globals.datavarname, all2str(cellargs{:}));
+end
 
-for dataidx = 1:numel(data)
-    [p, f] = fileparts(args.path{dataidx});
-    curr_path = fullfile(p, sprintf('%s.%s', f, pupl_globals.ext));
-    fprintf('Saving %s...', curr_path);
-    tmp = data(dataidx);
-    save(curr_path, 'tmp', '-v6');
-    fprintf('done\n');
+end
+
+function filehead = getfilehead(BIDS)
+
+currpath = sprintf('sub-%s/', BIDS.sub);
+% Session-specific data?
+if isfield(BIDS, 'ses')
+    sespath = fullfile(currpath, sprintf('ses-%s', BIDS.ses));
+    currpath = sespath;
+end
+currpath = fullfile(currpath, 'eyetrack');
+filehead = fullfile(currpath, sprintf('sub-%s', BIDS.sub));
+for field = {'ses' 'task' 'acq'  'run' 'recording' 'proc'}
+    if isfield(BIDS, field{:})
+        if ~isempty(BIDS.(field{:}))
+            filehead = sprintf('%s_%s-%s', filehead, field{:}, BIDS.(field{:}));
+        end
+    end
 end
 
 end

@@ -17,10 +17,10 @@ args = pupl_args2struct(varargin, {
 });
 
 type_opts = {'eye' 'event'};
-args.type = find(strcmp(args.type, type_opts));
+num_type = find(strcmp(args.type, type_opts));
 
 if args.native
-    switch args.type
+    switch num_type
         case 1
             args.filefilt = ['*.' pupl_globals.ext];
         case 2
@@ -32,21 +32,13 @@ EYE = args.eyedata;
 
 if isempty(args.filepath) % Get path
     if args.bids
-        datapath = uigetdir(pwd, 'Select data folder (e.g. sourcedata/ or raw/)');
-        if isnumeric(datapath)
+        args.filepath = uigetdir(pwd, 'Select data folder (e.g. sourcedata/ or raw/)');
+        if isnumeric(args.filepath)
             EYE = 0;
             return
         end
-        switch args.type
-            case {1 3}
-                fmt = '_eyetrack.';
-            case 2
-                fmt = '_events.';
-        end
-        parsed = pupl_BIDS_parse(datapath, fmt);
-        args.filepath = {parsed.full};
     else
-        switch args.type
+        switch num_type
             case 1
                 [filenames, directory] = uigetfile(args.filefilt,...
                     'MultiSelect', 'on');
@@ -72,13 +64,26 @@ if isempty(args.filepath) % Get path
     end
 end
 
+if args.bids
+    switch num_type
+        case {1 3}
+            fmt = '_eyetrack.';
+        case 2
+            fmt = '_events.';
+    end
+    parsed = pupl_BIDS_parse(args.filepath, fmt);
+    filepath = {parsed.full};
+else
+    filepath = args.filepath;
+end
+
 if args.native && args.bids % Load eye data and event logs
     % First load the eye data
-    EYE = pupl_import('filepath', args.filepath, 'native', true);
-    BIDS = pupl_BIDS_parse(args.filepath, '_eyedata');
+    EYE = pupl_import('filepath', filepath, 'native', true);
+    BIDS = pupl_BIDS_parse(filepath, '_eyedata');
     [EYE.BIDS] = BIDS.info;
     % Get paths to respective event logs
-    event_paths = cellfun(@fileparts, args.filepath, 'UniformOutput', false);
+    event_paths = cellfun(@fileparts, filepath, 'UniformOutput', false);
     event_files = cell(size(event_paths));
     for idx = 1:numel(event_paths)
         file = dir(fullfile(event_paths{idx}, '*.tsv'));
@@ -90,24 +95,24 @@ if args.native && args.bids % Load eye data and event logs
     end
     EYE = pupl_import('eyedata', EYE, 'filepath', event_files, 'native', true, 'type', type_opts{2});
 else
-    args.filepath = cellstr(args.filepath);
-    for dataidx = 1:numel(args.filepath)
-        if isempty(args.filepath{dataidx})
+    filepath = cellstr(filepath);
+    for dataidx = 1:numel(filepath)
+        if isempty(filepath{dataidx})
             continue
         end
-        [~, fname] = fileparts(args.filepath{dataidx});
+        [~, fname] = fileparts(filepath{dataidx});
         fprintf('Loading %s...', fname);
         
         % Load data
         if args.native
-            switch args.type
+            switch num_type
                 case 1
-                    curr = pupl_load(args.filepath{dataidx});
+                    curr = pupl_load(filepath{dataidx});
                 case 2
-                    curr = tsv2eventlog(args.filepath{dataidx});
+                    curr = tsv2eventlog(filepath{dataidx});
             end
         else
-            data = args.loadfunc(args.filepath{dataidx}, args.args{:});
+            data = args.loadfunc(filepath{dataidx}, args.args{:});
             if isempty(data)
                 fprintf('\n');
                 EYE = 0;
@@ -115,17 +120,17 @@ else
             end
             curr = pupl_checkraw(...
                 data,...
-                'src', args.filepath{dataidx},...
-                'type', type_opts{args.type});
+                'src', filepath{dataidx},...
+                'type', args.type);
             curr.getraw = sprintf('@() pupl_import(''type'', %s, ''loadfunc'', %s, ''filepath'', %s, ''args'', %s)',... % Brings us back here next time
-                all2str(type_opts{args.type}),...
+                all2str(args.type),...
                 all2str(args.loadfunc),...
-                all2str(args.filepath{dataidx}),...
+                all2str(filepath{dataidx}),...
                 all2str(args.args));
         end
         
         % Concatenate eye data to output or attach event log to eye data
-        switch args.type
+        switch num_type
             case 1
                 try
                     BIDS = pupl_BIDS_parse(curr.src);
@@ -138,12 +143,13 @@ else
             case 2
                 if args.bids % Match automatically
                     matchidx = strcmp(...
-                        stripmod(args.filepath{dataidx}),...
+                        stripmod(filepath{dataidx}),...
                         cellfun(@stripmod, {EYE.src}, 'UniformOutput', false));
                     if any(matchidx)
                         EYE(matchidx).eventlog = curr;
                     end
                 else
+                    fprintf('attaching to %s...', EYE(dataidx).name);
                     EYE(dataidx).eventlog = curr;
                 end
                 EYE(dataidx) = pupl_check(EYE(dataidx));
@@ -154,6 +160,19 @@ else
     if isa(args.loadfunc, 'function_handle')
         clear(func2str(args.loadfunc));
     end
+end
+
+stack = dbstack;
+if ~isempty(gcbf) && ~strcmp(stack(2), mfilename)
+    fprintf('\nEquivalent command:\n')
+    if ~isempty(args.eyedata)
+        eyedata = pupl_globals.datavarname;
+    else
+        eyedata = all2str(struct([]));
+    end
+    args = rmfield(args, 'eyedata');
+    cellargs = pupl_struct2args(args);
+    fprintf('%s(''eyedata'', %s, %s)\n\n', mfilename, eyedata, all2str(cellargs{:}))
 end
 
 EYE = pupl_check(EYE);
