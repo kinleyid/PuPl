@@ -358,7 +358,7 @@ uimenu(tvarMenu,...
     'Callback', @(src, event)...
         pupl_UI_procwrap(@pupl_tvar_map));
 uimenu(tvarMenu,...
-    'Label', '&Homogenize trial variables across trials',...
+    'Label', '&Homogenize trial variables within trials',...
     'Callback', @(src, event)...
         pupl_UI_procwrap(@pupl_tvar_hg));
 uimenu(tvarMenu,...
@@ -415,7 +415,7 @@ uimenu(trialRejectionMenu,...
 %% Rest of trials menu
         
 uimenu(trialsMenu,...
-    'Label', '&Merge epochs into sets',...
+    'Label', 'Define epoch &sets',...
     'UserData', @() isnonemptyfield(getactivedata, 'epoch'),...
     'Callback', @(src, event)...
         pupl_UI_procwrap(@pupl_epochset));
@@ -562,11 +562,39 @@ end
 
 function scrolldatapanel(ignored, eventdata)
 
-dataPanel = findobj('Tag', 'activeEyeDataPanel');
-dataScroller = findobj('Tag', 'dataScroller');
-originalDataPanelPos = getfield(get(dataPanel, 'UserData'), 'OriginalPos');
-if originalDataPanelPos(2) >= 0
-    set(dataScroller, 'Value', 1);
+scroller = findobj('Tag', 'dataScroller');
+
+if isempty(eventdata) % Octave
+    eventdata = struct('EventName', 'action');
+end
+switch lower(eventdata.EventName)
+    case 'windowscrollwheel'
+        scroll_start = get(scroller, 'Value');
+        scroll_amt = eventdata.VerticalScrollCount * eventdata.VerticalScrollAmount / 100;
+        scroll_pos = scroll_start - scroll_amt;
+        if scroll_pos < 0
+            scroll_pos = 0;
+        elseif scroll_pos > 1
+            scroll_pos = 1;
+        end
+        set(scroller, 'Value', scroll_pos);
+    case 'action'
+        scroll_pos = get(dataScroller, 'Value');
+end
+
+datapanel = findobj('Tag', 'activeEyeDataPanel');
+datapanel_pos = get(datapanel, 'Position');
+max_scroll = datapanel_pos(4) - 1;
+if max_scroll == 0
+    set(scroller, 'Value', 1);
+else
+    datapanel_pos(2) = - max_scroll * scroll_pos;
+end
+set(datapanel, 'Position', datapanel_pos);
+%{
+originalDataPanelPos = getfield(get(datapanel, 'UserData'), 'OriginalPos');
+if originalDataPanelPos(2) > 0
+    set(dataScroller, 'Value', 1); % Why would this ever happen?
 else
     if isempty(eventdata) % Octave
         eventdata = struct('EventName', 'action');
@@ -589,6 +617,7 @@ else
     originalDataPanelPos(2) = newVert * originalDataPanelPos(2);
     set(dataPanel, 'Position', originalDataPanelPos);
 end
+%}
 
 end
 

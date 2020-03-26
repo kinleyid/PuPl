@@ -76,7 +76,7 @@ if strcmpi(type, 'pupil')
     if n == 3 % Both fields present
         plotinfo.data{end + 1} = mergelr(EYE);
         plotinfo.colours{end + 1} = 'k';
-        plotinfo.legendentries{end + 1} = 'Both';
+        plotinfo.legendentries{end + 1} = 'Binocular average';
         plotinfo.t{end + 1} = EYE.times;
         plotinfo.srate{end + 1} = EYE.srate;
     end

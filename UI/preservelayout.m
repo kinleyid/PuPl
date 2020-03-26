@@ -2,8 +2,8 @@ function preservelayout(varargin)
 
 % Redraws the data panel, if necessary
 
-sep = 2;
-buttonHeight = 20;
+sep_px = 2;
+buttonheight_px = 20;
 
 global pupl_globals
 userInterface = pupl_globals.UI;
@@ -14,13 +14,27 @@ if ~isempty(get(dataPanel, 'Children'))
     delete(get(dataPanel, 'Children'));
 end
 
-dataPanelPixelPos = getDataPanelPixelPos;
-top = dataPanelPixelPos(4) - buttonHeight;
-buttonWidth = dataPanelPixelPos(3) - sep;
-lowestButtonPos = top - (buttonHeight + sep)*numel(currData);
-extraSpace = dataPanelPixelPos(2) - lowestButtonPos;
-relExtraSpace = extraSpace/(dataPanelPixelPos(4) - dataPanelPixelPos(2));
-if lowestButtonPos < dataPanelPixelPos(2)
+fig_pos_px = get(pupl_globals.UI, 'Position');
+datapanel_pos_px = getDataPanelPixelPos;
+button_top_px = datapanel_pos_px(4) - buttonheight_px;
+extraspace_px = -(button_top_px - (buttonheight_px + sep_px)*(numel(currData)+1));
+extraspace_rel = extraspace_px / fig_pos_px(4);
+datapanel_pos_rel = get(dataPanel, 'Position');
+datapanel_pos_rel(2) = datapanel_pos_rel(2) - extraspace_rel;
+datapanel_pos_rel(4) = datapanel_pos_rel(4) + extraspace_rel;
+if datapanel_pos_rel(2) > 0
+    datapanel_pos_rel(2) = 0;
+end
+if datapanel_pos_rel(4) < 1
+    datapanel_pos_rel = [0 0 1 1];
+end
+ud = get(dataPanel, 'UserData');
+ud.OriginalPos = datapanel_pos_rel;
+set(dataPanel, 'UserData', ud);
+set(dataPanel, 'Position', datapanel_pos_rel);
+buttonwidth_px = datapanel_pos_px(3) - sep_px;
+%{
+if lowestButtonPos < datapanel_pos_px(2)
     % Extend data panel until it hold all the data
     dataPanelRelPos = get(dataPanel, 'Position');
     d = relExtraSpace / 2 * (dataPanelRelPos(4) - dataPanelRelPos(2)); % Relative amount to increase the size by (may be negative);
@@ -32,18 +46,23 @@ if lowestButtonPos < dataPanelPixelPos(2)
     ud.OriginalPos(2) = ud.OriginalPos(2) - d;
     ud.OriginalPos(4) = ud.OriginalPos(4) + d;
     set(dataPanel, 'UserData', ud);
-    dataPanelPixelPos = getDataPanelPixelPos;
-    top = dataPanelPixelPos(4) - buttonHeight;
-    buttonWidth = dataPanelPixelPos(3) - sep;
+    datapanel_pos_px = getDataPanelPixelPos;
+    top = datapanel_pos_px(4) - buttonheight_px;
+    buttonwidth_px = datapanel_pos_px(3) - sep_px;
+else
+    
 end
+%}
 
+datapanel_pos_px = getDataPanelPixelPos;
+button_top_px = datapanel_pos_px(4) - buttonheight_px;
 for dataidx = 1:numel(currData)
     if activeIdx(dataidx)
         value = 1;
     else
         value = 0;
     end
-    currPos = [sep, top - (buttonHeight+sep)*dataidx, buttonWidth, buttonHeight];
+    currPos = [sep_px, button_top_px - (buttonheight_px+sep_px)*dataidx, buttonwidth_px, buttonheight_px];
     uicontrol(dataPanel,...
         'Style', 'checkbox',...       
         'Position', currPos,...
