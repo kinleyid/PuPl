@@ -579,7 +579,7 @@ switch lower(eventdata.EventName)
         end
         set(scroller, 'Value', scroll_pos);
     case 'action'
-        scroll_pos = get(dataScroller, 'Value');
+        scroll_pos = get(scroller, 'Value');
 end
 
 datapanel = findobj('Tag', 'activeEyeDataPanel');
