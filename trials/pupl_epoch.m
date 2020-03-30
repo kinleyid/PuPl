@@ -116,6 +116,6 @@ EYE = pupl_epochset(EYE,...
     'overwrite', true,...
     'verbose', false);
 
-fprintf('%d trials extracted\n', numel(EYE.epoch));
+fprintf('%d epochs defined\n', numel(EYE.epoch));
 
 end

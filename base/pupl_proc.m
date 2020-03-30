@@ -11,7 +11,6 @@ else
     end
 end
 
-% Process pupil size data
 for field1 = fields1
     for field2 = reshape(fieldnames(EYE.(field1{:})), 1, [])
         EYE.(field1{:}).(field2{:}) = func(EYE.(field1{:}).(field2{:}));

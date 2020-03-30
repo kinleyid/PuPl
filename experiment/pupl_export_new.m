@@ -54,7 +54,11 @@ if isempty(args.trialwise)
 end
 
 if strcmp(args.trialwise, per_epoch)
-    stat_opts(end + 1, :) = [{'Number of blinks'} {@(x)nnz(diff(x=='b')==1)} {'n_blinks'} {{'datalabel'}}];
+    stat_opts = [
+        stat_opts
+        {'Number of blinks'} {@(x)nnz(diff(x=='b')==1)} {'n_blinks'} {{'datalabel'}}
+        {'Number of saccades'} {@(x)nnz(diff(x(1:end-1)=='s')==1)} {'n_sacc'} {{'interstices'}}
+    ];
 end
 
 if isempty(args.cfg)

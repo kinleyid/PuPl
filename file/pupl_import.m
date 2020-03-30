@@ -172,7 +172,7 @@ if ~isempty(gcbf) && ~strcmp(stack(2), mfilename)
     end
     args = rmfield(args, 'eyedata');
     cellargs = pupl_struct2args(args);
-    fprintf('%s(''eyedata'', %s, %s)\n\n', mfilename, eyedata, all2str(cellargs{:}))
+    fprintf('%s = %s(''eyedata'', %s, %s)\n\n', pupl_globals.datavarname, mfilename, eyedata, all2str(cellargs{:}))
 end
 
 EYE = pupl_check(EYE);

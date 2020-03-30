@@ -118,30 +118,33 @@ end
 
 %% Prepare plot
 
-control_panel = uipanel(h,...
+c1 = uipanel(h,...
     'Units', 'normalized',...
-    'Position', [0.01 0.01 0.98 0.08]);
-uicontrol(control_panel,...
-    'Style', 'text',...
-    'String', 'X scale:',...
-    'HorizontalAlignment', 'right',...
+    'Title', 'X start',...
+    'Position', [0.01 0.01 0.23 0.08]);
+uicontrol(c1,...
+    'Style', 'edit',...
+    'Tag', 'xstart',...
     'Units', 'normalized',...
     'Callback', @(a, b) sub_render(h),...
-    'Position', [0.01 0.01 0.23 0.98]);
-uicontrol(control_panel,...
+    'Position', [0.01 0.01 0.98 0.98]);
+c2 = uipanel(h,...
+    'Units', 'normalized',...
+    'Title', 'X scale',...
+    'Position', [0.26 0.01 0.23 0.08]);
+uicontrol(c2,...
     'Style', 'edit',...
     'Tag', 'xscale',...
-    'String', '10s',...
     'Units', 'normalized',...
     'Callback', @(a, b) sub_render(h),...
-    'Position', [0.26 0.01 0.23 0.98]);
-uicontrol(control_panel,...
+    'Position', [0.01 0.01 0.98 0.98]);
+uicontrol(h,...
     'Style', 'checkbox',...
     'Tag', 'displayevents',...
     'String', 'Display events',...
     'Value', 0,...
     'Units', 'normalized',...
-    'Position', [0.51 0.01 0.48 0.98],...
+    'Position', [0.51 0.01 0.23 0.08],...
     'Callback', @(a, b) sub_render(h));
 uicontrol('Parent', h,...
     'Style', 'slider',...
@@ -156,7 +159,10 @@ axes(p);
 set(h, 'UserData', struct(...
     'plotinfo', plotinfo,...
     'EYE', EYE,...
-    'type', type));
+    'type', type,...
+    'cfg', struct(...
+        'xstart', sprintf('%ss', num2str(EYE.ur.times(1))),...
+        'xscale', '10s')));
 
 sub_render(h);
 
@@ -168,22 +174,71 @@ function sub_render(h)
 
 ud = get(h, 'UserData');
 
+% Get x start and scale
+
+x_scale_edit = findobj(h, 'Tag', 'xscale');
 try
-    % Test for typo in timestr
-    parsetimestr(get(findobj(h, 'Tag', 'xscale'), 'String'), 1);
+    str = get(x_scale_edit, 'String');
+    x_scale = parsetimestr(str, ud.EYE.srate);
+    ud.cfg.xscale = str;
 catch
-    return % Typo in timestr
+    str = ud.cfg.xscale;
+    x_scale = parsetimestr(str, ud.EYE.srate);
+    set(x_scale_edit, 'String', str)
 end
-sliderval = get(findobj(h, 'Style', 'slider'), 'Value'); % Between 0 and 1;
+ud.cfg.xscale = x_scale;
+
+% If there's a change in x start, we need to figure out if it's coming from
+% the slider or the edit box
+t_1 = ud.EYE.ur.times(1);
+t_end = ud.EYE.ur.times(end);
+
+x_start_prior = parsetimestr(ud.cfg.xstart, ud.EYE.srate);
+
+x_start_edit = findobj(h, 'Tag', 'xstart');
+try
+    x_start_fromedit = parsetimestr(get(x_start_edit, 'String'), ud.EYE.srate);
+    outofbounds = false;
+    if x_start_fromedit < t_1
+        x_start_fromedit = t_1;
+        outofbounds = true;
+    elseif x_start_fromedit + x_scale > t_end
+        x_start_fromedit = t_end - x_scale;
+        outofbounds = true;
+    end
+    if outofbounds
+        set(x_start_edit, 'String', sprintf('%ss', num2str(x_start_fromedit)));
+    end
+catch
+    x_start_fromedit = x_start_prior;
+    set(x_start_edit, 'String', sprintf('%ss', num2str(x_start_fromedit)));
+end
+slider = findobj(h, 'Style', 'slider');
+sliderval = get(slider, 'Value');
+x_start_fromslider = t_1 + sliderval * (t_end - t_1 - x_scale);
+% Round to the nearest millisecond for comparisons
+if round(1000*x_start_fromedit) ~= round(1000*x_start_prior)
+    % Change has occured in edit box
+    x_start = x_start_fromedit;
+    % Reset slider
+    new_sliderval = (x_start - t_1) / (t_end - t_1 - x_scale);
+    set(slider, 'Value', new_sliderval);
+elseif round(1000*x_start_fromslider) ~= round(1000*x_start_prior)
+    % Change has occured in slider
+    x_start = x_start_fromslider;
+    set(x_start_edit, 'String', sprintf('%ss', num2str(x_start)));
+else
+    x_start = x_start_prior;
+end
+ud.cfg.xstart = x_start;
+
+set(h, 'UserData', ud);
 
 cla; hold on
 % Display data
 plotinfo = ud.plotinfo;
 for dataidx = 1:numel(plotinfo.data)
-    ndata = numel(plotinfo.data{dataidx});
-    srate = plotinfo.srate{dataidx};
-    x_scale = parsetimestr(get(findobj(h, 'Tag', 'xscale'), 'String'), ud.EYE.srate);
-    t_start = ud.EYE.ur.times(1) + sliderval * (ud.EYE.ur.times(end) - ud.EYE.ur.times(1) - x_scale);
+    t_start = x_start;
     t_end = t_start + x_scale;
     win_idx = plotinfo.t{dataidx} >= t_start & plotinfo.t{dataidx} <= t_end;
     plot(plotinfo.t{dataidx}(win_idx), plotinfo.data{dataidx}(win_idx), plotinfo.colours{dataidx});
@@ -254,5 +309,7 @@ end
 ylim(plotinfo.ylim);
 
 legend(plotinfo.legendentries{:});
+
+
 
 end

@@ -71,15 +71,15 @@ function EYE = sub_crop(EYE, varargin)
 args = parseargs(varargin{:});
 
 bookend_event_times = [];
-for i = 1:2
-    event_matches = find(pupl_event_sel(EYE.event, args.cfg(i).event));
-    if args.cfg(i).instance < 0
-        inst = numel(event_matches) + args.cfg(i).instance + 1;
+for ii = 1:2
+    event_matches = find(pupl_event_sel(EYE.event, args.cfg(ii).event));
+    if args.cfg(ii).instance < 0
+        inst = numel(event_matches) + args.cfg(ii).instance + 1;
     else
-        inst = args.cfg(i).instance;
+        inst = args.cfg(ii).instance;
     end
     event_idx = event_matches(inst);
-    bookend_event_times(i) = EYE.event(event_idx).time;
+    bookend_event_times(ii) = EYE.event(event_idx).time;
 end
 
 % For current srate
@@ -102,6 +102,20 @@ for field1 = {'gaze' 'pupil' 'times' 'datalabel'}
         EYE.(field1{:})(data_rmidx) = [];
     end
 end
+% Remove interstitial labels
+rmdiff = diff(data_rmidx);
+inter_rmstarts = find(rmdiff == 1) + 1;
+inter_rmends = find(rmdiff == -1) - 1;
+if numel(inter_rmstarts) > numel(inter_rmends)
+    inter_rmends = [inter_rmends numel(EYE.interstices)];
+elseif numel(inter_rmstarts) < numel(inter_rmends)
+    inter_rmstarts = [1 inter_rmstarts];
+end
+inter_rmidx = false(size(EYE.interstices));
+for ii = 1:numel(inter_rmstarts)
+    inter_rmidx(inter_rmstarts(ii):inter_rmstarts(ii)) = true;
+end
+EYE.interstices(inter_rmidx) = [];
 
 % For ur srate
 lims = bookend_event_times + parsetimestr({args.cfg.lim}, EYE.ur.srate);

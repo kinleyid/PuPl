@@ -13,21 +13,22 @@ defunitstruct = struct(...
     'pupil', {{'diameter' 'unknown units' 'assumed absolute'}});
 
 defaults = {
-    'srate'     @(x)[]
-    'src'       @(x)[]
-    'name'      @(x)getname(x)
-    'getraw'    @(x)''
-    'coords'    @(x)[]
-    'units'     @(x)defunitstruct
-    'epoch'     @(x)struct([])
-    'epochset'  @(x)struct([])
-    'cond'      @(x)''
-    'event'     @(x)struct([])
-    'history'   @(x){}
-    'eventlog'  @(x)struct([])
-    'datalabel' @(x)repmat(' ', 1, getndata(x))
-    'ndata'     @(x)getndata(x)
-    'BIDS'      @(x)struct('sub', x.name)
+    'srate'         @(x)[]
+    'src'           @(x)[]
+    'name'          @(x)getname(x)
+    'getraw'        @(x)''
+    'coords'        @(x)[]
+    'units'         @(x)defunitstruct
+    'epoch'         @(x)struct([])
+    'epochset'      @(x)struct([])
+    'cond'          @(x)''
+    'event'         @(x)struct([])
+    'history'       @(x){}
+    'eventlog'      @(x)struct([])
+    'datalabel'     @(x)repmat(' ', 1, getndata(x))
+    'interstices'   @(x)repmat(' ', 1, getndata(x))
+    'ndata'         @(x)getndata(x)
+    'BIDS'          @(x)struct('sub', x.name)
 };
 
 % Fill in defaults

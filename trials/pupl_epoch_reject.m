@@ -29,7 +29,8 @@ if isempty(args.method)
         'Extreme pupil size' 'extremepupil'
         'Blink proximity' 'blink'
         'Reaction time' 'rt'
-        'Event attributes', 'event'
+        'Event attributes' 'event'
+        'Saccades' 'sacc'
     };
     sel = listdlgregexp(...
         'PromptString', 'Reject trials on what basis?',...
@@ -114,6 +115,8 @@ switch args.method
         rejidx = data > parsedatastr(args.cfg.thresh, data);
     case 'event'
         rejidx = pupl_event_sel(pupl_epoch_get(EYE, [], '_ev'), args.cfg.sel);
+    case 'sacc'
+        rejidx = cellfun(@(x) any(x(1:end-1) == 's'), pupl_epoch_getdata(EYE, [], 'interstices'));
     case 'undo'
         rejidx = false(1, numel(EYE.epoch));
         [EYE.epoch.reject] = deal(false);

@@ -12,15 +12,15 @@ end
 function EYE = sub_map2fix(EYE)
 
 i = 1;
-isf = true;
+isfix = true;
 islandidx = [true false(1, EYE.ndata - 1)];
 % Identify consecutive fixation points
 while true
-    if EYE.datalabel(i) == 'f'
-        isf = true;
+    if EYE.interstices(i) == 'f'
+        isfix = true;
         islandidx(i + 1) = true;
     else
-        if isf
+        if isfix
             for fld = {'x' 'y'}
                 EYE.gaze.(fld{:})(...
                     islandidx &...
@@ -28,7 +28,7 @@ while true
             end
             islandidx(islandidx) = false;
         end
-        isf = false;
+        isfix = false;
     end
     i = i + 1;
     if i == EYE.ndata

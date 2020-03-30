@@ -43,12 +43,24 @@ args = parseargs(varargin{:});
 % get functions that will perform baseline correction and the new string
 % that will describe the correction
 
-ds = @(x) x(1:args.fac:end);
+keepidx = 1:args.fac:EYE.ndata;
+
+ds = @(x) x(keepidx);
 
 EYE = pupl_proc(EYE, ds, 'all');
-EYE.srate = EYE.srate / args.fac;
-EYE.ndata = numel(EYE.pupil.left);
 EYE.times = ds(EYE.times);
 EYE.datalabel = ds(EYE.datalabel);
+EYE.srate = EYE.srate / args.fac;
+EYE.ndata = numel(EYE.datalabel);
+
+% Adjust interstitial labels--if a saccade happened between two points,
+% make sure that's reflected in the new interstitial labels
+
+new_interstices = repmat(' ', 1, EYE.ndata - 1);
+old_interstices = reshape(EYE.interstices(1:keepidx(end)-1), args.fac, []);
+sacc_idx = any(old_interstices == 's', 1);
+new_interstices(sacc_idx) = 's';
+new_interstices(~sacc_idx) = old_interstices(1, ~sacc_idx);
+EYE.interstices = new_interstices;
 
 end

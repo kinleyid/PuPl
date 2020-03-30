@@ -86,7 +86,7 @@ args.presence = logical(args.presence);
 if isempty(args.method)
     opts = {
         'Rename primary events'
-        'Add trial vars to primary events'
+        'Add a trial var to primary events'
     };
     sel = listdlg(...
         'PromptString', 'What should be done when a higher-order event is found?',...
@@ -123,6 +123,7 @@ if isempty(args.cfg)
                 return
             else
                 args.cfg.var = args.cfg.var{:};
+                args.cfg.var = regexprep(args.cfg.var, '#', '');
             end
             opts = {'Numeric' 'String'};
             sel = listdlg(...

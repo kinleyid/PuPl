@@ -71,7 +71,7 @@ function EYE = sub_saccades(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-new_datalabel = repmat(' ', size(EYE.datalabel));
+new_datalabel = repmat(' ', size(EYE.interstices));
 
 switch args.method
     case 'velocity'
@@ -109,10 +109,9 @@ switch args.method
 end
 
 % Only overwrite datalabels that aren't marked as, e.g., blinks
-replace_idx = EYE.datalabel == ' ';
-EYE.datalabel(replace_idx) = new_datalabel(replace_idx);
+EYE.interstices = new_datalabel;
 
-fprintf('%f%% of points marked as saccades\n', 100 * nnz(EYE.datalabel == 's') / EYE.ndata);
+fprintf('%f%% of intertices marked as saccades\n', 100 * nnz(EYE.interstices == 's') / EYE.ndata);
 
 end
 

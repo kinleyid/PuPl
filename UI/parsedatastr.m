@@ -22,10 +22,12 @@ end
 
 subs = {
     '\$'  @(x) x
-    '`mn' @nanmean_bc
+    '`mu' @nanmean_bc
     '`md' @nanmedian_bc
+    '`mn' @min
+    '`mx' @max
     '`sd' @nanstd_bc
-    '`vr'  @nanvar_bc
+    '`vr' @nanvar_bc
     '`iq' @interquartilerange
     '`madv' @medianabsdev
 };
