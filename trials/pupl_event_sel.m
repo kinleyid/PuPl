@@ -19,7 +19,7 @@ switch indic
         idx = ~cellfun(@isempty, regexp({events.name}, filter{:}));
     case 2 % Select by trial var filter
         try
-            ret = pupl_tvar_eval(filter{:}, events);
+            ret = pupl_evar_eval(filter{:}, events);
             idx = ~cellfun(@isempty, ret) & cellfun(@all, ret);
         catch
             idx = false(size(events)); % This is just to avoid callback weirdness

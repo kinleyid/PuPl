@@ -22,10 +22,10 @@ if isfield(eventlog.event, 'rt')
     ];
 end
 
-for tvar = pupl_tvar_getnames(eventlog.event)
+for evar = pupl_evar_getnames(eventlog.event)
     bigcell = [bigcell [
-            tvar
-            reshape({eventlog.event.(tvar{:})}, [], 1);
+            evar
+            reshape({eventlog.event.(evar{:})}, [], 1);
         ]
     ];
 end
