@@ -66,14 +66,16 @@ addpath(pdir)
 
 % Add built-in subdirectories
 fprintf('Loading source');
-for subdir = {'base' 'UI' 'file' 'tools' 'process' 'trials' 'experiment' 'plot' 'edit'}
-    addpath(genpath(fullfile(pdir, subdir{:}))) % Add folder and subfolders
+src_dirs = {'base' 'UI' 'file' 'tools' 'process' 'trials' 'experiment' 'plot' 'edit'};
+for src_idx = 1:numel(src_dirs)
+    addpath(genpath(fullfile(pdir, src_dirs{src_idx}))) % Add folder and subfolders
     fprintf('.');
 end
+fprintf('\n');
+
 if strcontains(varargin, 'dev')
     addpath(genpath(fullfile(pdir, 'dev')))
 end
-fprintf('\n');
 
 if ~any(strcmpi(varargin, 'noGlobals'))
     fprintf('Initializing global variables...\n');

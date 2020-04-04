@@ -9,7 +9,7 @@ if strcmp(varargin{1}, 'setmax')
 else
     fprintf(repmat('\b', 1, m + 2));
     n = varargin{1};
-    str = ['[' repmat('-', 1, n) repmat(' ', 1, m - n) ']'];
+    str = ['[' repmat('.', 1, n) repmat(' ', 1, m - n) ']'];
     fprintf(str);
     if n == m
         fprintf('\n');

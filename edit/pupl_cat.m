@@ -184,6 +184,7 @@ for setidx = 1:nsets
     % Append data fields
     fields = {
         'datalabel'
+        'interstices'
         'times'
         {'ur' 'times'}
         {'pupil' 'left'}

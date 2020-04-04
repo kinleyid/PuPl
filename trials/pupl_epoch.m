@@ -74,30 +74,28 @@ if args.overwrite
 end
 
 currlims = EYE.srate * parsetimestr(args.lims, EYE.srate);
-found = find(pupl_event_sel(EYE.event, args.timelocking));
-for eventidx = found
-    currEpoch = struct(...
+matches = find(pupl_event_sel(EYE.event, args.timelocking));
+latencies = pupl_event_getlat(EYE, matches);
+abslims = latencies(:) + currlims(:)';
+is_out = [abslims(:, 1) < 1 abslims(:, 2) > EYE.ndata];
+if any(is_out(:))
+    badidx = ind2sub(find(is_out, 1), size(is_out));
+    eventidx = matches(badidx(1));
+    limidx = badidx(2);
+    error('Event "%s" occurs at %f seconds into the recording "%s". %s from this event reaches outside the bounds of that recording (0 seconds to %f seconds).',...
+        EYE.event(eventidx).name,...
+        EYE.event(eventidx).time - EYE.times(1),...
+        EYE.name,...
+        args.lims{limidx},...
+        EYE.times(end) - EYE.times(1))
+end
+EYE.epoch = [
+    EYE.epoch...
+    struct(...
         'reject', false,...
         'lims', {args.lims},...
-        'event', EYE.event(eventidx).uniqid);
-    abslims = pupl_event_getlat(EYE, eventidx) + currlims;
-    badlimidx = 0;
-    if abslims(1) < 1
-        badlimidx = 1;
-    elseif abslims(2) > EYE.ndata
-        badlimidx = 2;
-    end
-    if badlimidx
-        error('Event "%s" occurs at %f seconds into the recording "%s". %s from this event reaches outside the bounds of that recording (0 seconds to %f seconds).',...
-            EYE.event(eventidx).name,...
-            EYE.event(eventidx).time - EYE.times(1),...
-            EYE.name,...
-            args.lims{badlimidx},...
-            EYE.times(end) - EYE.times(1))
-    else
-        EYE.epoch = [EYE.epoch, currEpoch];
-    end
-end
+        'event', {EYE.event(matches).uniqid})
+];
 
 % Sort epochs by event time
 [~, I] = sort(pupl_epoch_get(EYE, [], 'time'));

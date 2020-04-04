@@ -12,10 +12,11 @@ end
 function args = parseargs(varargin)
 
 args = pupl_args2struct(varargin, {
-	'primary' [] % Names of time-locking events; cell array of char arrays
-	'secondary' [] % Names of events to search for near time-locking events; cell array of char arrays
-	'lims' [] % Window-defining time limits within which to look for searched-for events; cell array of char arrays
-	'relidx' [] % Relative indices of searched-for events; numerical array
+	'primary' [] % Selector for primary events
+	'secondary' [] % Selector for secondary events
+	'lims' [] % Window-defining time limits within which to look for secondary events; cell array of char arrays
+	'relidx' [] % Relative indices of secondary events; numerical array
+    'evar' [] % Event variable filter
 	'presence' [] % Mark higher-order events by presence or absence of searched-for events; true or false
 	'method' [] % What to do once a higher-order event has been found
     'cfg' [] % Configuration that controls the action taken once a higher-order event has been found
@@ -69,6 +70,24 @@ if isempty(args.relidx)
     end
 end
 
+if isempty(args.evar)
+    txt = {
+        'Search for secondary events meeting some criterion defined by event variables?'
+        'Input an expression that will return true if a secondary event has been found'
+        'Event variables preceded by "#1" (e.g. #1rt) will be read from the primary event, those preceded by #2 will be read from the candidate secondary events'
+        '(Leave empty to not use an event variable criterion)'
+    };
+    args.evar = inputdlg(sprintf('%s\n\n', txt{:}));
+    if isempty(args.evar)
+        return
+    else
+        args.evar = args.evar{:};
+        if isempty(args.evar)
+            args.evar = 0;
+        end
+    end
+end
+
 if isempty(args.presence)
     q = 'Check for presence or absence of secondary events?';
     a = questdlg(q, q, 'Presence', 'Absence', 'Cancel', 'Presence');
@@ -86,7 +105,7 @@ args.presence = logical(args.presence);
 if isempty(args.method)
     opts = {
         'Rename primary events'
-        'Add a trial var to primary events'
+        'Add an event var to primary events'
     };
     sel = listdlg(...
         'PromptString', 'What should be done when a higher-order event is found?',...
@@ -96,7 +115,7 @@ if isempty(args.method)
         case 1
             args.method = 'rename';
         case 2
-            args.method = 'tvar';
+            args.method = 'evar';
         otherwise
             return
     end
@@ -111,8 +130,8 @@ if isempty(args.cfg)
             else
                 args.cfg.name = args.cfg.name{:};
             end
-        case 'tvar'
-            args.cfg.expr = inputdlg(sprintf('Input an expression to compute new trial variable(s)\n\nTrial variables preceded by "#1" (e.g. #1rt) will be read from the primary event, those preceded by #2 will be read from the earliest secondary event found'));
+        case 'evar'
+            args.cfg.expr = inputdlg(sprintf('Input an expression to compute new event variable(s)\n\nEvent variables preceded by "#1" (e.g. #1rt) will be read from the primary event, those preceded by #2 will be read from the earliest secondary event found'));
             if isempty(args.cfg.expr)
                 return
             else
@@ -127,7 +146,7 @@ if isempty(args.cfg)
             end
             opts = {'Numeric' 'String'};
             sel = listdlg(...
-                'PromptString', sprintf('What type of variable is #%s?', args.cfg.var),...
+                'PromptString', sprintf('What type of variable is\n#%s?', args.cfg.var),...
                 'ListString', opts,...
                 'SelectionMode', 'single');
             if isempty(sel)
@@ -151,33 +170,49 @@ if ~strcmp([args.lims{:}], 'none')
 else
     tlims = [];
 end
-primary_idx = pupl_event_sel(EYE.event, args.primary);
+primary_matches = pupl_event_sel(EYE.event, args.primary);
 n_found = 0;
-for eventidx = find(primary_idx)
-    pri_ev = EYE.event(eventidx);
-    windowidx = true(size(EYE.event));
+for pri_idx = find(primary_matches)
+    pri_ev = EYE.event(pri_idx);
+    sec_idx = pupl_event_sel(EYE.event, args.secondary);
+    % Time window filter
     if ~isempty(tlims)
-        primary_time = EYE.event(eventidx).time;
+        primary_time = pri_ev.time;
         rel_times = [EYE.event.time] - primary_time; % Event times relative to primary
-        windowidx = windowidx & ...
+        sec_idx = sec_idx & ...
             rel_times >= tlims(1) &...
             rel_times <= tlims(2);
     end
+    % Relative index filter
     if ~ischar(args.relidx)
-        relinds = (1:numel(EYE.event)) - eventidx;
-        windowidx = windowidx &...
+        relinds = (1:numel(EYE.event)) - pri_idx;
+        sec_idx = sec_idx &...
             ismember(relinds, args.relidx);
     end
-    found = pupl_event_sel(EYE.event(windowidx), args.secondary);
-    if args.presence == any(found)
+    % Event variable filter
+    if args.evar ~= 0
+        evar_idx = pupl_evar_eval(args.evar, pri_ev, EYE.event(sec_idx));
+        evar_idx = ~cellfun(@isempty, evar_idx) & cellfun(@all, evar_idx);
+        % Convert evar_idx from an index relative to the already-found
+        % secondary events to an index relative to the entire array of
+        % events:
+        prev_idx = find(sec_idx);
+        evar_idx = prev_idx(evar_idx);
+        new_idx = false(size(EYE.event));
+        new_idx(evar_idx) = true;
+        evar_idx = new_idx;
+        sec_idx = sec_idx &...
+            evar_idx;
+    end
+    sec_idx = find(sec_idx, 1);
+    if args.presence == any(sec_idx)
         n_found = n_found + 1;
         switch args.method
             case 'rename'
-                EYE.event(eventidx).type = args.cfg.name;
-            case 'tvar'
-                sec_ev = EYE.event(windowidx);
-                sec_ev = sec_ev(find(found, 1)); % In case there are multiple events found
-                var = pupl_tvar_get(args.cfg.expr, pri_ev, sec_ev);
+                EYE.event(pri_idx).type = args.cfg.name;
+            case 'evar'
+                sec_ev = EYE.event(sec_idx);
+                var = pupl_evar_get(args.cfg.expr, pri_ev, sec_ev);
                 if isnumeric(var)
                     if strcmp(args.cfg.type, 'String')
                         var = num2str(var);
@@ -187,7 +222,7 @@ for eventidx = find(primary_idx)
                         var = str2num(var);
                     end
                 end
-                EYE.event(eventidx).(args.cfg.var) = var;
+                EYE.event(pri_idx).(args.cfg.var) = var;
         end
     end
 end

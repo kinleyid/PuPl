@@ -97,7 +97,7 @@ end
 
 function v = applyinterpolation(f, v, n, m)
 
-interpidx = identifyconsecutive(v, n, @isnan);
+interpidx = ic_fft(isnan(v), n, 'most');
 s = find([false diff(interpidx) == 1]);
 e = find([diff(interpidx) == -1 false]);
 if ~isempty(s) && ~isempty(e)

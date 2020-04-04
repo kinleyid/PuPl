@@ -97,14 +97,15 @@ setdescriptions = args.setdescriptions;
 if overwrite
     EYE.epochset = [];
 end
-for setidx = 1:numel(setdescriptions)
-    epochidx = find(pupl_epoch_sel(EYE, [], setdescriptions(setidx).members));
-    if args.verbose
+
+EYE.epochset = [EYE.epochset setdescriptions(:)'];
+if args.verbose
+    for setidx = 1:numel(setdescriptions)
+        epochidx = find(pupl_epoch_sel(EYE, [], setdescriptions(setidx).members));
         fprintf('Set %s contains %d trials\n',...
             setdescriptions(setidx).name,...
             numel(epochidx));
     end
-    EYE.epochset = [EYE.epochset setdescriptions(setidx)];
 end
 
 end

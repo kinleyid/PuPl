@@ -98,63 +98,103 @@ function EYE = sub_filt(EYE, varargin)
 args = parseargs(varargin{:});
 
 width = parsetimestr(args.width, EYE.srate, 'smp');
-if mod(width, 2) == 0
-    width = width - 1;
-end
-fprintf('filter width is %d data points\n', width); 
 
-switch lower(args.avfunc)
-    case 'median'
-        try
-            median(1, 'omitnan');
-            avfunc = @(v) median(v, 'omitnan');
-        catch
-            avfunc = @nanmedian;
-        end
-    case 'mean'
-        try
-            median(1, 'omitnan');
-            avfunc = @(v) mean(v, 'omitnan');
-        catch
-            avfunc = @nanmean;
-        end
+if strcmp(args.avfunc, 'median')
+    if mod(width, 2) == 0
+        width = width - 1;
+    end
+    try
+        median(1, 'omitnan');
+        avfunc = @(v) median(v, 'omitnan');
+    catch
+        avfunc = @nanmedian;
+    end
 end
+
+fprintf('filter width is %d data points\n', width); 
 
 switch lower(args.win)
     case 'flat'
-        win = ones(width, 1);
+        kern = ones(width, 1);
     case 'hann'
-        win = 0.5 * (1 - cos(2*pi * (0:width - 1)/(width - 1)));
+        kern = 0.5 * (1 - cos(2*pi * (0:width - 1)/(width - 1)));
     case 'hamming'
-        win = 0.54 - 0.46 * cos(2*pi * (0:width - 1)/(width - 1));
+        kern = 0.54 - 0.46 * cos(2*pi * (0:width - 1)/(width - 1));
     case 'gaussian'
         sd = args.cfg.sd;
         x = linspace(-sd, sd, width);
-        win = 1 / sqrt(2*pi) * exp( -x.^2 / 2 );
+        kern = 1 / sqrt(2*pi) * exp( -x.^2 / 2 );
 end
 
 for stream = reshape(fieldnames(EYE.(args.data)), 1, [])
     fprintf('\t\tFiltering %s...', stream{:});
-    
-    if strcmpi(args.win, 'flat')
-        try
-            EYE.(args.data).(stream{:}) = fastmvavfilt(EYE.(args.data).(stream{:}), (width - 1) / 2, avfunc);
-        catch % Memory error?
-            EYE.(args.data).(stream{:}) = mvavfilt(EYE.(args.data).(stream{:}), (width - 1) / 2, avfunc);
-        end
-    else
-        try
-            EYE.(args.data).(stream{:}) = fastwinmvavfilt(EYE.(args.data).(stream{:}), (width - 1) / 2, win);
-        catch % Memory error?
-            EYE.(args.data).(stream{:}) = winmvavfilt(EYE.(args.data).(stream{:}), (width - 1) / 2, win);
-        end
+    switch args.avfunc
+        case 'median'
+            try
+                EYE.(args.data).(stream{:}) = fastmedfilt(EYE.(args.data).(stream{:}), (width - 1) / 2, avfunc);
+            catch % Memory error?
+                EYE.(args.data).(stream{:}) = slowmedfilt(EYE.(args.data).(stream{:}), (width - 1) / 2, avfunc);
+            end
+            fprintf('\n');
+        case 'mean'
+            % FFT-based convolution
+            printprog('setmax', 8);
+            nkern = numel(kern);
+            nconv = nkern + EYE.ndata - 1;
+            data = EYE.(args.data).(stream{:});
+            wasnan = isnan(data);
+            data(wasnan) = 0;
+            kernx = fft(kern(:)', nconv);
+            printprog(1);
+            kernx = kernx / max(kernx);
+            datax = fft(data(:)', nconv);
+            printprog(2);
+            mult = kernx.*datax;
+            printprog(3);
+            data = ifft(mult);
+            printprog(4);
+            hw = floor(nkern/2) + 1;
+            data = data(hw-1:end-hw);
+            % Correct for NaNs
+            o = ones(size(data));
+            o(wasnan) = 0;
+            ox = fft(o(:)', nconv);
+            printprog(5);
+            mult = kernx.*ox;
+            printprog(6);
+            sums = ifft(mult);
+            printprog(7);
+            sums = sums(hw-1:end-hw);
+            % Renormalize
+            data = data ./ sums;
+            printprog(8);
+            data(wasnan) = nan;
+            EYE.(args.data).(stream{:}) = data;
     end
-    fprintf('\n');
 end
 
 end
 
-function out = mvavfilt(x, n, avfunc)
+function out = fastmedfilt(x, n, avfunc)
+
+% x:        data
+% n:        half filter width
+% filtfunc: filtering function (mean or median)
+
+x_size = size(x);
+
+x = x(:); % Original data
+pd = [nan(n, 1); x; nan(n, 1)]; % Padded
+
+av = avfunc(pd(bsxfun(@plus, (1:n*2+1)', (0:numel(x)-1))));
+inx = ~isnan(x);
+x(inx) = av(inx);
+
+out = reshape(x, x_size);
+
+end
+
+function out = slowmedfilt(x, n, avfunc)
 
 % x:        data
 % n:        half filter width
@@ -178,85 +218,6 @@ for latidx = 1:nd
         x(latidx) = avfunc(rb);
     end
 end
-
-out = reshape(x, x_size);
-
-end
-
-function out = fastmvavfilt(x, n, avfunc)
-
-% x:        data
-% n:        half filter width
-% filtfunc: filtering function (mean or median)
-
-x_size = size(x);
-
-x = x(:); % Original data
-pd = [nan(n, 1); x; nan(n, 1)]; % Padded
-
-av = avfunc(pd(bsxfun(@plus, (1:n*2+1)', (0:numel(x)-1))));
-inx = ~isnan(x);
-x(inx) = av(inx);
-
-out = reshape(x, x_size);
-
-end
-
-function out = winmvavfilt(x, n, win)
-
-% x:        data
-% n:        half filter width
-% win:      window
-
-x_size = size(x);
-
-x = x(:); % Original data
-xz = x;
-xz(isnan(x)) = 0; % Original data, but with zeros instead of NaNs
-win = win(:)'; % Window
-pd = [nan(n, 1); xz; nan(n, 1)]; % Padded
-nd = numel(x); % Amount of data
-n2 = n*2;
-rb = [nan; pd(1:n2)]; % Window of data, a ring buffer
-
-% replidx(i) is the index of the ring buffer to overwrite at step i
-replidx = repmat((1:n2 + 1)', ceil(nd/(n2 + 1)), 1);
-replidx = replidx(1:nd);
-
-% widx(:, i) is the mapping from the window shape to the ring buffer
-% i.e. windowed = rb .* ws(widx(:, i)) at step i
-widx = arrayfun(@(x) circshift((1:n2 + 1), x), 1:nd, 'UniformOutput', false);
-widx = reshape([widx{:}], n2 + 1, nd);
-
-for latidx = 1:nd
-    rb(replidx(latidx)) = pd(latidx + n2);
-    if ~isnan(x(latidx))
-        cw = win(widx(:, latidx));
-        x(latidx) = cw * rb / sum(cw(rb ~= 0));
-    end
-end
-
-out = reshape(x, x_size);
-
-end
-
-function out = fastwinmvavfilt(x, n, win)
-
-% x:        data
-% n:        half filter width
-% win:      window
-
-x_size = size(x);
-
-x = x(:); % Original data
-pd = [nan(n, 1); x; nan(n, 1)]; % Padded
-
-av = bsxfun(@times, win(:), pd(bsxfun(@plus, (1:n*2+1)', (0:numel(x)-1))));
-inx = ~isnan(x);
-av = av(:, inx);
-p_idx = mat2cell(~isnan(av), size(av, 1), ones(1, size(av, 2)));
-av = nansum_bc(av ./ cellfun(@(idx) sum(win(idx)), p_idx));
-x(inx) = av;
 
 out = reshape(x, x_size);
 

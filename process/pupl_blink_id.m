@@ -122,11 +122,11 @@ pupil = mergelr(EYE);
 
 switch args.method
     case 'missing'
-        minblinklen = parsetimestr(args.cfg.min, EYE.srate) * EYE.srate;
-        maxblinklen = parsetimestr(args.cfg.max, EYE.srate) * EYE.srate;
+        minblinklen = parsetimestr(args.cfg.min, EYE.srate, 'smp');
+        maxblinklen = parsetimestr(args.cfg.max, EYE.srate, 'smp');
         blinkidx = ...
-            identifyconsecutive(pupil, minblinklen, @isnan, 'least') &...
-            identifyconsecutive(pupil, maxblinklen, @isnan, 'most');
+            ic_fft(isnan(pupil), minblinklen, 'least') &...
+            ic_fft(isnan(pupil), maxblinklen, 'most');
     case 'noise'
         pupil(isnan(pupil)) = 0;
         blinkidx = based_noise_blinks_detection(pupil(:), EYE.srate);

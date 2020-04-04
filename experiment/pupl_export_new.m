@@ -149,15 +149,7 @@ set_colnames = unique(mergefields(EYE, 'epochset', 'name')); % Set membership
 switch args.trialwise
     case per_epoch
         trial_colnames = {'trial_type' 'trial_idx' 'rejected' 'rt'};
-        all_fields = unique(fieldnames(mergefields(EYE, 'event')));
-        default_fields = { % Those the user didn't add
-            'type'
-            'name'
-            'time'
-            'uniqid'
-            'rt'
-        };
-        tvar_colnames = all_fields(~ismember(all_fields, default_fields));
+        tvar_colnames = pupl_tvar_getnames(mergefields(EYE, 'event'));
         tvar_colnames = tvar_colnames(:)';
     otherwise
         trial_colnames = {'mean_rt' 'median_rt' 'mean_log_rt'};
@@ -189,8 +181,15 @@ for dataidx = 1:numel(EYE)
             fprintf('Collecting indices to windowed data\t\t');
             collected_windows = cell(numel(EYE(dataidx).epoch), numel(win));
             n_epochs = numel(EYE(dataidx).epoch);
-            printprog('setmax', n_epochs);
+            printprog('setmax', 10);
+            last_pct = 0;
             for epochidx = 1:n_epochs
+                % Print progress
+                curr_pct = round(10 * epochidx / n_epochs);
+                if curr_pct > last_pct
+                    printprog(curr_pct);
+                    last_pct = curr_pct;
+                end
                 % Get epoch info
                 all_info{end + 1} = EYE(dataidx).name;
                 curr_epoch = EYE(dataidx).epoch(epochidx);
@@ -211,10 +210,10 @@ for dataidx = 1:numel(EYE)
                 curr_setnames = {EYE(dataidx).epochset.name};
                 curr_setmembership = curr_setnames(...
                     arrayfun(...
-                        @(desc) regexpsel(...
-                            curr_event.name,...
+                        @(desc) pupl_event_sel(...
+                            curr_event,...
                             desc.members),...
-                        [EYE(dataidx).epochset.description]));
+                        [EYE(dataidx).epochset]));
                 all_setmemberships{end + 1} = ismember(set_colnames, curr_setmembership);
                 % Get indices to windowed data
                 for winidx = 1:numel(win)
@@ -232,7 +231,6 @@ for dataidx = 1:numel(EYE)
                     collected_windows{epochidx, winidx} = abs_lats;
                 end
                 rec_idx{end + 1} = dataidx;
-                printprog(epochidx);
             end
         case set_avg
             fprintf('Collecting windowed data\t\t\t\t');
@@ -284,8 +282,15 @@ for dataidx = 1:numel(EYE)
 
     % Use data
     fprintf('Computing statistics on windowed data\t');
-    printprog('setmax', size(collected_windows, 1))
-    for trialidx = 1:size(collected_windows, 1)
+    printprog('setmax', 10)
+    nwin = size(collected_windows, 1);
+    last_pct = 0;
+    for trialidx = 1:nwin
+        curr_pct = round(10 * trialidx / nwin);
+        if curr_pct > last_pct
+            printprog(curr_pct)
+            last_pct = curr_pct;
+        end
         switch args.which
             case 'downsampled'
                 if strcmp(args.trialwise, per_epoch)
@@ -339,7 +344,6 @@ for dataidx = 1:numel(EYE)
                 end
                 all_data{end + 1} = curr_stats;
         end
-        printprog(trialidx);
     end
 end
 fprintf('Done\n');
@@ -375,14 +379,14 @@ bigtable = [
     all_info        all_trialinfo   all_tvars       all_condmemberships             all_setmemberships              all_data
 ];
 
-fprintf('Writing to %s...\n', args.path);
+fprintf('Writing to %s...', args.path);
 writecell2delim(args.path, bigtable, ',');
 fprintf('Done\n');
 
 if ~isempty(gcbf)
     global pupl_globals
     args = pupl_struct2args(args);
-    fprintf('Equivalent command: %s(%s, %s)\n', mfilename, pupl_globals.datavarname, all2str(args{:}));
+    fprintf('\nEquivalent command:\n\n%s(%s, %s)\n\n', mfilename, pupl_globals.datavarname, all2str(args{:}));
 end
 
 end

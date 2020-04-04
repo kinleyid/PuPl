@@ -65,7 +65,7 @@ if isempty(args.cfg)
                 return
             end
         case 'std'
-            vars = arrayfun(@(e) pupilstd, EYE);
+            vars = arrayfun(@pupilstd, EYE);
             args.cfg.thresh = UI_cdfgetrej(vars,...
                 'dataname', 'recordings',...
                 'threshname', sprintf('Std. dev. of %s', lower(pupl_getunits(EYE(1), 'pupil'))));
@@ -127,7 +127,7 @@ switch args.method
         data = arrayfun(@(e) 100*e.ppnmissing, EYE);
         rmidx = data >= parsedatastr(args.cfg.thresh, data);
     case 'std'
-        data = arrayfun(@(e) pupilstd, EYE);
+        data = arrayfun(@pupilstd, EYE);
         rmidx = data >= parsedatastr(args.cfg.thresh, data);
     case 'manual'
         rmidx = regexpsel({EYE.name}, args.cfg.sel);
