@@ -149,17 +149,17 @@ set_colnames = unique(mergefields(EYE, 'epochset', 'name')); % Set membership
 switch args.trialwise
     case per_epoch
         trial_colnames = {'trial_type' 'trial_idx' 'rejected' 'rt'};
-        tvar_colnames = pupl_tvar_getnames(mergefields(EYE, 'event'));
-        tvar_colnames = tvar_colnames(:)';
+        evar_colnames = pupl_evar_getnames(mergefields(EYE, 'event'));
+        evar_colnames = evar_colnames(:)';
     otherwise
         trial_colnames = {'mean_rt' 'median_rt' 'mean_log_rt'};
-        tvar_colnames = [];
+        evar_colnames = [];
 end
 all_info = {};
 all_condmemberships = {};
 all_setmemberships = {};
 all_trialinfo = {};
-all_tvars = {};
+all_evars = {};
 all_data = {};
 
 % All data will be windowed. 
@@ -201,11 +201,11 @@ for dataidx = 1:numel(EYE)
                     curr_event.rt
                 };
                 % Get trial vars
-                curr_tvars = {};
-                for tvar_idx = 1:numel(tvar_colnames)
-                    curr_tvars{end + 1} = curr_event.(tvar_colnames{tvar_idx});
+                curr_evars = {};
+                for evar_idx = 1:numel(evar_colnames)
+                    curr_evars{end + 1} = curr_event.(evar_colnames{evar_idx});
                 end
-                all_tvars(end + 1, :) = curr_tvars;
+                all_evars(end + 1, :) = curr_evars;
                 % Determine set membership, lining up membership with column names
                 curr_setnames = {EYE(dataidx).epochset.name};
                 curr_setmembership = curr_setnames(...
@@ -369,14 +369,14 @@ all_setmemberships = num2cell(cell2mat(all_setmemberships(:)));
 all_condmemberships = num2cell(cell2mat(all_condmemberships(:)));
 
 if strcmp(args.trialwise, per_epoch)
-    tvar_colnames = strcat('tvar_', tvar_colnames);
+    evar_colnames = strcat('evar_', evar_colnames);
 else
-    all_tvars = [];
+    all_evars = [];
 end
 
 bigtable = [
-    info_colnames   trial_colnames  tvar_colnames   strcat('cond_', cond_colnames)  strcat('set_', set_colnames)    data_colnames
-    all_info        all_trialinfo   all_tvars       all_condmemberships             all_setmemberships              all_data
+    info_colnames   trial_colnames  evar_colnames   strcat('cond_', cond_colnames)  strcat('set_', set_colnames)    data_colnames
+    all_info        all_trialinfo   all_evars       all_condmemberships             all_setmemberships              all_data
 ];
 
 fprintf('Writing to %s...', args.path);
