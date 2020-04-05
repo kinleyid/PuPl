@@ -7,6 +7,7 @@ args = pupl_args2struct(varargin, {
     'cfg' []
     'trialwise' []
     'path' []
+    'lw' []
 });
 
 stat_opts = [
@@ -68,7 +69,7 @@ if isempty(args.cfg)
                 % field | prompt | default
                 'start' 'Start (relative to epoch-defining event; defaults to start of epoch)' EYE(1).epoch(1).lims{1}
                 'width' 'Width' '100ms'
-                'step' 'Step size (defaults to width plus one sample/datapoint)' ''
+                'step' 'Step size (defaults to width)' ''
                 'end' 'End (relative to epoch-defining event; defaults to end of epoch)' EYE(1).epoch(1).lims{2}
             };
 
@@ -133,6 +134,19 @@ if isempty(args.cfg)
     end
 end
 
+if strcmp(args.which, 'downsampled')
+    if isempty(args.lw)
+        q = 'Long or wide format?';
+        a = questdlg(q, q, 'Long', 'Wide', 'Cancel', 'Long');
+        switch a
+            case {'Long' 'Wide'}
+                args.lw = lower(a);
+            otherwise
+                return
+        end
+    end
+end
+
 if isempty(args.path)
     [f, d] = uiputfile('*.csv');
     if isnumeric(f)
@@ -148,12 +162,13 @@ cond_colnames = unique(mergefields(EYE, 'cond')); % Condition membership
 set_colnames = unique(mergefields(EYE, 'epochset', 'name')); % Set membership
 switch args.trialwise
     case per_epoch
-        trial_colnames = {'trial_type' 'trial_idx' 'rejected' 'rt'};
+        trial_colnames = {'trial_type' 'trial_idx' 'rejected'};
         evar_colnames = pupl_evar_getnames(mergefields(EYE, 'event'));
         evar_colnames = evar_colnames(:)';
     otherwise
-        trial_colnames = {'mean_rt' 'median_rt' 'mean_log_rt'};
         evar_colnames = [];
+        trial_colnames = {'mean_rt' 'median_rt' 'mean_log_rt'};
+        get_rts = isfield(mergefields(EYE, 'event'), 'rt');
 end
 all_info = {};
 all_condmemberships = {};
@@ -161,6 +176,7 @@ all_setmemberships = {};
 all_trialinfo = {};
 all_evars = {};
 all_data = {};
+all_epochidx = {};
 
 % All data will be windowed. 
 switch args.which
@@ -180,6 +196,7 @@ for dataidx = 1:numel(EYE)
         case per_epoch
             fprintf('Collecting indices to windowed data\t\t');
             collected_windows = cell(numel(EYE(dataidx).epoch), numel(win));
+            collected_epochidx = cell(numel(EYE(dataidx).epoch), numel(win));
             n_epochs = numel(EYE(dataidx).epoch);
             printprog('setmax', 10);
             last_pct = 0;
@@ -198,7 +215,6 @@ for dataidx = 1:numel(EYE)
                     sprintf('"%s"', curr_event.name)
                     epochidx
                     curr_epoch.reject
-                    curr_event.rt
                 };
                 % Get trial vars
                 curr_evars = {};
@@ -226,30 +242,39 @@ for dataidx = 1:numel(EYE)
                     end
                     curr_win = parsetimestr(str_win, EYE(dataidx).srate, 'smp');
                     rel_lats = unfold(parsetimestr(curr_epoch.lims, EYE(dataidx).srate, 'smp'));
-                    is_win = rel_lats >= curr_win(1) & rel_lats <= curr_win(2);
-                    abs_lats = rel_lats(is_win) + pupl_epoch_get(EYE(dataidx), curr_epoch, '_lat');
-                    collected_windows{epochidx, winidx} = abs_lats;
+                    rel_win = rel_lats >= curr_win(1) & rel_lats <= curr_win(2);
+                    collected_windows{epochidx, winidx} = rel_win;
+                    collected_epochidx{epochidx, winidx} = epochidx;
                 end
                 rec_idx{end + 1} = dataidx;
             end
         case set_avg
             fprintf('Collecting windowed data\t\t\t\t');
             collected_windows = cell(numel(EYE(dataidx).epochset), numel(win));
+            collected_epochidx = cell(numel(EYE(dataidx).epochset), numel(win));
             n_sets = numel(EYE(dataidx).epochset);
             printprog('setmax', n_sets);
             for setidx = 1:n_sets
                 curr_set = EYE(dataidx).epochset(setidx);
-                epochidx = pupl_epoch_sel(EYE(dataidx), EYE(dataidx).epoch, curr_set.description.members);
-                rts = pupl_epoch_get(EYE(dataidx), EYE(dataidx).epoch(epochidx), 'rt');
+                epochidx = pupl_epoch_sel(EYE(dataidx), EYE(dataidx).epoch, curr_set.members);
                 % Get epoch info
                 all_info{end + 1} = EYE(dataidx).name;
-                all_trialinfo(end + 1, :) = {
-                    nanmean_bc(rts)
-                    nanmedian_bc(rts)
-                    nanmean_bc(log(rts))
-                };
+                if get_rts
+                    rts = pupl_epoch_get(EYE(dataidx), EYE(dataidx).epoch(epochidx), 'rt');
+                    all_trialinfo(end + 1, :) = {
+                        nanmean_bc(rts)
+                        nanmedian_bc(rts)
+                        nanmean_bc(log(rts))
+                    };
+                else
+                    all_trialinfo(end + 1, :) = {
+                        nan
+                        nan
+                        nan
+                    };
+                end
                 % Get set membership
-                all_setmemberships{end + 1} = ismember(set_colnames, curr_set.description.name);
+                all_setmemberships{end + 1} = ismember(set_colnames, curr_set.name);
                 % Get windowed data
                 curr_data = nanmean_bc(cell2mat(pupl_epoch_getdata(EYE(dataidx), curr_set.name)));
                 for winidx = 1:numel(win)
@@ -257,14 +282,29 @@ for dataidx = 1:numel(EYE)
                     curr_win = nan(size(str_win));
                     for ii = 1:2
                         if isempty(str_win{ii})
-                            curr_win(ii) = parsetimestr(EYE(dataidx).epochset(setidx).lims(ii), EYE(dataidx).srate, 'smp');
+                            lims = {EYE(dataidx).epoch(epochidx).lims};
+                            if isequal(lims{:})
+                                curr_win(ii) = parsetimestr(lims{1}{ii}, EYE(dataidx).srate, 'smp');
+                            else
+                                error('Epochs are not all of the same length');
+                            end
                         else
                             curr_win(ii) = parsetimestr(str_win{ii}, EYE(dataidx).srate, 'smp');
                         end
                     end
-                    rel_lats = unfold(parsetimestr(EYE(dataidx).epochset(setidx).lims, EYE(dataidx).srate, 'smp'));
-                    win_idx = rel_lats >= curr_win(1) & rel_lats <= curr_win(2);
-                    collected_windows{setidx, winidx} = curr_data(win_idx);
+                    if isequal(EYE(dataidx).epoch(epochidx).lims)
+                        rel_lats = unfold(...
+                            parsetimestr(...
+                                EYE(dataidx).epoch(find(epochidx, 1)).lims,...
+                                EYE(dataidx).srate,...
+                                'smp'));
+                        rel_win = find(rel_lats >= curr_win(1) & rel_lats <= curr_win(2));
+                        
+                    else
+                        rel_win = curr_win(1):curr_win(2);
+                    end
+                    collected_windows{setidx, winidx} = rel_win;
+                    collected_epochidx{setidx, winidx} = epochidx;
                 end
                 printprog(setidx);
             end
@@ -293,16 +333,25 @@ for dataidx = 1:numel(EYE)
         end
         switch args.which
             case 'downsampled'
-                if strcmp(args.trialwise, per_epoch)
-                    curr_data = getfield(EYE(dataidx), 'pupil', 'both');
-                    curr_data = curr_data(collected_windows{trialidx, winidx});
-                else
-                    curr_data = collected_windows{trialidx, 1};
+                data_type = {'pupil' 'both'};
+                switch args.trialwise
+                    case per_epoch
+                        curr_data = pupl_epoch_getdata(...
+                            EYE(dataidx),...
+                            collected_epochidx{trialidx, winidx},...
+                            data_type{:});
+                        curr_data = curr_data{1}(collected_windows{trialidx, winidx});
+                    case set_avg
+                        [curr_data, rej] = pupl_epoch_getdata(...
+                            EYE(dataidx),...
+                            collected_epochidx{trialidx, winidx},...
+                            data_type{:});
+                        curr_data = cell2mat(curr_data);
+                        curr_data = nanmean_bc(curr_data(~rej, collected_windows{trialidx, winidx}), 1);
                 end
                 win_width = parsetimestr(args.cfg.width, EYE(dataidx).srate, 'smp');
-                % 1s at 60Hz gives 60 datapoints
                 if isempty(args.cfg.step)
-                    win_step = win_width + 1;
+                    win_step = win_width;
                 else
                     win_step = parsetimestr(args.cfg.step, EYE(dataidx).srate, 'smp');
                 end
@@ -328,16 +377,24 @@ for dataidx = 1:numel(EYE)
                     for statidx = 1:numel(args.cfg(winidx).stats)
                         statname = args.cfg(winidx).stats{statidx};
                         statoptidx = strcmp(statname, stat_opts(:, 1));
+                        data_type = stat_opts{statoptidx, 4};
+                        if isempty(data_type)
+                            data_type = {'pupil' 'both'};
+                        end
                         switch args.trialwise
                             case per_epoch
-                                data_type = stat_opts{statoptidx, 4};
-                                if isempty(data_type)
-                                    data_type = {'pupil' 'both'};
-                                end
-                                curr_data = getfield(EYE(dataidx), data_type{:});
-                                curr_win = curr_data(collected_windows{trialidx, winidx});
+                                curr_data = pupl_epoch_getdata(...
+                                    EYE(dataidx),...
+                                    collected_epochidx{trialidx, winidx},...
+                                    data_type{:});
+                                curr_win = curr_data{1}(collected_windows{trialidx, winidx});
                             case set_avg
-                                curr_win = collected_windows{trialidx, winidx};
+                                [curr_data, rej] = pupl_epoch_getdata(...
+                                    EYE(dataidx),...
+                                    collected_epochidx{trialidx, winidx},...
+                                    data_type{:});
+                                curr_data = cell2mat(curr_data);
+                                curr_win = nanmean_bc(curr_data(~rej, collected_windows{trialidx, winidx}), 1);
                         end
                         curr_stats = [curr_stats feval(stat_opts{statoptidx, 2}, curr_win)];
                     end
@@ -351,11 +408,51 @@ fprintf('Done\n');
 % Get data column names
 switch args.which
     case 'downsampled'
-        n_data_cols = max(cellfun(@numel, all_data));
-        data_colnames = arrayfun(@(n) sprintf('t%d', n), 1:n_data_cols, 'UniformOutput', false);
+        
+        n_samples_per = max(cellfun(@numel, all_data));
+        
+        % Fill in missing samples
         for idx = 1:numel(all_data)
-            n_missing = n_data_cols - numel(all_data{idx});
+            n_missing = n_samples_per - numel(all_data{idx});
             all_data{idx} = [all_data{idx} nan(1, n_missing)];
+        end
+        
+        if isequal(EYE.srate)
+            srate = EYE(1).srate;
+            win_start = parsetimestr(args.cfg.start, srate, 'smp');
+            win_end = parsetimestr(args.cfg.end, srate, 'smp');
+            win_width = parsetimestr(args.cfg.width, srate, 'smp');
+            if isempty(args.cfg.step)
+                win_step = win_width;
+            else
+                win_step = parsetimestr(args.cfg.step, srate, 'smp');
+            end
+            ur_win = 1:win_width;
+            win_starts = (ur_win(1) + win_step * (0:n_samples_per-1)) / srate;
+            win_ends = (ur_win(end) + win_step * (0:n_samples_per-1)) / srate;
+        else
+            win_starts = [];
+            win_ends = [];
+        end
+        switch args.lw
+            case 'wide'
+                data_colnames = strcat(...
+                    't',...
+                    cellfun(@num2str, num2cell(1:n_samples_per), 'UniformOutput', false)...
+                );
+                if ~isempty(win_starts)
+                    data_colnames = strcat(...
+                        data_colnames,...
+                        '[',...
+                        cellfun(@num2str, num2cell(win_starts), 'UniformOutput', false),...
+                        '_',...
+                        cellfun(@num2str, num2cell(win_starts), 'UniformOutput', false),...
+                        ']'...
+                    );
+                end
+            case 'long'
+                data_colnames = sprintf('pupil_%s', EYE(1).units.epoch{1});
+                all_data = num2cell([all_data{:}]');
         end
     case 'stats'
         data_colnames = {};
@@ -374,10 +471,41 @@ else
     all_evars = [];
 end
 
-bigtable = [
-    info_colnames   trial_colnames  evar_colnames   strcat('cond_', cond_colnames)  strcat('set_', set_colnames)    data_colnames
-    all_info        all_trialinfo   all_evars       all_condmemberships             all_setmemberships              all_data
+nondata_table = [
+    info_colnames   trial_colnames  evar_colnames   strcat('cond_', cond_colnames)  strcat('set_', set_colnames)
+    all_info        all_trialinfo   all_evars       all_condmemberships             all_setmemberships
 ];
+
+data_table = [
+    data_colnames
+    all_data
+];
+
+if strcmp(args.which, 'downsampled')
+    if strcmp(args.lw, 'long')
+        % Reshape to long format
+        prev_size = size(nondata_table);
+        cols = nondata_table(1, :);
+        contents = nondata_table(2:end, :);
+        contents = repmat(contents', n_samples_per, 1);
+        contents = reshape(contents, prev_size(2), [])';
+        nondata_table = [
+            cols
+            contents
+        ];
+        if ~isempty(win_starts)
+            se = [num2cell(win_starts(:)) num2cell(win_ends(:))];
+            se = repmat(se, prev_size(1) - 1, 1);
+            se = [
+                {'win_start'} {'win_end'}
+                se
+            ];
+            nondata_table = [nondata_table se];
+        end
+    end
+end
+
+bigtable = [nondata_table data_table];
 
 fprintf('Writing to %s...', args.path);
 writecell2delim(args.path, bigtable, ',');

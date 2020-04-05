@@ -19,6 +19,14 @@ if isempty(data_fields)
     data_fields = {'pupil' 'both'};
 end
 
+if ismember('ur', data_fields)
+    maybe_ur = {'ur'};
+else
+    maybe_ur = {};
+end
+
+srate = getfield(EYE, maybe_ur{:}, 'srate');
+
 data = cell(1, numel(EYE));
 isrej = cell(1, numel(EYE));
 lims = cell(1, numel(EYE));
@@ -50,8 +58,8 @@ for dataidx = 1:numel(EYE)
     for epochidx = 1:numel(epochs)
         curr_epoch = epochs(epochidx);
         curr_lims = ...
-            pupl_epoch_get(EYE(dataidx), curr_epoch, '_lat') + ...
-            parsetimestr(curr_epoch.lims, EYE(dataidx).srate, 'smp');
+            pupl_epoch_get(EYE(dataidx), curr_epoch, '_lat', maybe_ur{:}) + ...
+            parsetimestr(curr_epoch.lims, srate, 'smp');
         curr_data{epochidx} = all_data(unfold(curr_lims));
         
         % Baseline correction

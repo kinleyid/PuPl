@@ -1,29 +1,14 @@
 
 function event_lats = pupl_event_getlat(EYE, sel, varargin)
 
-if isempty(varargin)
-    ctrl = 'idx';
-else
-    ctrl = varargin{1}; % idx, t, or uniqid
-end
+sample_times = getfield(EYE, varargin{:}, 'times');
 
 if isstruct(sel)
     % Struct array of events has been provided as input
     event_times = [sel.time];
 else
-    switch ctrl
-        case 'idx'
-            % Index
-            event_times = [EYE.event(sel).time];
-        case 't'
-            event_times = sel;
-            %{
-        case 'uniqid'
-            event_times = [EYE.event(ismember(sel, [EYE.event.uniqid])).time];
-            %}
-    end
+    event_times = [EYE.event(sel).time];
 end
-sample_times = EYE.times;
 event_lats = nan(size(event_times));
 last_lat = 1;
 nt = numel(event_times);

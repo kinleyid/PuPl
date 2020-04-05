@@ -130,6 +130,7 @@ for eventidx = read_from
             end
         case 'evar'
             var = pupl_evar_eval(args.expr, EYE.event(eventidx));
+            var = var{:};
             if isnumeric(var)
                 if strcmp(args.type{1}, 'String')
                     var = num2str(var);

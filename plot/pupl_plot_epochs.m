@@ -1,9 +1,15 @@
 function pupl_plot_epochs(h, EYE)
 
+pupil_fields = reshape(fieldnames(EYE.pupil), 1, []);
+
 % Get limits
-[l, rej] = pupl_epoch_getdata(EYE, [], 'pupil', 'left');
-r = pupl_epoch_getdata(EYE, [], 'pupil', 'right');
-alldata = [l{~rej} r{~rej}];
+alldata = [];
+
+for field = pupil_fields
+    [x, rej] = pupl_epoch_getdata(EYE, [], 'pupil', field{:});
+    alldata = [alldata x{~rej}];
+end
+
 if isempty(alldata) % If all are rejected
     alldata = [l{:} r{:}];
 end
@@ -42,13 +48,13 @@ sub_plot_epochs(h, 0)
 
 end
 
-function sub_plot_epochs(h, n)
+function sub_plot_epochs(h, cidx)
 
 ud = get(h, 'UserData');
 trialidx = ud.trialidx;
 EYE = ud.EYE;
 
-trialidx = trialidx + n;
+trialidx = trialidx + cidx;
 if trialidx < 1
     trialidx = numel(EYE.epoch);
 elseif trialidx > numel(EYE.epoch)
@@ -59,38 +65,75 @@ ud.trialidx = trialidx;
 
 epoch = EYE.epoch(trialidx);
 
-[pupil, urpupil] = deal([]);
-for field = {'left' 'right'}
-    pupil.(field{:}) = cell2mat(pupl_epoch_getdata(EYE, trialidx, 'pupil', field{:}));
-    urpupil.(field{:}) = cell2mat(pupl_epoch_getdata(EYE, trialidx, 'ur', 'pupil', field{:}));
-end
-if isfield(EYE.pupil, 'both')
-    pupil.both = cell2mat(pupl_epoch_getdata(EYE, trialidx, 'pupil', 'both'));
+% Get plot data
+plotinfo = struct(...
+    'data', [],...
+    'legendentries', [],...
+    'colours', [],...
+    't', [],...
+    'srate', []);
+colours = {'b' 'r'};
+n = 1;
+for side = {'left' 'right'}
+    if isfield(EYE.pupil, side{:})
+        plotinfo.data = [
+            plotinfo.data
+            [
+                pupl_epoch_getdata(EYE, trialidx, 'ur', 'pupil', side{:})
+                pupl_epoch_getdata(EYE, trialidx, 'pupil', side{:})
+            ]
+        ];
+        plotinfo.legendentries = [
+            plotinfo.legendentries
+            {
+                ['Unprocessed ' side{:}]
+                [upper(side{:}(1)) side{:}(2:end)]
+            }
+        ];
+        plotinfo.colours = [
+            plotinfo.colours
+            {
+                sprintf('%s:', colours{n})
+                colours{n}
+            }
+        ];
+        n = n + 1;
+        plotinfo.t = [
+            plotinfo.t
+            {
+                EYE.ur.times
+                EYE.times
+            }
+        ];
+        plotinfo.srate = [
+            plotinfo.srate
+            {
+                EYE.ur.srate
+                EYE.srate
+            }
+        ];
+    end
 end
 
 axes(findobj(h, 'Tag', 'axes'));
 cla; hold on
 
-t = unfold(parsetimestr(epoch.lims, EYE.srate, 'smp') + pupl_epoch_get(EYE, epoch, '_lat')) / EYE.srate; % Time in seconds
-eventidx = unfold(parsetimestr(epoch.lims, EYE.srate, 'smp')) == 0; % Find where the event occurs
-plot(repmat(t(eventidx), 1, 2), ud.ylims, 'k--');
-plot(t, pupil.left, 'b');
-plot(t, pupil.right, 'r');
-if isfield(pupil, 'both')
-    plot(t, pupil.both, 'k');
+for dataidx = 1:numel(plotinfo.data)
+    t = parsetimestr(epoch.lims, plotinfo.srate{dataidx});
+    plot(...
+        linspace(t(1), t(2), numel(plotinfo.data{dataidx})) + pupl_epoch_get(EYE, epoch, 'time'),...
+        plotinfo.data{dataidx},...
+        plotinfo.colours{dataidx});
 end
-plot(t, urpupil.left, 'b:');
-plot(t, urpupil.right, 'r:');
 
-xlim([t(1) t(end)]);
+ev_time = pupl_epoch_get(EYE, epoch, 'time');
+plot(repmat(ev_time, 1, 2), ud.ylims, 'k--');
+
+xlim(parsetimestr(epoch.lims, EYE.srate) + ev_time);
 ylim(ud.ylims);
 xlabel('Time (s)');
 ylabel(sprintf('Pupil %s (%s, %s)', EYE.units.epoch{:}));
-legendentries = {'Event', 'Left', 'Right', 'Unprocesssed left', 'Unprocessed right'};
-if isfield(pupil, 'both')
-    legendentries = [legendentries(1:3) 'Both' legendentries(4:end)];
-end
-legend(legendentries{:});
+legend(plotinfo.legendentries{:}, 'Event');
 
 currtitle = sprintf('Epoch %d.', trialidx);
 if EYE.epoch(trialidx).reject
