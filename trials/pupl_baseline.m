@@ -21,9 +21,12 @@ function args = parseargs(varargin)
 
 args = pupl_args2struct(varargin, {
     'correction' []
-	'event' []
+    'mapping' []
+    'len' []
+    'when' []
+	'timelocking' []
 	'lims' []
-	'mapping' []
+    'other' []
 });
 
 end
@@ -51,15 +54,20 @@ end
 if strcmp(args.correction, 'none') % Any baseline correction?
     % If none, fill in defaults
     args.mapping = 'one:all';
-    args.event = EYE(1).event(1).type; % Should be 'beginning of recording'
+    args.timelocking = EYE(1).event(1).name; % Should be 'beginning of recording'
     args.lims = {'1d' '1d'};
+    args.other = [];
+    args.other.event = args.timelocking;
+    args.other.when = 'after';
 else
     if isempty(args.mapping)
-        mappingOptions = {'one:one'
+        mappingOptions = {
+            'one:one'
             'one:all'
-            'one:some'};
+            'one:some'
+        };
         args.mapping = mappingOptions(...
-            listdlg('PromptString', 'Baseline-to-trial mapping',...
+            listdlg('PromptString', sprintf('Baseline-to-trial mapping'),...
             'ListString', mappingOptions));
         if isempty(args.mapping)
             return
@@ -67,35 +75,100 @@ else
             args.mapping = args.mapping{:};
         end
     end
+    
+    if strcmp(args.mapping, 'one:some')
+        if isempty(args.when)
+            q = 'Do baselines occur before or after epochs?';
+            args.when = lower(questdlg(q, q, 'Before', 'After', 'Cancel', 'Before'));
+            if isempty(args.when)
+                return
+            end
+        end
+    else
+        args.when = 0; % Not applicable
+    end
+    
+    if isempty(args.len)
+        q = sprintf('Fixed or variable length baselines?');
+        a = lower(questdlg(q, q, 'Fixed', 'Variable', 'Cancel', 'Fixed'));
+        switch a
+            case {'fixed' 'variable'}
+                args.len = a;
+            otherwise
+                return
+        end
+    end
 
-    if isempty(args.event)
+    if isempty(args.timelocking)
         switch args.mapping
             case 'one:one'
-                args.event = 0;
-            otherwise
-                args.event = pupl_event_UIget(mergefields(EYE, 'event'), 'Baselines are defined relative to which events?');
-                if isempty(args.event)
+                args.timelocking = 0; % Not applicable
+                rel2 = 'Do baselines begin before epoch timelocking events or end after epoch timelocking events?';
+                a = questdlg(rel2, rel2, 'Begin before', 'End after', 'Cancel', 'Begin before');
+                switch a
+                    case 'End after'
+                        args.other.when = 'after';
+                        pick_next = 'ends';
+                    case 'Begin before'
+                        args.other.when = 'before';
+                        pick_next = 'beginnings';
+                    otherwise
+                        return
+                end
+                args.other.event = pupl_event_UIget(...
+                    [EYE.event],...
+                    sprintf('Baseline %s are defined relative to which events?', pick_next));
+                if isempty(args.other.event)
                     return
+                end
+            otherwise
+                switch args.len
+                    case 'fixed'
+                        args.timelocking = pupl_event_UIget(mergefields(EYE, 'event'), 'Baselines are defined relative to which events?');
+                        if isempty(args.timelocking)
+                            return
+                        end
+                        args.other.event = args.timelocking;
+                        args.other.when = 'after';
+                    case 'variable'
+                        args.timelocking = pupl_event_UIget(mergefields(EYE, 'event'), 'Baseline beginnings are defined relative to which events?');
+                        if isempty(args.timelocking)
+                            return
+                        end
+                        args.other.event = pupl_event_UIget(mergefields(EYE, 'event'), 'Baseline ends are defined relative to which events?');
+                        if isempty(args.other.event)
+                            return
+                        end
+                        args.other.when = 'after';
+                    otherwise
+                        return
                 end
         end
     end
 
     if isempty(args.lims)
+        rel2 = cell(1, 2);
         switch args.mapping
             case 'one:one'
-                args.lims = (inputdlg(...
-                    {sprintf('Baselines start at this time relative to events that define trials:')
-                    'Baselines end at this time relative to events that define trials:'}));
-                if isempty(args.lims)
-                    return
+                rel2(1:2) = {'epoch timelocking events'};
+                if strcmp(args.len, 'variable')
+                    switch args.other.when
+                        case 'before'
+                            rel2{1} = 'the events that signal their beginnings';
+                        case 'after'
+                            rel2{2} = 'the events that signal their ends';
+                    end
                 end
             otherwise
-                args.lims = (inputdlg(...
-                    {sprintf('Baselines start at this time relative to event:')
-                    'Baselines end at this time relative to event:'}));
-                if isempty(args.lims)
-                    return
-                end
+                rel2{1} = 'the events that signal their beginnings';
+                rel2{2} = 'the events that signal their ends';
+        end
+        args.lims = inputdlg({
+            sprintf('Baselines start at this time relative to %s:', rel2{1})
+            sprintf('Baselines end at this time relative to %s:', rel2{2})
+        });
+        if isempty(args.lims)
+            return
         end
     end
 end
@@ -119,68 +192,52 @@ switch args.correction
         relstr = '% change from baseline mean';
     case 'z-score based on baseline statistics'
         correctionFunc = @(tv, bv) 100 * (tv - nanmean_bc(bv)) / nanstd_bc(bv);
-        relstr = {'z-scores' 'based on baseline stats'};
+        relstr = {'z-scores' 'from baseline stats'};
     case 'none'
         correctionFunc = @(tv, bv) tv;
         relstr = EYE.units.pupil{3};
 end
 
-% At the end of this there will be an array called baseline_uniqids, such
-% that epoch(n) will be corrected by a baseline period centered on the
-% event with uniqid baseline_uniqids(n)
-
-epoch_times = pupl_epoch_get(EYE, [], 'time'); % Latencies of epoch-defining events
-if isnumeric(args.event) % Baselines defined relative to each epoch-defining event
-    baseline_uniqids = [EYE.epoch.event]; % Uniqids
-else % Baselines defined relative to their own events (other than those that define epochs)
-    baseline_events = EYE.event(pupl_event_sel(EYE.event, args.event));
-    if strcmp(args.mapping, 'one:all')
-        baseline_events = baseline_events(1);
-    end
-    % Figure out which epochs occur after which baseline period
-    baseline_uniqids = [];
-    for baseline_idx = 1:numel(baseline_events)
-        if baseline_idx == 1 % Ensure no epochs are missed
-            early_epoch_idx = epoch_times < EYE.event(baseline_idx).time;
-            if any(early_epoch_idx)
-                error_txt = [
-                    'The following epochs occur before the first baseline period:\n'...
-                    sprintf('\t%s\n', pupl_epoch_get(EYE, early_epoch_idx, 'name'))
-                ];
-                error(error_txt) % This should probably just be a warning
+switch args.mapping
+    case 'one:one'
+        tl_evs = pupl_epoch_get(EYE, EYE.epoch, '_tl');
+        baselines = epoch_(EYE, [tl_evs.uniqid], args.lims, args.other, 'baseline');
+    case 'one:some'
+        cand_baselines = epoch_(EYE, args.timelocking, args.lims, args.other, 'baseline');
+        cand_baseline_times = pupl_epoch_get(EYE, cand_baselines, 'time');
+        epoch_times = pupl_epoch_get(EYE, EYE.epoch, 'time');
+        baselines = [];
+        for epoch_idx = 1:numel(epoch_times)
+            switch args.when
+                case 'before'
+                    % Find latest baseline prior to epoch
+                    baseline_idx = find(cand_baseline_times <= epoch_times(epoch_idx), 1, 'last');
+                case 'after'
+                    % Find earliest baseline after epoch
+                    baseline_idx = find(cand_baseline_times >= epoch_times(epoch_idx), 1);
             end
+            if isempty(baseline_idx)
+                epoch_ev = pupl_epoch_get(EYE, EYE.epoch, '_tl');
+                error('No baseline occurs %s the epoch associated with event %s (%f s)',...
+                    args.when,...
+                    epoch_ev.name,...
+                    epoch_ev.time);
+            end
+            baselines = [baselines cand_baselines(baseline_idx)];
         end
-        % Correct all epochs whose defining events occur after the defining
-        % event of the baseline period
-        correct_idx = epoch_times >= baseline_events(baseline_idx).time;
-        if baseline_idx < numel(baseline_events)
-            % But don't correct the epochs that occur after the next
-            % baseline period
-            correct_idx = correct_idx & ...
-                epoch_times < baseline_events(baseline_idx + 1).time;
-        end
-        baseline_uniqids = [
-            baseline_uniqids;
-            repmat(baseline_events(baseline_idx).uniqid, nnz(correct_idx), 1)
-        ];
-    end
+    case 'one:all'
+        tl_idx = find(pupl_event_sel(EYE.event, args.timelocking));
+        tl_idx = tl_idx(1);
+        tl_ev = EYE.event(tl_idx);
+        baseline = epoch_(EYE, tl_ev.uniqid, args.lims, args.other, 'baseline');
+        baselines = repmat(baseline, 1, numel(EYE.epoch));
 end
 
-rel_lats = parsetimestr(args.lims, EYE.srate, 'smp');
-event_ids = [EYE.event.uniqid];
-for epochidx = 1:numel(EYE.epoch)
-    abs_lats = rel_lats + pupl_event_getlat(EYE, baseline_uniqids(epochidx) == event_ids);
-    if abs_lats(1) < 1
-        error('Trying to create a baseline period starting at latency %d (earliest possible latency is 1)', baselinelims{epochidx}(1))
-    end
-    if abs_lats(2) > EYE.ndata
-        error('Trying to create a baseline period ending at latency %d (earliest possible latency for this recording is %d)', baselinelims{epochidx}(2), EYE.ndata)
-    end
-    EYE.epoch(epochidx).baseline = struct(...
-        'lims', {args.lims},...
-        'event', baseline_uniqids(epochidx),...
-        'func', correctionFunc);
-end
+[baselines.func] = deal(correctionFunc);
+
+baselines = num2cell(baselines);
+
+[EYE.epoch.baseline] = deal(baselines{:});
 
 if ~isempty(relstr)
     relstr = cellstr(relstr);

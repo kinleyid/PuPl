@@ -9,6 +9,7 @@ global pupl_globals
 
 args = pupl_args2struct(varargin, {
     'path', []
+    'as', [] % bin or asc
     'method', 'single' % 'single', 'batch', or 'bids'
 });
 

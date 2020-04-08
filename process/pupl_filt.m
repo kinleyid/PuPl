@@ -126,6 +126,8 @@ switch lower(args.win)
         kern = 1 / sqrt(2*pi) * exp( -x.^2 / 2 );
 end
 
+kern = kern + 1; % If zeros in the kernel, the initial fft is weird. It will be normalized later
+
 for stream = reshape(fieldnames(EYE.(args.data)), 1, [])
     fprintf('\t\tFiltering %s...', stream{:});
     switch args.avfunc
@@ -154,7 +156,9 @@ for stream = reshape(fieldnames(EYE.(args.data)), 1, [])
             data = ifft(mult);
             printprog(4);
             hw = floor(nkern/2) + 1;
-            data = data(hw-1:end-hw);
+            if hw > 1
+                data = data(hw-1:end-hw);
+            end
             % Correct for NaNs
             o = ones(size(data));
             o(wasnan) = 0;
@@ -164,7 +168,9 @@ for stream = reshape(fieldnames(EYE.(args.data)), 1, [])
             printprog(6);
             sums = ifft(mult);
             printprog(7);
-            sums = sums(hw-1:end-hw);
+            if hw > 1
+                sums = sums(hw-1:end-hw);
+            end
             % Renormalize
             data = data ./ sums;
             printprog(8);

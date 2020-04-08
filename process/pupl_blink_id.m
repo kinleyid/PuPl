@@ -67,10 +67,8 @@ if isempty(args.cfg)
             args.cfg = struct(...
                 'min', params{1},... 
                 'max', params{2});
-            fprintf('Identifying blinks by consecutive missing data\nMin. blink length: %s\nMax. blink length: %s\n', args.cfg.min, args.cfg.max);
         case 'noise'
             % No configuration necessary
-            fprintf('Identifying blinks by pupillometry noise\n');
         case 'velocity'
             vel = cell(size(EYE));
             for dataidx = 1:numel(EYE)
@@ -103,11 +101,19 @@ if isempty(args.cfg)
                 'onset_lim', onset_lim,... 
                 'offset_lim', offset_lim,...
                 'max_len', max_len);
-            fprintf('Identifying blinks by dilation velocity.\n');
-            fprintf('Blinks begin when dilation speed becomes less than or equal to %s\n', args.cfg.onset_lim);
-            fprintf('Blinks end when dilation speed becomes greater than or equal to %s\n', args.cfg.offset_lim);
-            fprintf('Blinks are constrained to a max length of %s\n', args.cfg.max_len);
     end
+end
+
+switch args.method
+    case 'missing'
+        fprintf('Identifying blinks by consecutive missing data (method "missing")\nMin. blink length: %s\nMax. blink length: %s\n', args.cfg.min, args.cfg.max);
+    case 'noise'
+        fprintf('Identifying blinks by pupillometry noise (method "noise")\n');
+    case 'velocity'
+        fprintf('Identifying blinks by dilation velocity (method "velocity").\n');
+        fprintf('Blinks begin when dilation speed becomes less than or equal to %s\n', args.cfg.onset_lim);
+        fprintf('Blinks end when dilation speed becomes greater than or equal to %s\n', args.cfg.offset_lim);
+        fprintf('Blinks are constrained to a max length of %s\n', args.cfg.max_len);
 end
 
 outargs = args;

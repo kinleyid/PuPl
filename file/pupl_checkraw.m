@@ -23,6 +23,24 @@ if isfield(data, 'pupil')
         uniqid = num2cell(1:numel(data.event));
         [data.event.uniqid] = uniqid{:};
     end
+    
+    % Check units
+    def_pupil = {'size' 'unknown units' 'assumed absolute'};
+    def_gaze = {'unknown units' 'unknown relative position'};
+    if ~isfield(data, 'units')
+        data.units = [];
+    end
+    if ~isfield(data.units, 'pupil')
+        data.units.pupil = def_pupil;
+    end
+    if ~isfield(data.units, 'gaze')
+        data.units.gaze = [];
+    end
+    for axis = {'x' 'y'}
+        if ~isfield(data.units.gaze, axis{:})
+            data.units.gaze.(axis{:}) = [axis def_gaze];
+        end
+    end
 end
 
 data.src = args.src;

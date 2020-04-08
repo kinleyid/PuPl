@@ -75,6 +75,17 @@ if isempty(args.cfg)
             else
                 args.cfg.thresh = thresh;
             end
+        case 'blink'
+            thresh = UI_cdfgetrej(...
+                arrayfun(@(e) cellfun(@(x) nnz(diff(x == 'b') == 1), pupl_epoch_getdata(e, [], 'datalabel')), EYE, 'UniformOutput', false),...
+                'names', {EYE.name},...
+                'dataname', 'epochs',...
+                'threshname', sprintf('Number of blinks'));
+            if isempty(thresh)
+                return
+            else
+                args.cfg.thresh = thresh;
+            end
         case 'rt'
             thresh = UI_cdfgetrej(...
                 arrayfun(@(e) mergefields(e, 'epoch', 'event', 'rt'), EYE, 'UniformOutput', false),...
@@ -89,6 +100,17 @@ if isempty(args.cfg)
             args.cfg.sel = pupl_event_UIget(pupl_epoch_get(EYE, [], '_ev'), 'Reject epochs associated with which events?');
             if isempty(args.cfg.sel)
                 return
+            end
+        case 'sacc'
+            thresh = UI_cdfgetrej(...
+                arrayfun(@(e) cellfun(@(x) nnz(diff(x(1:end-1) == 's') == 1), pupl_epoch_getdata(e, [], 'interstices')), EYE, 'UniformOutput', false),...
+                'names', {EYE.name},...
+                'dataname', 'epochs',...
+                'threshname', sprintf('Number of saccades'));
+            if isempty(thresh)
+                return
+            else
+                args.cfg.thresh = thresh;
             end
     end
 end
@@ -109,7 +131,8 @@ switch args.method
         data = cellfun(@(x) max(abs(x)), pupl_epoch_getdata(EYE));
         rejidx = data > parsedatastr(args.cfg.thresh, data);
     case 'blink'
-        rejidx = cellfun(@(x) any(x == 'b'), pupl_epoch_getdata(EYE, [], 'datalabel'));
+        data = cellfun(@(x) nnz(diff(x == 'b') == 1), pupl_epoch_getdata(EYE, [], 'datalabel'));
+        rejidx = data > parsedatastr(args.cfg.thresh, data);
     case 'rt'
         data = mergefields(EYE, 'epoch', 'event', 'rt');
         rejidx = data > parsedatastr(args.cfg.thresh, data);

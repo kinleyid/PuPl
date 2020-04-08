@@ -1,5 +1,5 @@
 
-function [data, isrej, lims] = pupl_epoch_getdata(EYE, varargin)
+function [data, isrej, lims, bef_aft, rel_lats] = pupl_epoch_getdata_new(EYE, varargin)
 
 % Get epoch data
 %   Inputs
@@ -30,6 +30,8 @@ srate = getfield(EYE, maybe_ur{:}, 'srate');
 data = cell(1, numel(EYE));
 isrej = cell(1, numel(EYE));
 lims = cell(1, numel(EYE));
+bef_aft = cell(1, numel(EYE));
+rel_lats = cell(1, numel(EYE));
 
 for dataidx = 1:numel(EYE)
     if isstruct(sel)
@@ -55,13 +57,15 @@ for dataidx = 1:numel(EYE)
     all_data = getfield(EYE(dataidx), data_fields{:}); % All data from current recording
     
     curr_data = cell(1, numel(epochs)); % Epoch data from the current recording
+    curr_bef_aft = cell(1, numel(epochs));
+    curr_rel_lats = cell(1, numel(epochs));
     for epochidx = 1:numel(epochs)
+        % Get data
         curr_epoch = epochs(epochidx);
-        curr_lims = ...
-            pupl_epoch_get(EYE(dataidx), curr_epoch, '_lat', maybe_ur{:}) + ...
-            parsetimestr(curr_epoch.lims, srate, 'smp');
-        curr_data{epochidx} = all_data(unfold(curr_lims));
-        
+        curr_lims = pupl_epoch_get(EYE(dataidx), curr_epoch, '_abs', maybe_ur{:});
+        curr_data{epochidx} = all_data(curr_lims(1):curr_lims(2));
+        curr_bef_aft{epochidx} = curr_epoch.other.when;
+        curr_rel_lats{epochidx} = curr_lims - pupl_epoch_get(EYE(dataidx), curr_epoch, '_lat', maybe_ur{:});
         % Baseline correction
         if ismember({'pupil'}, data_fields) && isfield(curr_epoch, 'baseline')
             baseline_data = pupl_epoch_getdata(EYE(dataidx), curr_epoch.baseline, data_fields{:});
@@ -78,11 +82,31 @@ for dataidx = 1:numel(EYE)
     else
         isrej{dataidx} = false(size(epochs));
     end
-    
+    bef_aft{dataidx} = curr_bef_aft;
+    rel_lats{dataidx} = curr_rel_lats;
 end
 
 data = [data{:}]';
 isrej = [isrej{:}]';
 lims = [lims{:}]';
+bef_aft = [bef_aft{:}];
+rel_lats = [rel_lats{:}];
+
+% Fill in the missing data
+lens = cellfun(@numel, data);
+max_len = max(lens);
+too_short = find(lens(:)' < max_len);
+for dataidx = too_short
+    n_missing = max_len - lens(dataidx);
+    new_nans = nan(1, n_missing);
+    switch bef_aft{dataidx}
+        case 'before'
+            data{dataidx} = [new_nans data{dataidx}];
+            rel_lats{dataidx}(1) = rel_lats{dataidx}(1) - n_missing;
+        case 'after'
+            data{dataidx} = [data{dataidx} new_nans];
+            rel_lats{dataidx}(2) = rel_lats{dataidx}(2) + n_missing;
+    end
+end
 
 end

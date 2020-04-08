@@ -4,7 +4,7 @@ function out = readSMItxt(fullpath)
 
 %% Read raw
 
-raw = readdelim2cell(fullpath, '\t', '##');
+[raw, h] = readdelim2cell(fullpath, '\t', '##');
 cols = lower(raw(1, :));
 contents = raw(2:end, :);
 
@@ -40,7 +40,7 @@ for fields = {
     end
 end
 
-units.diam = {'diameter' diamunits 'absolute'};
+units.pupil = {'diameter' diamunits 'absolute'};
 
 %% Get gaze
 
@@ -59,8 +59,8 @@ for ax = {'x' 'y'}
     end
 end
 
-units.gaze.x = {'gaze' gazeunits 'unknown relative position'};
-units.gaze.y = units.gaze.x;
+units.gaze.x = {'x' gazeunits 'unknown relative position'};
+units.gaze.y = {'y' gazeunits 'unknown relative position'};
 
 %% Get events
 
@@ -77,8 +77,9 @@ event = event(I);
 
 out = struct(...
     'pupil', pupil,...
-    'srate', srate,...
     'gaze', gaze,...
+    'srate', srate,...
+    'times', timestamps,...
     'event', event,...
     'units', units);
 

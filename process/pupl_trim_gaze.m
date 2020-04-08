@@ -180,6 +180,8 @@ badIdx.both = badIdx.x | badIdx.y;
 ax = findobj(f, 'Type', 'axes', 'Tag', 'middlescatter');
 axes(ax);
 cla;
+set(ax, 'Tag', 'middlescatter'); % So we can find it again
+
 s = scatter(x(~badIdx.both), y(~badIdx.both), 5, 'k', 'filled');
 try
     alpha(s, 0.1);
