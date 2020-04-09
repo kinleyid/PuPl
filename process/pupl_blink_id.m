@@ -46,14 +46,18 @@ if isempty(args.method)
 end
 
 if isempty(args.overwrite)
-    a = questdlg('Overwrite previous datapoint labels? (e.g. saccade/fixation)');
-    switch a
-        case 'Yes'
-            args.overwrite = true;
-        case 'No'
-            args.overwrite = false;
-        otherwise
-            return
+    if any(mergefields(EYE, 'datalabel') == 'b')
+        a = questdlg('Overwrite previous blink labels?');
+        switch a
+            case 'Yes'
+                args.overwrite = true;
+            case 'No'
+                args.overwrite = false;
+            otherwise
+                return
+        end
+    else
+        args.overwrite = true;
     end
 end
 
@@ -200,8 +204,8 @@ fprintf('\t\tAccording to method "%s":\n', args.method);
 fprintf('\t\t\t%f%% of data marked as blinks using this method\n', 100 * nnz(blinkidx) / EYE.ndata);
 fprintf('\t\t\t%d blinks in %0.2f minutes of recording (%.2f blinks/min)\n', nblinks, nmins, nblinks/nmins)
 
-if ~args.overwrite % Only mark unlabeled points as blinks
-    blinkidx = blinkidx & EYE.datalabel == ' ';
+if args.overwrite
+    EYE.datalabel = repmat(' ', size(EYE.datalabel));
 end
 EYE.datalabel(blinkidx) = 'b';
 
