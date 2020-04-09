@@ -28,12 +28,13 @@ full_fmt = cell(1, 2*ncols);
 full_fmt(1:2:end) = data_fmt;
 full_fmt(2:2:end) = {delim};
 full_fmt(end) = {sprintf('\n')};
-
 data_fmt = [full_fmt{:}];
 
-col_fmt = repmat('%s,', 1, ncols);
-col_fmt(end) = '';
-col_fmt = [col_fmt '\n'];
+col_fmt = cell(1, 2*ncols);
+col_fmt(1:2:end) = {'%s'};
+col_fmt(2:2:end) = {delim};
+col_fmt(end) = {sprintf('\n')};
+col_fmt = [col_fmt{:}];
 
 data = data';
 

@@ -5,23 +5,19 @@ global pupl_globals
 if isgraphics(pupl_globals.UI)
     
     args = pupl_args2struct(varargin, {
-        'loadfunc' []
-        'label' 'Mystery format'
+        'label' ''
         'type' 'eye' % For convenience
-        'argstoself' {} % Also for convenience
-        'argsto_pupl_importraw' {}
     });
-    args.argsto_pupl_importraw = [args.argsto_pupl_importraw {'type' args.type}];
-    if ~isempty(args.argstoself)
-        args.argsto_pupl_importraw = [args.argsto_pupl_importraw {'args' args.argstoself}];
-    end
     switch args.type
         case 'eye'
             tags = {'importEyeDataMenu' 'BIDSimportEyeDataMenu'};
         case 'event'
             tags = {'importEventLogsMenu' 'BIDSimportEventLogsMenu'};
     end
-
+    
+    args_to_pupl_import = rmfield(args, 'label');
+    args_to_pupl_import = pupl_struct2args(args_to_pupl_import);
+    
     for tag = tags
         if strcontains(tag{:}, 'BIDS')
             usebids = true;
@@ -34,18 +30,16 @@ if isgraphics(pupl_globals.UI)
                     'Label', args.label,...
                     'Callback', @(h, e)...
                         appendtodata(@() pupl_import(...
-                            'loadfunc', args.loadfunc,...
-                            'bids', usebids,...
-                            args.argsto_pupl_importraw{:})));
+                            args_to_pupl_import{:},...
+                            'bids', usebids)));
             case 'event'
                 uimenu(findobj(pupl_globals.UI, 'Tag', tag{:}),...
                     'Label', args.label,...
                     'Callback', @(h, e)...
                         updateactivedata(@() pupl_import(...
+                            args_to_pupl_import{:},...
                             'eyedata', getactivedata,...
-                            'loadfunc', args.loadfunc,...
-                            'bids', usebids,...
-                            args.argsto_pupl_importraw{:})));
+                            'bids', usebids)));
         end
     end
 

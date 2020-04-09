@@ -5,15 +5,16 @@ if size(defs, 1) == 1
     defs = reshape(defs, 2, [])';
 end
 
-for argidx = 1:size(defs, 1)
-    argname = defs{argidx, 1};
-    found = strcmpi(argname, inputs);
-    if ~any(found)
-        val = defs{argidx, 2};
-    else
-        val = inputs{find(found) + 1};
+for arg_idx = 1:2:numel(inputs)
+    args.(inputs{arg_idx}) = inputs{arg_idx + 1};
+end
+
+for def_idx = 1:size(defs, 1)
+    curr_def_name = defs{def_idx, 1};
+    curr_def_val = defs{def_idx, 2};
+    if ~isfield(args, curr_def_name)
+        args.(curr_def_name) = curr_def_val;
     end
-    args.(argname) = val;
 end
 
 end
