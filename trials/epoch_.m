@@ -10,7 +10,15 @@ else
 end
 timelocking_times = [EYE.event(timelocking_idx).time];
 % Candidate epoch ends
-cand_other_idx = find(pupl_event_sel(EYE.event, other.event));
+if isnumeric(other.event)
+    if other.event == 0
+        cand_other_idx = timelocking_idx;
+    else
+        
+    end
+else
+    cand_other_idx = find(pupl_event_sel(EYE.event, other.event));
+end
 cand_other_times = [EYE.event(cand_other_idx).time];
 other_idx = nan(size(timelocking_idx));
 for t_idx = 1:numel(timelocking_times)

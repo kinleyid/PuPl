@@ -103,23 +103,29 @@ else
         switch args.mapping
             case 'one:one'
                 args.timelocking = 0; % Not applicable
-                rel2 = 'Do baselines begin before epoch timelocking events or end after epoch timelocking events?';
-                a = questdlg(rel2, rel2, 'Begin before', 'End after', 'Cancel', 'Begin before');
-                switch a
-                    case 'End after'
+                switch args.len
+                    case 'fixed'
+                        args.other.event = 0;
                         args.other.when = 'after';
-                        pick_next = 'ends';
-                    case 'Begin before'
-                        args.other.when = 'before';
-                        pick_next = 'beginnings';
-                    otherwise
-                        return
-                end
-                args.other.event = pupl_event_UIget(...
-                    [EYE.event],...
-                    sprintf('Baseline %s are defined relative to which events?', pick_next));
-                if isempty(args.other.event)
-                    return
+                    case 'variable'
+                        rel2 = 'Do baselines begin before epoch timelocking events or end after epoch timelocking events?';
+                        a = questdlg(rel2, rel2, 'Begin before', 'End after', 'Cancel', 'Begin before');
+                        switch a
+                            case 'End after'
+                                args.other.when = 'after';
+                                pick_next = 'ends';
+                            case 'Begin before'
+                                args.other.when = 'before';
+                                pick_next = 'beginnings';
+                            otherwise
+                                return
+                        end
+                        args.other.event = pupl_event_UIget(...
+                            [EYE.event],...
+                            sprintf('Baseline %s are defined relative to which events?', pick_next));
+                        if isempty(args.other.event)
+                            return
+                        end
                 end
             otherwise
                 switch args.len

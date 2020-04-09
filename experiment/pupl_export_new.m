@@ -500,6 +500,13 @@ switch args.which
                         '_',...
                         cellfun(@num2str, num2cell(t_win_ends), 'UniformOutput', false)...
                     );
+                else
+                    warning_txt = {
+                        'Downsampled windows could not be aligned'
+                        'I.e., between epochs, downsampling windows overlap only partially in some cases'
+                        'Columns in the data table will not contain the beginnings and ends of the downsampling windows'
+                    };
+                    warning('%s\n', warning_txt{:});
                 end
                 
             case 'long'

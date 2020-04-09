@@ -33,9 +33,10 @@ if isempty(p.Results.plotstruct)
         plotstruct(plotidx).dataidx = dataidx;
         
         setopts = unique(mergefields(EYE(dataidx), 'epochset', 'name'));
-        sel = listdlg('PromptString', 'Plot from which trial set?',...
+        sel = listdlgregexp('PromptString', 'Plot from which epoch set?',...
             'ListString', setopts,...
-            'SelectionMode', 'single');
+            'SelectionMode', 'single',...
+            'regexp', false);
         if isempty(sel)
             return
         end
@@ -109,7 +110,12 @@ for plotidx = 1:numel(plotstruct)
     all_lims = {};
     all_bef_aft = {};
     all_rel_lats = {};
+    fprintf('Getting data ')
+    printprog('setmax', numel(datasets));
+    n = 0;
     for curr_idx = datasets(:)'
+        n = n + 1;
+        printprog(n);
         [data, isrej, lims, bef_aft, rel_lats] = pupl_epoch_getdata_new(EYE(curr_idx{:}), currset);
         if isequal(rel_lats{:})
             all_rel_lats{end + 1} = rel_lats{1};
@@ -173,11 +179,9 @@ for plotidx = 1:numel(plotstruct)
     end
     mu = nanmean_bc(alldata, 1);
     nmu = sum(~isnan(alldata), 1);
-    if nmu > 1
-        sem = nanstd_bc(alldata, 0, 1) ./ sqrt(nmu);
-    else
-        sem = zeros(size(mu));
-    end
+    nmu(nmu == 0) = 1;
+    sem = nanstd_bc(alldata, 0, 1) ./ sqrt(nmu);
+    sem(isnan(sem)) = 0;
     
     % Get legend entries
     if bycond
@@ -222,11 +226,15 @@ for plotidx = 1:numel(plotstruct)
         mu + sem...
         fliplr(mu - sem)
     ];
-    fill(x, y, get(currplot, 'Color'),...
-        'EdgeColor', get(currplot, 'Color'),...
-        'FaceAlpha', 0.1,...
-        'EdgeAlpha', 0.0,...
-        'HandleVisibility', 'off');
+    if any(isnan(y))
+        warning('Cannot display SEM when there are NaNs in the epoch set averages')
+    else
+        fill(x, y, get(currplot, 'Color'),...
+            'EdgeColor', get(currplot, 'Color'),...
+            'FaceAlpha', 0.1,...
+            'EdgeAlpha', 0.0,...
+            'HandleVisibility', 'off');
+    end
     xlim([t(1) t(end)]);
 end
 

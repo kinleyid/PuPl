@@ -22,7 +22,7 @@ else
         case {'save' 'cache'}
             pupl_timeline('a', evalin('base', pupl_globals.datavarname));
         otherwise
-            fprintf('Unrecognized command line argument ''%s''\n', args{1});
+            pupl_init(args{:});
     end
 end
 

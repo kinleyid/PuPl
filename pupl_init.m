@@ -49,16 +49,17 @@ currVersion = '1.0.0';
 fprintf('PuPl, version %s\n', currVersion);
 % Check for updates
 if ~any(strcmpi(varargin, 'noweb'))
-  try
-      newestVersion = urlread('https://kinleyid.github.io/newest.txt');
-      if ~strcmp(newestVersion, currVersion)
-          fprintf('! A new version (%s) is out, go to github.com/kinleyid/pupillometry-pipeline to get it\n', newestVersion);
-      else
+    fprintf('Checking web for new version (use ''pupl init noweb'' to skip this)...');
+    try
+        newestVersion = urlread('https://kinleyid.github.io/newest.txt');
+        if ~strcmp(newestVersion, currVersion)
+          fprintf('\n\t! A new version (%s) is out, download it from github.com/kinleyid/PuPl\n', newestVersion);
+        else
           fprintf('You are using the latest version\n');
-      end
-  catch
-      fprintf('Error checking the web for a new version\n');
-  end
+        end
+    catch
+        fprintf('Error\n');
+    end
 end
 
 pdir = fileparts(which('pupl'));
@@ -72,6 +73,14 @@ for src_idx = 1:numel(src_dirs)
     fprintf('.');
 end
 fprintf('\n');
+
+if ~pupl_globals.isoctave
+    % Octave's questdlg function works fine, but Matlab's returns the
+    % default option when the user presses enter, regardless of which
+    % option was actually highlighted when the user presses enter. I wrote
+    % a quick function that behaves better:
+    addpath(fullfile(pdir, 'overwrite', 'questdlg'));
+end
 
 if strcontains(varargin, 'dev')
     addpath(genpath(fullfile(pdir, 'dev')))

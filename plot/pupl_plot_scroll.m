@@ -120,21 +120,23 @@ end
 
 c1 = uipanel(h,...
     'Units', 'normalized',...
-    'Title', 'X start',...
+    'Title', 'Start',...
     'Position', [0.01 0.01 0.23 0.08]);
 uicontrol(c1,...
     'Style', 'edit',...
-    'Tag', 'xstart',...
+    'Tag', 't_start',...
+    'String', sprintf('%ss', num2str(EYE.ur.times(1))),...
     'Units', 'normalized',...
     'Callback', @(a, b) sub_render(h),...
     'Position', [0.01 0.01 0.98 0.98]);
 c2 = uipanel(h,...
     'Units', 'normalized',...
-    'Title', 'X scale',...
+    'Title', 'Scale',...
     'Position', [0.26 0.01 0.23 0.08]);
 uicontrol(c2,...
     'Style', 'edit',...
-    'Tag', 'xscale',...
+    'Tag', 't_scale',...
+    'String', '10s',...
     'Units', 'normalized',...
     'Callback', @(a, b) sub_render(h),...
     'Position', [0.01 0.01 0.98 0.98]);
@@ -160,9 +162,10 @@ set(h, 'UserData', struct(...
     'plotinfo', plotinfo,...
     'EYE', EYE,...
     'type', type,...
-    'cfg', struct(...
-        'xstart', sprintf('%ss', num2str(EYE.ur.times(1))),...
-        'xscale', '10s')));
+    'scale', struct(...
+        't_start', get(findobj(h, 'Tag', 't_start'), 'String'),...
+        't_scale', get(findobj(h, 'Tag', 't_scale'), 'String'),...
+        'slider', 0)));
 
 sub_render(h);
 
@@ -174,77 +177,66 @@ function sub_render(h)
 
 ud = get(h, 'UserData');
 
-% Get x start and scale
+% See if any scale changes have happened since last time
+t_start_edit = findobj(h, 'Tag', 't_start');
+new_t_start = get(t_start_edit, 'String');
 
-x_scale_edit = findobj(h, 'Tag', 'xscale');
-try
-    str = get(x_scale_edit, 'String');
-    x_scale = parsetimestr(str, ud.EYE.srate);
-    ud.cfg.xscale = str;
-catch
-    str = ud.cfg.xscale;
-    x_scale = parsetimestr(str, ud.EYE.srate);
-    set(x_scale_edit, 'String', str)
-end
-ud.cfg.xscale = x_scale;
+t_scale_edit = findobj(h, 'Tag', 't_scale');
+new_t_scale = get(t_scale_edit, 'String');
 
-% If there's a change in x start, we need to figure out if it's coming from
-% the slider or the edit box
-t_1 = ud.EYE.ur.times(1);
-t_end = ud.EYE.ur.times(end);
-
-x_start_prior = parsetimestr(ud.cfg.xstart, ud.EYE.srate);
-
-x_start_edit = findobj(h, 'Tag', 'xstart');
-try
-    x_start_fromedit = parsetimestr(get(x_start_edit, 'String'), ud.EYE.srate);
-    outofbounds = false;
-    if x_start_fromedit < t_1
-        x_start_fromedit = t_1;
-        outofbounds = true;
-    elseif x_start_fromedit + x_scale > t_end
-        x_start_fromedit = t_end - x_scale;
-        outofbounds = true;
-    end
-    if outofbounds
-        set(x_start_edit, 'String', sprintf('%ss', num2str(x_start_fromedit)));
-    end
-catch
-    x_start_fromedit = x_start_prior;
-    set(x_start_edit, 'String', sprintf('%ss', num2str(x_start_fromedit)));
-end
 slider = findobj(h, 'Style', 'slider');
-sliderval = get(slider, 'Value');
-x_start_fromslider = t_1 + sliderval * (t_end - t_1 - x_scale);
-% Round to the nearest millisecond for comparisons
-if round(1000*x_start_fromedit) ~= round(1000*x_start_prior)
-    % Change has occured in edit box
-    x_start = x_start_fromedit;
-    % Reset slider
-    new_sliderval = (x_start - t_1) / (t_end - t_1 - x_scale);
-    set(slider, 'Value', new_sliderval);
-elseif round(1000*x_start_fromslider) ~= round(1000*x_start_prior)
-    % Change has occured in slider
-    x_start = x_start_fromslider;
-    set(x_start_edit, 'String', sprintf('%ss', num2str(x_start)));
-else
-    x_start = x_start_prior;
-end
-ud.cfg.xstart = x_start;
+new_sliderval = get(slider, 'Value');
 
+% Time edges of recording
+t_min = ud.EYE.times(1);
+t_max = ud.EYE.times(end);
+
+if new_sliderval ~= ud.scale.slider % Check first for slider changes, since it can change quickest
+    t_scale = parsetimestr(ud.scale.t_scale, ud.EYE.srate);
+    t_start = t_min + new_sliderval * (t_max - t_scale - t_min);
+    % Reset text box
+    set(t_start_edit, 'String', sprintf('%ss', num2str(t_start)));
+elseif ~strcmp(new_t_start, ud.scale.t_start)
+    t_start = parsetimestr(new_t_start, ud.EYE.srate);
+    t_scale = parsetimestr(ud.scale.t_scale, ud.EYE.srate);
+    % Adjust if out of bounds
+    if t_start + t_scale > t_max
+        t_start = t_max - t_scale;
+    elseif t_start < t_min
+        t_start = t_min;
+    end
+    set(t_start_edit, 'String', sprintf('%ss', num2str(t_start)));
+    % Adjust slider value
+    set(slider, 'Value', (t_start - t_min) / (t_max - t_scale - t_min));
+elseif ~strcmp(new_t_scale, ud.scale.t_scale)
+    t_start = parsetimestr(ud.scale.t_start, ud.EYE.srate);
+    t_scale = parsetimestr(new_t_scale, ud.EYE.srate);
+    % Adjust if out of bounds
+    if t_start + t_scale > t_max
+        t_scale = t_max - t_start;
+    end
+    set(t_scale_edit, 'String', sprintf('%ss', num2str(t_scale)));
+    % Slider value is set in part by t scale, so adjust:
+    set(slider, 'Value', (t_start - t_min) / (t_max - t_scale - t_min));
+else
+    t_start = parsetimestr(ud.scale.t_start, ud.EYE.srate);
+    t_scale = parsetimestr(ud.scale.t_scale, ud.EYE.srate);
+end
+
+ud.scale.t_start = get(t_start_edit, 'String');
+ud.scale.t_scale = get(t_scale_edit, 'String');
+ud.scale.slider = get(slider, 'Value');
 set(h, 'UserData', ud);
 
 cla; hold on
 % Display data
 plotinfo = ud.plotinfo;
 for dataidx = 1:numel(plotinfo.data)
-    t_start = x_start;
-    t_end = t_start + x_scale;
-    win_idx = plotinfo.t{dataidx} >= t_start & plotinfo.t{dataidx} <= t_end;
+    t_win = [t_start t_start + t_scale];
+    win_idx = plotinfo.t{dataidx} >= t_win(1) & plotinfo.t{dataidx} <= t_win(2);
     plot(plotinfo.t{dataidx}(win_idx), plotinfo.data{dataidx}(win_idx), plotinfo.colours{dataidx});
 end
-x_limits = [t_start t_end];
-xlim(x_limits);
+xlim(t_win);
 xlabel('Time (s)');
 switch ud.type
     case 'gaze'
@@ -268,9 +260,9 @@ if get(findobj(h, 'Tag', 'displayevents'), 'Value')
     % Display events
     if ~isempty(ud.EYE.event)
         event_times = [ud.EYE.event.time];
-        currevents = find(event_times >= x_limits(1) & event_times <= x_limits(end));
+        currevents = find(event_times >= t_win(1) & event_times <= t_win(2));
         cont = true;
-        warn_events = 50;
+        warn_events = 100;
         if numel(currevents) > warn_events
             q = sprintf('Attempt to display over %d events?', warn_events);
             a = questdlg(q, q, 'Yes', 'No', 'No');
