@@ -1,5 +1,5 @@
 # PuPl (Pupillometry Pipeliner)
-A Matlab-based user interface for analyzing pupillometry data, written by Scott Watter &amp; Isaac Kinley
+A Matlab-based user interface for analyzing pupillometry data.
 
 ## How to use
 

@@ -49,7 +49,7 @@ currVersion = '1.0.0';
 fprintf('PuPl, version %s\n', currVersion);
 % Check for updates
 if ~any(strcmpi(varargin, 'noweb'))
-    fprintf('Checking web for new version\n\t(use ''pupl init noweb'' to skip this)...\n\t');
+    fprintf('Checking web for new version...\n\t(use ''pupl init noweb'' to skip this)\n\t');
     try
         newestVersion = urlread('https://kinleyid.github.io/newest.txt');
         if ~strcmp(newestVersion, currVersion)

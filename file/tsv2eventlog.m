@@ -9,15 +9,27 @@ end
 cols = raw(1, :);
 contents = raw(2:end, :);
 
-contents(strcontains(contents(:), 'n/a')) = {'nan'};
+contents(strcmp(contents(:), 'n/a')) = {'nan'};
+
+times = cellstr2num(contents(:, strcmp(cols, 'onset')));
 
 events = struct(...
-    'time', cellfun(@(s) sscanf(s, '%g'), contents(:, strcmp(cols, 'onset')), 'un', 0),...
-    'type', contents(:, strcmp(cols, 'trial_type')),...
-    'rt', cellfun(@(s) sscanf(s, '%g'), contents(:, strcmp(cols, 'response_time')), 'un', 0));
+    'time', num2cell(times),...
+    'type', contents(:, strcmp(cols, 'trial_type')));
 
-for othername = cols(~ismember(cols, {'onset' 'trial_type' 'response_time'}))
-    [events.(othername{:})] = raw{2:end, strcmp(cols, othername{:})};
+rts = cellstr2num(contents(:, strcmp(cols, 'response_time')));
+if ~isempty(rts)
+    rts = num2cell(rts);
+    [events.rt] = deal(rts{:});
+end
+
+for othername = cols(~ismember(cols, {'onset' 'duration' 'trial_type' 'response_time'}))
+    curr_col = contents(:, strcmp(cols, othername{:}));
+    as_numeric = cellfun(@str2double, curr_col);
+    if any(~isnan(as_numeric))
+        curr_col = num2cell(as_numeric);
+    end
+    [events.(othername{:})] = deal(curr_col{:});
 end
 
 [~, n] = fileparts(fullpath);

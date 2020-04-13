@@ -11,14 +11,23 @@ args = pupl_args2struct(varargin, {
     'path', []
     'as', [] % bin or txt
     'method', 'single' % 'single', 'batch', or 'bids'
+    'data', 'both' % 'eye' or 'event' or 'both'
 });
 
 switch args.as
     case 'bin'
-        default_filenames = strcat({EYE.name}, ['.' pupl_globals.ext]);
+        if ismember(args.data, {'eye' 'both'})
+            default_filenames = strcat({EYE.name}, sprintf('.%s', pupl_globals.ext));
+        else
+            default_filenames = strcat({EYE.name}, '.tsv');
+        end
     case 'txt'
-        default_filenames = strcat({EYE.name}, '.txt');
-        if isnonemptyfield(EYE, 'epoch')
+        if ismember(args.data, {'eye' 'both'})
+            default_filenames = strcat({EYE.name}, '.txt');
+        else
+            default_filenames = strcat({EYE.name}, '.csv');
+        end
+        if isnonemptyfield(EYE, 'epoch') && ismember(args.data, {'eye' 'both'})
             q = 'PuPl''s text formats save only continuous data, events, and basic metadata (e.g., sample rate and units; not epochs). To avoid data loss, use the binary format. Continue?';
             a = questdlg(q, '', 'Yes', 'No', 'Yes');
             switch a
@@ -95,33 +104,43 @@ for dataidx = 1:numel(filepath)
     switch args.as
         case 'bin'
             % Save continuous data
-            curr_path = fullfile(p, sprintf('%s.%s', f, pupl_globals.ext));
-            fprintf('Saving %s...', curr_path);
-            tmp = EYE(dataidx);
-            save(curr_path, 'tmp', '-v6');
-            fprintf('done\n');
-            if strcmp(args.method, 'bids')
-                % Also save event log
-                if ~isempty(EYE(dataidx).eventlog)
-                    fprintf('\t');
-                    eventlog2tsv(EYE(dataidx).eventlog, sprintf('%s_event', filepath{dataidx}));
+            if ismember(args.data, {'eye' 'both'})
+                curr_path = fullfile(p, sprintf('%s.%s', f, pupl_globals.ext));
+                fprintf('Saving %s...', curr_path);
+                tmp = EYE(dataidx);
+                save(curr_path, 'tmp', '-v6');
+                fprintf('done\n');
+            end
+            % Save event data
+            if ismember(args.data, {'event' 'both'})
+                if strcmp(args.method, 'bids')
+                    events_path = sprintf('%s_event.tsv', filepath{dataidx});
+                else
+                    events_path = fullfile(p, sprintf('%s.tsv', f));
                 end
+                fprintf('Saving %s...', events_path);
+                eventlog2tsv(EYE(dataidx), events_path);
+                fprintf('done\n');
             end
         case 'txt'
             % Save continuous data
-            curr_path = fullfile(p, sprintf('%s.txt', f));
-            fprintf('Saving %s...', curr_path);
-            pupl_txt(curr_path, 'w', 'c', EYE(dataidx));
-            fprintf('done\n');
-            % Save event data
-            if strcmp(args.method, 'bids')
-                events_path = sprintf('%s_event.csv', filepath{dataidx});
-            else
-                events_path = fullfile(p, sprintf('%s.csv', f));
+            if ismember(args.data, {'eye' 'both'})
+                curr_path = fullfile(p, sprintf('%s.txt', f));
+                fprintf('Saving %s...', curr_path);
+                pupl_txt(curr_path, 'w', 'c', EYE(dataidx));
+                fprintf('done\n');
             end
-            fprintf('Saving %s...', events_path);
-            pupl_txt(events_path, 'w', 'e', EYE(dataidx));
-            fprintf('done\n');
+            % Save event data
+            if ismember(args.data, {'event' 'both'})
+                if strcmp(args.method, 'bids')
+                    events_path = sprintf('%s_event.csv', filepath{dataidx});
+                else
+                    events_path = fullfile(p, sprintf('%s.csv', f));
+                end
+                fprintf('Saving %s...', events_path);
+                pupl_txt(events_path, 'w', 'e', EYE(dataidx));
+                fprintf('done\n');
+            end
     end
 end
 

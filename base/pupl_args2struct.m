@@ -5,6 +5,8 @@ if size(defs, 1) == 1
     defs = reshape(defs, 2, [])';
 end
 
+args = [];
+
 for arg_idx = 1:2:numel(inputs)
     args.(inputs{arg_idx}) = inputs{arg_idx + 1};
 end
