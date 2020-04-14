@@ -17,6 +17,7 @@ function args = parseargs(varargin)
 args = pupl_args2struct(varargin, {
     'method' []
     'cfg' []
+    'overwrite' []
 });
 
 end
@@ -26,6 +27,20 @@ function outargs = getargs(EYE, varargin)
 outargs = [];
 
 args = parseargs(varargin{:});
+
+if isempty(args.overwrite)
+    if any(mergefields(EYE, 'interstices') ~= ' ')
+        a = questdlg('Overwrite previous interstitial labels?');
+        switch a
+            case 'Yes'
+                args.overwrite = true;
+            case 'No'
+                args.overwrite = false;
+            otherwise
+                return
+        end
+    end
+end
 
 if isempty(args.method)
     q = 'Which method?';
@@ -73,6 +88,10 @@ args = parseargs(varargin{:});
 
 new_datalabel = repmat(' ', size(EYE.interstices));
 
+if args.overwrite
+    EYE.interstices = new_datalabel;
+end
+
 switch args.method
     case 'velocity'
         vel = velocity(EYE);
@@ -108,10 +127,17 @@ switch args.method
         end
 end
 
-% Only overwrite datalabels that aren't marked as, e.g., blinks
-EYE.interstices = new_datalabel;
+if args.overwrite
+    EYE.interstices = new_datalabel;
+else
+    % If we aren't overwriting, don't overwrite old saccades
+    EYE.interstices(EYE.interstices ~= 's') = new_datalabel(EYE.interstices ~= 's');
+end
 
+n_sacc = nnz(diff(EYE.interstices == 's') == 1);
+nmins = EYE.ndata / EYE.srate / 60;
 fprintf('%f%% of intertices marked as saccades\n', 100 * nnz(EYE.interstices == 's') / EYE.ndata);
+fprintf('%d saccades in %0.2f minutes of recording (%.2f blinks/min)\n', n_sacc, nmins, n_sacc/nmins)
 
 end
 

@@ -46,7 +46,7 @@ if isempty(args.method)
 end
 
 if isempty(args.overwrite)
-    if any(mergefields(EYE, 'datalabel') == 'b')
+    if any([EYE.datalabel] == 'b')
         a = questdlg('Overwrite previous blink labels?');
         switch a
             case 'Yes'
@@ -140,6 +140,13 @@ switch args.method
     case 'noise'
         pupil(isnan(pupil)) = 0;
         blinkidx = based_noise_blinks_detection(pupil(:), EYE.srate);
+        blinkidx = reshape(blinkidx, 2, [])';
+        % Go from integer to logical index
+        tmp = false(size(pupil));
+        for ii = 1:size(blinkidx, 1)
+            tmp(blinkidx(ii, 1):blinkidx(ii, 2)) = true;
+        end
+        blinkidx = tmp;
     case 'velocity'
         vel = diff(pupil);
         onset_lim = parsedatastr(args.cfg.onset_lim, vel);
@@ -266,7 +273,7 @@ function blinks_data_positions = based_noise_blinks_detection(pupil_data, sampli
     %% Smoothing the data in order to increase the difference between the measurement noise and the eyelid signal.
     ms_4_smooting  = 10;                                    % using a gap of 10 ms for the smoothing
     samples2smooth = ceil(ms_4_smooting/sampling_interval); % amount of samples to smooth 
-    smooth_data    = smooth(pupil_data, samples2smooth);    
+    smooth_data     = fft_conv(pupil_data, ones(samples2smooth, 1));
 
     smooth_data(smooth_data==0) = nan;                      % replace zeros with NaN values
     diff_smooth_data            = diff(smooth_data);

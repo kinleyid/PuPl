@@ -83,12 +83,24 @@ if strcmpi(type, 'pupil')
     plotinfo.ylim = [min(structfun(@min, EYE.pupil)) max(structfun(@max, EYE.pupil))];
     % Get datalabel
     if any(EYE.datalabel == 'b')
-        dl = nan(size(EYE.datalabel));
-        dl(EYE.datalabel == 'b') = plotinfo.ylim(1);
-        plotinfo.data{end + 1} = dl;
-        plotinfo.colours{end + 1} = 'gs';
+        s = find([false diff(EYE.datalabel == 'b') == 1]);
+        e = find([diff(EYE.datalabel == 'b') == -1 false]);
+        t = EYE.times(:);
+        
+        t = [t(s) t(s) t(s) t(s) t(e) t(e) t(e) t(e)];
+        t = t';
+        t = t(:)';
+        y = plotinfo.ylim;
+        d = [[nan y(:)' nan]; [nan y(:)' nan]];
+        d = d';
+        d = d(:);
+        d = repmat(d, numel(s), 1);
+        plotinfo.data{end + 1} = d(:)';
+        plotinfo.colours{end + 1} = 'g';
         plotinfo.legendentries{end + 1} = 'Blink';
-        plotinfo.t{end + 1} = EYE.times;
+        plotinfo.t{end + 1} = t;
+        plotinfo.data{end} = [plotinfo.data{end} nan(1, EYE.ndata)];
+        plotinfo.t{end} = [plotinfo.t{end} EYE.times(:)'];
         plotinfo.srate{end + 1} = EYE.srate;
     end
 elseif strcmpi(type, 'gaze')
