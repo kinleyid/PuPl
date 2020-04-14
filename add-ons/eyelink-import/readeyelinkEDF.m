@@ -275,5 +275,8 @@ for ii = 1:numel(fields)
 end
 
 EYE.units.pupil = {pupil_size 'arbitrary units' 'absolute'};
+EYE.units.gaze = [];
+EYE.units.gaze.x = {'x' 'px' 'from screen left'};
+EYE.units.gaze.y = {'y' 'px' 'from screen top'};
 
 end

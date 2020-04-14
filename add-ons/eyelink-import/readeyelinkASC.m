@@ -101,6 +101,33 @@ EYE.t1 = sample_times(1);
 [sample_times, event_times] = processtimestamps(sample_times, event_times, srate);
 EYE.times = sample_times;
 
+%% Get units
+
+% pupil area or diameter
+pupil_line = regexp(lower(infolines(find(strcmpi(firstwords, 'pupil'), 1))), '\s', 'split');
+pupil_size = pupil_line{:}{2};
+pupil_units = {pupil_size 'arbitrary units' 'absolute'};
+
+% gaze units--see section 4.4.2. in the EyeLink 1000 user manual
+samples_line = regexp(lower(infolines(find(strcmpi(firstwords, 'samples'), 1))), '\s', 'split');
+switch samples_line{:}{2}
+    case 'gaze'
+        gaze_units_x = {'x' 'px' 'from screen left'};
+        gaze_units_y = {'y' 'px' 'from screen top'};
+    case 'href'
+        gaze_units_x = {'x' 'arbitrary units' 'from HREF origin'};
+        gaze_units_y = {'y' 'arbitrary units' 'from HREF origin'};
+    case 'pupil'
+        gaze_units_x = {'x' 'raw coordinates' 'from camera'};
+        gaze_units_y = {'y' 'raw coordinates' 'from camera'};    
+end
+
+EYE.units = [];
+EYE.units.pupil = pupil_units;
+EYE.units.gaze = [];
+EYE.units.gaze.x = gaze_units_x;
+EYE.units.gaze.y = gaze_units_y;
+
 %% Get events
 
 EYE.event = struct(...
