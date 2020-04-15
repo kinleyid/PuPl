@@ -57,7 +57,7 @@ end
 for field = reshape(fieldnames(EYE.pupil), 1, [])
     data = EYE.pupil.(field{:});
     lims = cellfun(@(x) parsedatastr(x, data), args.lims);
-    badidx = data < lims(1) | data > lims(2);
+    badidx = data <= lims(1) | data >= lims(2);
     badidx = badidx & ~isnan(data);
     fprintf('\t\t%s:\t%f%% previously extant data removed\n', field{:}, 100*nnz(badidx)/numel(badidx))
     data(badidx) = nan;

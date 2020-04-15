@@ -81,12 +81,18 @@ if strcmpi(type, 'pupil')
         plotinfo.srate{end + 1} = EYE.srate;
     end
     plotinfo.ylim = [min(structfun(@min, EYE.pupil)) max(structfun(@max, EYE.pupil))];
-    % Get datalabel
+    % Get blink labels
     if any(EYE.datalabel == 'b')
+        ic_fft(EYE.datalabel == 'b', 1, 'least');
         s = find([false diff(EYE.datalabel == 'b') == 1]);
+        if EYE.datalabel(1) == 'b'
+            s = [1 s(:)'];
+        end
         e = find([diff(EYE.datalabel == 'b') == -1 false]);
+        if EYE.datalabel(end) == 'b'
+            e = [e(:)' EYE.ndata];
+        end
         t = EYE.times(:);
-        
         t = [t(s) t(s) t(s) t(s) t(e) t(e) t(e) t(e)];
         t = t';
         t = t(:)';
@@ -239,7 +245,7 @@ elseif ~strcmp(new_t_scale, ud.scale.t_scale)
     end
     set(t_scale_edit, 'String', sprintf('%ss', num2str(t_scale)));
     % Slider value is set in part by t scale, so adjust:
-    set(slider, 'Value', (t_start - t_min) / (t_max - t_scale - t_min));
+    set(slider, 'Value', min(0, (t_start - t_min) / (t_max - t_scale - t_min)));
 else
     t_start = parsetimestr(ud.scale.t_start, ud.EYE.srate);
     t_scale = parsetimestr(ud.scale.t_scale, ud.EYE.srate);

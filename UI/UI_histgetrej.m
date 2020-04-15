@@ -92,9 +92,9 @@ for dataidx = 1:numel(ud.data)
     for limType = {'lower' 'upper'}
         currLim = parsedatastr(getlim(f, limType), data);
         if strcmp(limType, 'lower')
-            badidx = badidx | data < currLim;
+            badidx = badidx | data <= currLim;
         else
-            badidx = badidx | data > currLim;
+            badidx = badidx | data >= currLim;
         end
     end
 

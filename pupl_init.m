@@ -124,4 +124,7 @@ if ~any(strcmpi(varargin, 'noAddOns'))
 end
 
 fprintf('Done\n')
+
+fprintf('\nSee the "Citations" tab for the papers PuPl is based on.\nPlease cite all the algorithms you use to process your data.\n');
+
 end
