@@ -83,7 +83,6 @@ if strcmpi(type, 'pupil')
     plotinfo.ylim = [min(structfun(@min, EYE.pupil)) max(structfun(@max, EYE.pupil))];
     % Get blink labels
     if any(EYE.datalabel == 'b')
-        ic_fft(EYE.datalabel == 'b', 1, 'least');
         s = find([false diff(EYE.datalabel == 'b') == 1]);
         if EYE.datalabel(1) == 'b'
             s = [1 s(:)'];

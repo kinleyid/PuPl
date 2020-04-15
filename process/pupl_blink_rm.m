@@ -23,8 +23,11 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.trim)
-    prompt = 'Trim how much data immediately before and after blinks?';
-    args.trim = inputdlg(prompt, prompt, 1, {'100ms'}); 
+    prompt = {
+        sprintf('Trim how much data immediately before and after blinks?\n\nBefore:')
+        'After:'
+    };
+    args.trim = inputdlg(prompt, prompt, 1, {'50ms' '150ms'}); 
     if isempty(args.trim)
         return
     else
@@ -64,8 +67,8 @@ end
 
 end
 
-function x = rmblinks(x, blink, trimlen)
+function x = rmblinks(x, blink, trimstart, trimend)
 
-x(max(1, blink(1)-trimlen):min(blink(2)+trimlen, numel(x))) = NaN;
+x(max(1, blink(1)-trimstart):min(blink(2)+trimend, numel(x))) = NaN;
 
 end

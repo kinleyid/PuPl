@@ -139,7 +139,7 @@ for plotidx = 1:numel(plotstruct)
         sem = zeros(size(mu));
     end
     
-    % Get legend entries
+    % Get legend entries 
     if bycond
         names = unique(mergefields(EYE(dataidx), 'cond'));
     else
