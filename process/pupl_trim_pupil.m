@@ -62,6 +62,8 @@ for field = reshape(fieldnames(EYE.pupil), 1, [])
     fprintf('\t\t%s:\t%f%% previously extant data removed\n', field{:}, 100*nnz(badidx)/numel(badidx))
     data(badidx) = nan;
     EYE.pupil.(field{:}) = data;
+    EYE.gaze.x(badidx) = nan;
+    EYE.gaze.y(badidx) = nan;
 end
 
 end

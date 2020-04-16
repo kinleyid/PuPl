@@ -115,8 +115,8 @@ switch args.method
         fprintf('Identifying blinks by pupillometry noise (method "noise")\n');
     case 'velocity'
         fprintf('Identifying blinks by dilation velocity (method "velocity").\n');
-        fprintf('Blinks begin when dilation speed becomes less than or equal to %s\n', args.cfg.onset_lim);
-        fprintf('Blinks end when dilation speed becomes greater than or equal to %s\n', args.cfg.offset_lim);
+        fprintf('Blinks begin when dilation velocity becomes less than or equal to %s\n', args.cfg.onset_lim);
+        fprintf('Blinks end when dilation velocity becomes greater than or equal to %s\n', args.cfg.offset_lim);
         fprintf('Blinks are constrained to a max length of %s\n', args.cfg.max_len);
 end
 

@@ -58,7 +58,7 @@ if ~isempty(blinkStarts)
     fprintf('\t\t%f%% of data are blink samples\n', 100 * nnz(EYE.datalabel == 'b') / EYE.ndata)
     nblinks = numel(blinkStarts);
     for blinkidx = 1:nblinks
-        EYE = pupl_proc(EYE, @(x) rmblinks(x, [blinkStarts(blinkidx) blinkEnds(blinkidx)], trimlen));
+        EYE = pupl_proc(EYE, @(x) rmblinks(x, [blinkStarts(blinkidx) blinkEnds(blinkidx)], trimlen), 'all');
     end
     fprintf('\t\t%f%% of data are blink-adjacent\n', 100 * nblinks * sum(trimlen) / EYE.ndata)
 end
