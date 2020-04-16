@@ -24,19 +24,17 @@ args = parseargs(varargin{:});
 
 if isempty(args.trim)
     prompt = {
-        sprintf('Trim how much data immediately before and after blinks?\n\nBefore:')
-        'After:'
+        'Remove data beginning from this long before blinks:'
+        'Remove data up until this long after blinks:'
     };
-    args.trim = inputdlg(prompt, prompt, 1, {'50ms' '150ms'}); 
+    args.trim = inputdlg(prompt, '', 1, {'50ms' '150ms'}); 
     if isempty(args.trim)
         return
-    else
-        args.trim = args.trim{:};
     end
 end
 
 outargs = args;
-fprintf('Trimming %s immediately before and after blinks\n', args.trim);
+fprintf('Removing from %s immediately before blinks to %s immediately after\n', args.trim{1}, args.trim{2});
 
 end
 
@@ -62,13 +60,13 @@ if ~isempty(blinkStarts)
     for blinkidx = 1:nblinks
         EYE = pupl_proc(EYE, @(x) rmblinks(x, [blinkStarts(blinkidx) blinkEnds(blinkidx)], trimlen));
     end
-    fprintf('\t\t%f%% of data are blink-adjacent\n', 2 * 100 * nblinks * trimlen / EYE.ndata)
+    fprintf('\t\t%f%% of data are blink-adjacent\n', 100 * nblinks * sum(trimlen) / EYE.ndata)
 end
 
 end
 
-function x = rmblinks(x, blink, trimstart, trimend)
+function x = rmblinks(x, blink, trimlen)
 
-x(max(1, blink(1)-trimstart):min(blink(2)+trimend, numel(x))) = NaN;
+x(max(1, blink(1)-trimlen(1)):min(blink(2)+trimlen(2), numel(x))) = NaN;
 
 end
