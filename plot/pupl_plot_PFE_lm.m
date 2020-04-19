@@ -1,4 +1,4 @@
-function pupl_PFE_detrend_plot(h, EYE, ax, varargin)
+function pupl_plot_PFE_lm(h, EYE, ax, varargin)
 
 if numel(varargin) > 0
     a = varargin{1};

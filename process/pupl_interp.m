@@ -52,7 +52,7 @@ end
 
 if isempty(args.maxlen)
     prompt = 'Max length of data to interpolate';
-    maxlen = inputdlg(prompt, prompt, [1 50], {'500ms'});
+    maxlen = inputdlg(prompt, prompt, [1 50], {'400ms'});
     if isempty(maxlen)
         return
     else
@@ -62,7 +62,7 @@ end
 
 if isempty(args.maxdist)
     prompt = 'Max jump in pupil size to interpolate across';
-    maxdist = inputdlg(prompt, prompt, [1 50], {'3`sd'});
+    maxdist = inputdlg(prompt, prompt, [1 50], {'1`sd'});
     if isempty(maxdist)
         return
     else

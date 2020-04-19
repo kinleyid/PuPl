@@ -1,6 +1,26 @@
 
 function out = pupl_filt(EYE, varargin)
-
+% Filter pupil size or gaze data
+%
+% Inputs:
+%   data: string ('pupil' or 'gaze')
+%       specifies which data will be filtered
+%   win: string
+%       specifies which window type will be used (e.g., 'flat')
+%   avfunc: string ('median' or 'mean')
+%       specifies whether moving median or mean filter should be used.
+%   width: string
+%       specifies the width of the moving average (e.g., '100ms')
+%   cfg: struct
+%       additional configuration details (e.g., half width of Gaussian window)
+% Example:
+%   pupl_filt(eye_data,...
+%       'data', 'pupil',...
+%       'win', 'gaussian',...
+%       'avfunc', 'mean',...
+%       'width', '100ms',...
+%       'cfg', struct(...
+%           'sd', 3))
 if nargin == 0
     out = @getargs;
 else

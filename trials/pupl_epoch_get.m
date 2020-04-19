@@ -1,6 +1,9 @@
 
 function out = pupl_epoch_get(EYE, epochs, ctrl, varargin)
-
+% Get attributes of epochs
+%
+% Inputs:
+%   
 if numel(EYE) > 1
     out = [];
     for dataidx = 1:numel(EYE)
@@ -43,6 +46,12 @@ else
             out = bsxfun(@minus, abslats, t1_lats(:));
         case '_lat' % Get timelocking event latencies
             out = pupl_event_getlat(EYE, pupl_epoch_get(EYE, epochs, '_tl'), varargin{:});
+        case 'name'
+            % Some epochs may have their own names
+            out = mergefields(epochs, 'name');
+            num_idx = cellfun(@isnumeric, out);
+            events = pupl_epoch_get(EYE, epochs(num_idx), '_tl');
+            out(num_idx) = {events.name};
         otherwise % Get a field from the events
             events = pupl_epoch_get(EYE, epochs, '_tl');
             out = mergefields(events, ctrl);

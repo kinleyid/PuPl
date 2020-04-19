@@ -1,6 +1,22 @@
 
 function out = pupl_epoch(EYE, varargin)
-
+% Pupulates the eye_data.epoch field
+%
+% Inputs:
+%   len: string ('fixed' or 'variable')
+%       specifies whether epochs are fixed-length or variable-length
+%   timelocking: cell array
+%       specifies the timelocking events
+%   other: cell array
+%       specifies the non-timelocking event and whether it comes before or
+%       after the timelocking event (if epochs are variable-length)
+%   lims: cell array of strings
+%       specifies when epochs should be defined, relative to the events
+%       that mark their onsets and ends
+%   overwrite: boolean
+%       specifies whether existing epochs should be overwritten
+%   names: string or 0
+%       specifies the names for epochs
 if nargin == 0
     out = @getargs;
 else
@@ -12,9 +28,12 @@ end
 function args = parseargs(varargin)
 
 args = pupl_args2struct(varargin{:}, {
+    'len' []
     'timelocking' []
     'lims' []
+    'other' []
     'overwrite' []
+    'name', []
 });
 
 end
@@ -38,28 +57,111 @@ if any(arrayfun(@(x) ~isempty(x.epoch), EYE)) && isempty(args.overwrite)
 end
 
 if isempty(args.timelocking)
-    args.timelocking = pupl_event_UIget([EYE.event], 'Epoch relative to which events?');
+    args.timelocking = pupl_event_UIget([EYE.event], 'Which are the timelocking events?');
     if isempty(args.timelocking)
         return
     end
 end
 
+if isempty(args.len)
+    q = sprintf('Fixed or variable length epochs?');
+    a = lower(questdlg(q, q, 'Fixed', 'Variable', 'Cancel', 'Fixed'));
+    switch a
+        case {'fixed' 'variable'}
+            args.len = a;
+        otherwise
+            return
+    end
+end
+
+if isempty(args.other)
+    switch args.len
+        case 'fixed'
+            args.other = struct(...
+                'when', 'after',...
+                'event', args.timelocking);
+        case 'variable'
+            rel2 = 'Do epochs end after timelocking events or begin before timelocking events?';
+            a = questdlg(rel2, rel2, 'End after', 'Begin before', 'Cancel', 'End after');
+            switch a
+                case 'End after'
+                    args.other.when = 'after';
+                    pick_next = 'ends';
+                case 'Begin before'
+                    args.other.when = 'before';
+                    pick_next = 'beginnings';
+                otherwise
+                    return
+            end
+            args.other.event = pupl_event_UIget(...
+                [EYE.event],...
+                sprintf('Epoch %s are defined relative to which events?', pick_next));
+            if isempty(args.other.event)
+                return
+            end
+        otherwise
+            return
+    end
+end
+
 if isempty(args.lims)
-    args.lims = (inputdlg(...
-        {sprintf('Epochs start at this time relative to events:')
-        'Epochs end at this time relative to events:'}));
+    rel2 = cell(1, 2);
+    rel2(1:2) = {'timelocking events'};
+    if strcmp(args.len, 'variable')
+        switch args.other.when
+            case 'before'
+                rel2{1} = 'the events that signal their beginnings';
+            case 'after'
+                rel2{2} = 'the events that signal their ends';
+        end
+    end
+    args.lims = inputdlg({
+        sprintf('Epochs start at this time relative to %s:', rel2{1})
+        sprintf('Epochs end at this time relative to %s:', rel2{2})
+    });
     if isempty(args.lims)
         return
     end
 end
-%{
-if any(cellfun(@isnumeric, args.timelocking))
-    fprintf('Epoch-defining events selected by regexp "%s"\n', args.timelocking{2});
-else
-    fprintf('Epoch-defining events:\n%s', sprintf('\t%s\n', args.timelocking{:}));
+
+if isempty(args.names)
+    q = 'How should epochs be named?';
+    a = questdlg(q, q, 'Use timelocking event names', 'Use a custom name', 'Cancel', 'Cancel');
+    switch a
+        case 'Use timelocking event names'
+            args.name = 0;
+        case 'Use a custom name'
+            args.name = inputdlg('Custom name for these epochs:');
+            if isempty(args.name)
+                return
+            else
+                args.name = args.name{:};
+            end
+        otherwise
+            return
+    end
 end
-%}
-fprintf('Epochs defined from [event] + [%s] to [event] + [%s]\n', args.lims{:});
+if ~isnumeric(args.name)
+    fprintf('Defining epochs called "%s"\n', args.name);
+else
+    fprintf('Defining epochs\n');
+end
+switch args.other.when
+    case 'before'
+        fprintf('Epochs begin at %s relative to the following events:\n', args.lims{1});
+        txt = pupl_event_selprint(args.other.event);
+        fprintf('\t%s\n', txt{:});
+        fprintf('Epochs end at %s relative to the timelocking events:\n', args.lims{2});
+        txt = pupl_event_selprint(args.timelocking);
+        fprintf('\t%s\n', txt{:});
+    case 'after'
+        fprintf('Epochs begin at %s relative to the timelocking events:\n', args.lims{1});
+        txt = pupl_event_selprint(args.timelocking);
+        fprintf('\t%s\n', txt{:});
+        fprintf('Epochs end at %s relative to the following events:\n', args.lims{2});
+        txt = pupl_event_selprint(args.other.event);
+        fprintf('\t%s\n', txt{:});
+end
 
 outargs = args;
 
@@ -70,41 +172,22 @@ function EYE = sub_epoch(EYE, varargin)
 args = parseargs(varargin);
 
 if args.overwrite
-    [EYE.epoch] = deal([]);
+    EYE.epoch = [];
 end
 
-currlims = EYE.srate * parsetimestr(args.lims, EYE.srate);
-matches = find(pupl_event_sel(EYE.event, args.timelocking));
-latencies = pupl_event_getlat(EYE, matches);
-abslims = latencies(:) + currlims(:)';
-is_out = [abslims(:, 1) < 1 abslims(:, 2) > EYE.ndata];
-if any(is_out(:))
-    badidx = ind2sub(find(is_out, 1), size(is_out));
-    eventidx = matches(badidx(1));
-    limidx = badidx(2);
-    error('Event "%s" occurs at %f seconds into the recording "%s". %s from this event reaches outside the bounds of that recording (0 seconds to %f seconds).',...
-        EYE.event(eventidx).name,...
-        EYE.event(eventidx).time - EYE.times(1),...
-        EYE.name,...
-        args.lims{limidx},...
-        EYE.times(end) - EYE.times(1))
-end
-EYE.epoch = [
-    EYE.epoch...
-    struct(...
-        'reject', false,...
-        'lims', {args.lims},...
-        'event', {EYE.event(matches).uniqid})
-];
+epochs = epoch_(EYE, args.timelocking, args.lims, args.other, 'epoch');
+[epochs.name] = deal(args.name);
+[epochs.reject] = deal(false);
+[epochs.units] = deal(EYE.units.pupil);
 
-% Sort epochs by event time
-[~, I] = sort(pupl_epoch_get(EYE, [], 'time'));
+EYE.epoch = [EYE.epoch, epochs];
+
+% Sort epochs by onset latency
+L = pupl_epoch_get(EYE, [], '_abs');
+[~, I] = sort(L(1, :));
 EYE.epoch = EYE.epoch(I);
 
-% Set units for epochs
-EYE.units.epoch = EYE.units.pupil;
-
-% Set preliminary 1:1 trial set-to-trial relationship
+fprintf('Setting preliminary one-to-one epoch set-to-epoch relationship...');
 trialnames = unique(pupl_epoch_get(EYE, [], 'name'));
 epochsetdescriptions = struct(...
     'name', trialnames,...
@@ -113,6 +196,7 @@ EYE = pupl_epochset(EYE,...
     'setdescriptions', epochsetdescriptions,...
     'overwrite', true,...
     'verbose', false);
+fprintf('done\n');
 
 fprintf('%d epochs defined\n', numel(EYE.epoch));
 

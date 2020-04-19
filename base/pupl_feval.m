@@ -10,13 +10,22 @@ else
 end
 
 % Get arguments
-args = func(); % nargin = 0
-if isa(args, 'function_handle')
-    if nargout(args) < 1
+getargs = func(); % nargin = 0
+if isa(getargs, 'function_handle')
+    if nargout(getargs) < 1
         args = struct([]);
     else
-        args = args(EYE, varargin{:});
+        switch nargin(getargs)
+            case -1
+                args = getargs(varargin{:});
+            case -2
+                args = getargs(EYE, varargin{:});
+            otherwise
+                error
+        end
     end
+else
+    args = struct([]);
 end
 if isstruct(args)
     args = pupl_struct2args(args);    

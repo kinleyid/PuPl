@@ -20,6 +20,7 @@ end
 function args = parseargs(varargin)
 
 args = pupl_args2struct(varargin, {
+    'epoch' []
     'correction' []
     'mapping' []
     'len' []
@@ -36,19 +37,33 @@ function outargs = getargs(EYE, varargin)
 outargs = [];
 args = parseargs(varargin{:});
 
-if isempty(args.correction)
-    correctionOptions = {
-        'subtract baseline mean'
-        'percent change from baseline mean'
-        'z-score based on baseline statistics'
-        'none'};
-    correction = correctionOptions(...
-        listdlg('PromptString', 'Baseline correction type',...
-        'ListString', correctionOptions));
-    if isempty(correction)
+if isempty(args.epoch)
+    args.epoch = pupl_epoch_selUI(...
+        EYE,...
+        'Which epochs should be baseline corrected?');
+    if isempty(args.epoch)
         return
     end
-    args.correction = correction{:};
+end
+
+if isempty(args.correction)
+    correction_opts = {
+        'subtract baseline mean'
+        'subtract baseline median'
+        'percent change from baseline mean'
+        'percent change from baseline median'
+        'z-score based on baseline statistics'
+        'none'
+    };
+    sel = listdlgregexp(...
+        'PromptString', 'Baseline correction type',...
+        'ListString', correction_opts,...
+        'regexp', false);
+    if isempty(sel)
+        return
+    else
+        args.correction = correction_opts{sel};
+    end
 end
 
 if strcmp(args.correction, 'none') % Any baseline correction?
@@ -61,18 +76,19 @@ if strcmp(args.correction, 'none') % Any baseline correction?
     args.other.when = 'after';
 else
     if isempty(args.mapping)
-        mappingOptions = {
+        mapping_opts = {
             'one:one'
-            'one:all'
             'one:some'
+            'one:all'
         };
-        args.mapping = mappingOptions(...
-            listdlg('PromptString', sprintf('Baseline-to-trial mapping'),...
-            'ListString', mappingOptions));
-        if isempty(args.mapping)
+        sel = listdlgregexp(...
+            'PromptString', 'Baseline-to-epoch mapping',...
+            'ListString', mapping_opts,...
+            'regexp', false);
+        if isempty(sel)
             return
         else
-            args.mapping = args.mapping{:};
+            args.mapping = mapping_opts{sel};
         end
     end
     
@@ -193,12 +209,18 @@ switch args.correction
     case 'subtract baseline mean'
         correctionFunc = @(tv, bv) tv - nanmean_bc(bv);
         relstr = 'change from baseline mean';
+    case 'subtract baseline median'
+        correctionFunc = @(tv, bv) tv - nanmedian_bc(bv);
+        relstr = 'change from baseline median';
     case 'percent change from baseline mean'
         correctionFunc = @(tv, bv) 100 * (tv - nanmean_bc(bv)) / nanmean_bc(bv);
         relstr = '% change from baseline mean';
+    case 'percent change from baseline median'
+        correctionFunc = @(tv, bv) 100 * (tv - nanmedian_bc(bv)) / nanmedian_bc(bv);
+        relstr = '% change from baseline median';
     case 'z-score based on baseline statistics'
         correctionFunc = @(tv, bv) 100 * (tv - nanmean_bc(bv)) / nanstd_bc(bv);
-        relstr = {'z-scores' 'from baseline stats'};
+        relstr = {'z-scores' 'based on baseline stats'};
     case 'none'
         correctionFunc = @(tv, bv) tv;
         relstr = EYE.units.pupil{3};
@@ -223,7 +245,7 @@ switch args.mapping
                     baseline_idx = find(cand_baseline_times >= epoch_times(epoch_idx), 1);
             end
             if isempty(baseline_idx)
-                epoch_ev = pupl_epoch_get(EYE, EYE.epoch, '_tl');
+                epoch_ev = pupl_epoch_get(EYE, EYE.epoch(epoch_idx), '_tl');
                 error('No baseline occurs %s the epoch associated with event %s (%f s)',...
                     args.when,...
                     epoch_ev.name,...

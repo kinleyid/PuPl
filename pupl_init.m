@@ -8,6 +8,9 @@ function pupl_init(varargin)
 %   Example
 % >> pupl_init noui noaddons
 
+currVersion = '1.0.0';
+fprintf('PuPl, version %s\n', currVersion);
+
 global pupl_globals
 if ~isfield(pupl_globals, 'UI')
     pupl_globals.UI = []; % The handle to the GUI is stored here
@@ -46,8 +49,6 @@ if any(badargidx)
     return
 end
 
-currVersion = '1.0.0';
-fprintf('PuPl, version %s\n', currVersion);
 % Check for updates
 if ~any(strcmpi(varargin, 'noweb'))
     fprintf('Checking web for new version...\n\t(use ''pupl init noweb'' to skip this)\n\t');
@@ -125,6 +126,6 @@ end
 
 fprintf('Done\n')
 
-fprintf('\nSee the "Citations" tab for the papers PuPl is based on.\nPlease cite all the algorithms you use to process your data.\n');
+fprintf('\n\tSee the "Citations" tab for the papers PuPl is based on.\n\tPlease cite all the procedures you use to process your data.\n\n');
 
 end

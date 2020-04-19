@@ -1,6 +1,13 @@
 
 function out = pupl_blink_rm(EYE, varargin)
-
+% Remove blink and, optionally, blink-adjacent samples
+%
+% Inputs:
+%   trim: 2-element cell array of strings
+%       specifies the length of pre- and post-blink data to remove
+% Example:
+%   pupl_blink_rm(eye_data,...
+%       'trim', {'150ms', '50ms'})
 if nargin == 0
     out = @getargs;
 else

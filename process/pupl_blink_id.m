@@ -1,6 +1,22 @@
 
 function out = pupl_blink_id(EYE, varargin)
-
+% Identify blinks according to one of a number of criteria
+%
+% Inputs:
+%   method: string
+%       specifies the method of blink identification
+%   overwrite: boolean
+%       specifies whether pre-existing blink labels should be overwritten
+%   cfg: struct
+%       configures the implementation of the method used
+% Example:
+%   pupl_blink_id(eye_data,...
+%       'method', 'velocity',...
+%       'overwrite', false,...
+%       'cfg', struct(...
+%           'onset_lim', -150,... 
+%           'offset_lim', 150,...
+%           'max_len', '400ms'))
 if nargin == 0
     out = @getargs;
 else

@@ -1,6 +1,16 @@
 
 function out = pupl_epoch_reject(EYE, varargin)
-
+% Reject epochs according to one of a number of criteria
+%
+% Inputs:
+%   method: string
+%       specifies the method of epoch rejection
+%   cfg: struct
+%       configures the implementation of the method used
+% Example:
+%   pupl_epoch_reject(eye_data,...
+%       'method', 'ppnmissing',...
+%       'cfg', struct('thresh', 0.2))
 if nargin == 0
     out = @getargs;
 else
@@ -27,10 +37,14 @@ if isempty(args.method)
     method_options = {
         'Proportion missing data' 'ppnmissing'
         'Extreme pupil size' 'extremepupil'
+        'Max. pupil size' 'max'
+        'Min. pupil size' 'min'
         'Blink proximity' 'blink'
         'Reaction time' 'rt'
         'Event attributes' 'event'
         'Saccades' 'sacc'
+        'Median absolute deviation' 'mad'
+        'Standard deviation' 'std'
     };
     sel = listdlgregexp(...
         'PromptString', 'Reject trials on what basis?',...
@@ -80,7 +94,7 @@ if isempty(args.cfg)
                 arrayfun(@(e) cellfun(@(x) nnz(diff(x == 'b') == 1), pupl_epoch_getdata(e, [], 'datalabel')), EYE, 'UniformOutput', false),...
                 'names', {EYE.name},...
                 'dataname', 'epochs',...
-                'threshname', sprintf('Number of blinks'));
+                'threshname', 'Number of blinks');
             if isempty(thresh)
                 return
             else
@@ -106,7 +120,29 @@ if isempty(args.cfg)
                 arrayfun(@(e) cellfun(@(x) nnz(diff(x(1:end-1) == 's') == 1), pupl_epoch_getdata(e, [], 'interstices')), EYE, 'UniformOutput', false),...
                 'names', {EYE.name},...
                 'dataname', 'epochs',...
-                'threshname', sprintf('Number of saccades'));
+                'threshname', 'Number of saccades');
+            if isempty(thresh)
+                return
+            else
+                args.cfg.thresh = thresh;
+            end
+        case 'mad'
+            thresh = UI_cdfgetrej(...
+                arrayfun(@(e) cellfun(@(x) nanmedian_bc(nanmedian_bc(x) - x), pupl_epoch_getdata(e, [])), EYE, 'UniformOutput', false),...
+                'names', {EYE.name},...
+                'dataname', 'epochs',...
+                'threshname', 'Median absolute deviation');
+            if isempty(thresh)
+                return
+            else
+                args.cfg.thresh = thresh;
+            end
+        case 'std'
+            thresh = UI_cdfgetrej(...
+                arrayfun(@(e) cellfun(@(x) nanstd_bc(x), pupl_epoch_getdata(e, [])), EYE, 'UniformOutput', false),...
+                'names', {EYE.name},...
+                'dataname', 'epochs',...
+                'threshname', 'Standard deviation');
             if isempty(thresh)
                 return
             else
