@@ -1,14 +1,38 @@
 function out = pupl_baseline(EYE, varargin)
-
-%   Inputs
-% correctionType: 'subtract mean' or 'percent change'
-% baselineDefs: struct with fields:
-%       event: event name defining baseline
-%       lims: lims around events
-%       
-%   Outputs
-% EYE: struct array
-
+% Define baselines
+%
+% Inputs:
+%   epoch: cell array (see pupl_event_sel)
+%       selects the epochs to baseline correct
+%   correction: string
+%       specifies the type of correction
+%   mapping: string
+%       specifies the baseline-to-epoch mapping
+%   len: string
+%       specifies whether baseline periods are of fixed or variable length
+%   when: string or numeric
+%       specifies whether baseline periods occur before or after epochs, if
+%       applicable
+%   timelocking: cell array (see pupl_event_sel)
+%       selects the "timelocking" events for the baseline periods, if
+%       applicable
+%   lims: cellstr
+%       specifies the time limits of baseline periods relative to defining
+%       events
+%   other: struct
+%       specifies the non-"timelocking" events for baselines, if applicable
+% Example:
+%   pupl_baseline(eye_data,...
+%       'epoch', {1 '.'},...
+%       'correction', 'subtract baseline mean',...
+%       'mapping', 'one:one',...
+%       'len', 'fixed',...
+%       'when', 0,...
+%       'timelocking', 0,...
+%       'lims', {'4s';'4.5s'},...
+%       'other', struct(...
+%           'event', {0},...
+%           'when', {'after'}));
 if nargin == 0
     out = @getargs;
 else
@@ -195,6 +219,9 @@ else
     end
 end
 
+fprintf('Performing baseline correction using method:\n');
+fprintf('\t%s\n', args.correction);
+fprintf('%s mapping from baselines to epochs\n', args.mapping);
 outargs = args;
 
 end

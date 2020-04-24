@@ -1,6 +1,13 @@
 
 function out = pupl_eye(EYE, varargin)
-
+% Monocularize recordings
+%
+% Inputs:
+%   keep: string
+%       which eye to keep
+% Example:
+%   pupl_eye(eye_data,...
+%       'keep', 'left');
 if nargin == 0
     out = @getargs;
 else
@@ -17,7 +24,7 @@ args = pupl_args2struct(varargin, {
 
 end
 
-function outargs = getargs(EYE, varargin)
+function outargs = getargs(varargin)
 
 outargs = [];
 

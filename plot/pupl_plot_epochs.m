@@ -101,8 +101,8 @@ for side = {'left' 'right'}
         plotinfo.t = [
             plotinfo.t
             {
-                EYE.ur.times
-                EYE.times
+                EYE.ur.times(unfold(pupl_epoch_get(EYE, epoch, '_abs', 'ur')))
+                EYE.times(unfold(pupl_epoch_get(EYE, epoch, '_abs')))
             }
         ];
         plotinfo.srate = [
@@ -118,25 +118,25 @@ end
 axes(findobj(h, 'Tag', 'axes'));
 cla; hold on
 
+tl_time = pupl_epoch_get(EYE, epoch, 'time');
+
 for dataidx = 1:numel(plotinfo.data)
-    t = parsetimestr(epoch.lims, plotinfo.srate{dataidx});
     plot(...
-        linspace(t(1), t(2), numel(plotinfo.data{dataidx})) + pupl_epoch_get(EYE, epoch, 'time'),...
+        plotinfo.t{dataidx},...
         plotinfo.data{dataidx},...
         plotinfo.colours{dataidx});
 end
 
-ev_time = pupl_epoch_get(EYE, epoch, 'time');
-plot(repmat(ev_time, 1, 2), ud.ylims, 'k--');
+plot(repmat(tl_time, 1, 2), ud.ylims, 'k--');
 
-xlim(parsetimestr(epoch.lims, EYE.srate) + ev_time);
+xlim(EYE.times(pupl_epoch_get(EYE, epoch, '_abs')));
 ylim(ud.ylims);
 xlabel('Time (s)');
-ylabel(sprintf('Pupil %s (%s, %s)', EYE.units.epoch{:}));
-legend(plotinfo.legendentries{:}, 'Event');
+ylabel(pupl_epoch_units(epoch));
+legend(plotinfo.legendentries{:}, 'Timelocking event');
 
 currtitle = sprintf('Epoch %d.', trialidx);
-if EYE.epoch(trialidx).reject
+if epoch.reject
     currtitle = sprintf('%s [REJECTED]', currtitle);
 end
 epoch_name = pupl_epoch_get(ud.EYE, ud.trialidx, 'name');

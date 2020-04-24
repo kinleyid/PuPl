@@ -220,12 +220,9 @@ end
 nblinks = numel(blinkstarts);
 nmins = EYE.ndata / EYE.srate / 60;
 
-if isgraphics(gcbf)
-    fprintf('\n')
-end
-fprintf('\t\tAccording to method "%s":\n', args.method);
-fprintf('\t\t\t%f%% of data marked as blinks using this method\n', 100 * nnz(blinkidx) / EYE.ndata);
-fprintf('\t\t\t%d blinks in %0.2f minutes of recording (%.2f blinks/min)\n', nblinks, nmins, nblinks/nmins)
+fprintf('According to method "%s":\n', args.method);
+fprintf('\t%f%% of data marked as blinks using this method\n', 100 * nnz(blinkidx) / EYE.ndata);
+fprintf('\t%d blinks in %0.2f minutes of recording (%.2f blinks/min)\n', nblinks, nmins, nblinks/nmins)
 
 if args.overwrite
     EYE.datalabel = repmat(' ', size(EYE.datalabel));
@@ -241,9 +238,9 @@ if any(blinkidx)
     end
 end
 nblinks = numel(blinkstarts);
-fprintf('\t\tIn total:\n');
-fprintf('\t\t\t%f%% of data marked as blinks\n', 100 * nnz(blinkidx) / EYE.ndata);
-fprintf('\t\t\t%d blinks in %0.2f minutes of recording (%.2f blinks/min)\n', nblinks, nmins, nblinks/nmins)
+fprintf('In total:\n');
+fprintf('\t%f%% of data marked as blinks\n', 100 * nnz(blinkidx) / EYE.ndata);
+fprintf('\t%d blinks in %0.2f minutes of recording (%.2f blinks/min)\n', nblinks, nmins, nblinks/nmins)
 
 end
 

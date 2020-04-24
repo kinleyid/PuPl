@@ -1,12 +1,14 @@
 
 function pupl_init(varargin)
-
-%   Command line arguments
-% 'noUI': don't initialize the user interface
-% 'noGlobals': don't initialize global variables
-% 'noAddOns': don't initialize toolboxes
-%   Example
-% >> pupl_init noui noaddons
+% Initializes PuPl
+%
+% Command line arguments:
+%   noUI: don't initialize the user interface
+%   noGlobals: don't initialize global variables
+%   noAddOns: don't initialize toolboxes
+%   noWeb: don't check the web for a new version
+% Example:
+%   >> pupl_init noui noaddons
 
 currVersion = '1.0.0';
 fprintf('PuPl, version %s\n', currVersion);
@@ -90,9 +92,20 @@ end
 
 if ~any(strcmpi(varargin, 'noGlobals'))
     fprintf('Initializing global variables...\n');
-    evalin('base',...
-        sprintf('global %s; %s = struct([]);',...
-            pupl_globals.datavarname, pupl_globals.datavarname));
+    evalin('base', sprintf('global %s', pupl_globals.datavarname));
+    if ~isempty(evalin('base', pupl_globals.datavarname))
+        while true
+            switch input('Overwrite data variable? [y/n] ', 's')
+                case 'y'
+                    evalin('base', sprintf('%s = struct([]);', pupl_globals.datavarname));
+                    break
+                case 'n'
+                    break
+                otherwise
+                    fprintf('Type "y" or "n"\n');
+            end
+        end
+    end
 end
 
 if ~any(strcmpi(varargin, 'noUI'))

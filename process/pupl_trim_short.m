@@ -1,6 +1,20 @@
 
 function out = pupl_trim_short(EYE, varargin)
-
+% Trim short "islands" of isolated data
+%
+% Citation:
+% Kret, M. E., & Sjak-Shie, E. E. (2019). Preprocessing pupil size data:
+% Guidelines and code. Behavior research methods, 51(3), 1336-1342.
+%
+% Inputs:
+%   lengthresh: string
+%       max. island length
+%   septhresh: string
+%       min. island separation from nearby data
+% Example
+%   pupl_trim_short(eye_data,...
+%       'lenthresh', '10ms',...
+%       'septhresh', '1s')
 if nargin == 0
     out = @getargs;
 else

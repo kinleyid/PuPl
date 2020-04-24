@@ -1,5 +1,5 @@
 
-function [data, isrej, lims, bef_aft, rel_lats] = pupl_epoch_getdata_new(EYE, varargin)
+function [data, isrej, lims, bef_aft, rel_lats] = pupl_epoch_getdata(EYE, varargin)
 % Get epoch data
 %
 % Inputs:
@@ -10,7 +10,7 @@ function [data, isrej, lims, bef_aft, rel_lats] = pupl_epoch_getdata_new(EYE, va
 % Example:
 %   pupl_epoch_getdata_new(eye_data,...
 %       [],... <- get from all epochs
-%       'pupil', 'left)
+%       'pupil', 'left')
 if isempty(varargin)
     sel = [];
 else
@@ -27,8 +27,6 @@ else
     maybe_ur = {};
 end
 
-srate = getfield(EYE, maybe_ur{:}, 'srate');
-
 data = cell(1, numel(EYE));
 isrej = cell(1, numel(EYE));
 lims = cell(1, numel(EYE));
@@ -36,22 +34,7 @@ bef_aft = cell(1, numel(EYE));
 rel_lats = cell(1, numel(EYE));
 
 for dataidx = 1:numel(EYE)
-    if isstruct(sel)
-        epochs = sel;
-    else
-        if isempty(sel) % Return data from all epochs for the current recording
-            selidx = 1:numel(EYE(dataidx).epoch);
-        elseif ischar(sel) % Return data from all epochs belonging to a set
-            epochset = EYE(dataidx).epochset(strcmp({EYE(dataidx).epochset.name}, sel));
-            selidx = find(pupl_epoch_sel(EYE(dataidx), EYE(dataidx).epoch, epochset.members));
-        else
-            if islogical(sel)
-                sel = find(sel);
-            end
-            selidx = sel;
-        end
-        epochs = EYE(dataidx).epoch(selidx);
-    end
+    epochs = pupl_epoch_get(EYE(dataidx), sel);
     
     if isequal(data_fields, {'pupil' 'both'}) % Compute on the fly
         EYE(dataidx) = pupl_mergelr(EYE(dataidx));

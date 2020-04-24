@@ -5,7 +5,7 @@ function out = pupl_epoch(EYE, varargin)
 % Inputs:
 %   len: string ('fixed' or 'variable')
 %       specifies whether epochs are fixed-length or variable-length
-%   timelocking: cell array
+%   timelocking: cell array (see pupl-event_sel)
 %       specifies the timelocking events
 %   other: cell array
 %       specifies the non-timelocking event and whether it comes before or
@@ -17,6 +17,8 @@ function out = pupl_epoch(EYE, varargin)
 %       specifies whether existing epochs should be overwritten
 %   names: string or 0
 %       specifies the names for epochs
+% Example:
+%   
 if nargin == 0
     out = @getargs;
 else
@@ -57,7 +59,7 @@ if any(arrayfun(@(x) ~isempty(x.epoch), EYE)) && isempty(args.overwrite)
 end
 
 if isempty(args.timelocking)
-    args.timelocking = pupl_event_UIget([EYE.event], 'Which are the timelocking events?');
+    args.timelocking = pupl_event_selUI(EYE, 'Which are the timelocking events?');
     if isempty(args.timelocking)
         return
     end
@@ -79,7 +81,7 @@ if isempty(args.other)
         case 'fixed'
             args.other = struct(...
                 'when', 'after',...
-                'event', args.timelocking);
+                'event', 0);
         case 'variable'
             rel2 = 'Do epochs end after timelocking events or begin before timelocking events?';
             a = questdlg(rel2, rel2, 'End after', 'Begin before', 'Cancel', 'End after');
@@ -93,8 +95,8 @@ if isempty(args.other)
                 otherwise
                     return
             end
-            args.other.event = pupl_event_UIget(...
-                [EYE.event],...
+            args.other.event = pupl_event_selUI(...
+                EYE,...
                 sprintf('Epoch %s are defined relative to which events?', pick_next));
             if isempty(args.other.event)
                 return
@@ -124,9 +126,9 @@ if isempty(args.lims)
     end
 end
 
-if isempty(args.names)
+if isempty(args.name)
     q = 'How should epochs be named?';
-    a = questdlg(q, q, 'Use timelocking event names', 'Use a custom name', 'Cancel', 'Cancel');
+    a = questdlg(q, q, 'Use timelocking event names', 'Use a custom name', 'Cancel', 'Use timelocking event names');
     switch a
         case 'Use timelocking event names'
             args.name = 0;
@@ -148,9 +150,13 @@ else
 end
 switch args.other.when
     case 'before'
-        fprintf('Epochs begin at %s relative to the following events:\n', args.lims{1});
-        txt = pupl_event_selprint(args.other.event);
-        fprintf('\t%s\n', txt{:});
+        if isnumeric(args.other.event)
+            fprintf('Epochs begin at %s relative to the timelocking events:\n', args.lims{1});
+        else
+            fprintf('Epochs begin at %s relative to the following events:\n', args.lims{1});
+            txt = pupl_event_selprint(args.other.event);
+            fprintf('\t%s\n', txt{:});
+        end
         fprintf('Epochs end at %s relative to the timelocking events:\n', args.lims{2});
         txt = pupl_event_selprint(args.timelocking);
         fprintf('\t%s\n', txt{:});
@@ -158,9 +164,13 @@ switch args.other.when
         fprintf('Epochs begin at %s relative to the timelocking events:\n', args.lims{1});
         txt = pupl_event_selprint(args.timelocking);
         fprintf('\t%s\n', txt{:});
-        fprintf('Epochs end at %s relative to the following events:\n', args.lims{2});
-        txt = pupl_event_selprint(args.other.event);
-        fprintf('\t%s\n', txt{:});
+        if isnumeric(args.other.event)
+            fprintf('Epochs begin at %s relative to the timelocking events:\n', args.lims{1});
+        else
+            fprintf('Epochs end at %s relative to the following events:\n', args.lims{2});
+            txt = pupl_event_selprint(args.other.event);
+            fprintf('\t%s\n', txt{:});
+        end
 end
 
 outargs = args;
@@ -175,29 +185,20 @@ if args.overwrite
     EYE.epoch = [];
 end
 
+fprintf('Defining epochs...');
 epochs = epoch_(EYE, args.timelocking, args.lims, args.other, 'epoch');
+fprintf('%d epochs defined\n', numel(epochs));
 [epochs.name] = deal(args.name);
 [epochs.reject] = deal(false);
 [epochs.units] = deal(EYE.units.pupil);
 
-EYE.epoch = [EYE.epoch, epochs];
-
+[EYE.epoch, epochs] = fieldconsistency(EYE.epoch, epochs);
+EYE.epoch = [EYE.epoch epochs];
 % Sort epochs by onset latency
+fprintf('Sorting epochs by onset time...');
 L = pupl_epoch_get(EYE, [], '_abs');
-[~, I] = sort(L(1, :));
+[~, I] = sort(L(:, 1));
 EYE.epoch = EYE.epoch(I);
-
-fprintf('Setting preliminary one-to-one epoch set-to-epoch relationship...');
-trialnames = unique(pupl_epoch_get(EYE, [], 'name'));
-epochsetdescriptions = struct(...
-    'name', trialnames,...
-    'members', cellfun(@(x) {x}, trialnames, 'UniformOutput', false));
-EYE = pupl_epochset(EYE,...
-    'setdescriptions', epochsetdescriptions,...
-    'overwrite', true,...
-    'verbose', false);
 fprintf('done\n');
-
-fprintf('%d epochs defined\n', numel(EYE.epoch));
 
 end

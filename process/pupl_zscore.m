@@ -1,8 +1,11 @@
 
 function out = pupl_zscore(EYE)
-
+% Z-score pupil size data across entire recording
+%
+% Example:
+%   pupl_zscore(eye_data)
 if nargin == 0
-    out = @()[];
+    out = [];
 else
     EYE = pupl_proc(EYE, @(x) (x - nanmean_bc(x)) / nanstd_bc(x));
     EYE.ur = pupl_proc(EYE.ur, @(x) (x - nanmean_bc(x)) / nanstd_bc(x));

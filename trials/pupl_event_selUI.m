@@ -16,11 +16,16 @@ if numel(varargin) < 3
 else
     listbox_str = varargin{3};
 end
+if numel(varargin) < 4
+    all_events = mergefields(EYE, 'event');
+else
+    all_events = varargin{4};
+end
 
 % Main figure
 f = figure(...
     'UserData', struct(...
-        'events', mergefields(EYE, 'event'),...
+        'events', all_events,...
         'n', 0),...
     'Name', 'Event filter',...
     'NumberTitle', 'off',...
@@ -123,7 +128,7 @@ if isgraphics(f)
         case 0
             contents = get(listbox, 'String');
             idx = get(listbox, 'Value');
-            sel = {ud.n contents{idx}};
+            sel = {ud.n ud.events(idx).name};
         case 1
             sel = {ud.n get(findobj(f, 'Tag', 'regexp'), 'String')};
         case 2

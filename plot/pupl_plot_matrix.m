@@ -20,9 +20,10 @@ end
 
 if isempty(p.Results.set)
     setOpts = unique(mergefields(EYE, 'epochset', 'name'));
-    sel = listdlg('PromptString', 'Plot from which trial set?',...
+    sel = listdlgregexp('PromptString', 'Plot from which trial set?',...
         'ListString', setOpts,...
-        'SelectionMode', 'single');
+        'SelectionMode', 'single',...
+        'regexp', false);
     if isempty(sel)
         return
     end
@@ -30,23 +31,6 @@ if isempty(p.Results.set)
 else
     set = p.Results.set;
 end
-
-%{
-if isempty(p.Results.byRT)
-    q = 'Sort trials by reaction time?';
-    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'No');
-    switch a
-        case 'Yes'
-            byRT = true;
-        case 'No'
-            byRT = false;
-        otherwise
-            return
-    end
-else
-    byRT = p.Results.byRT;
-end
-%}
 
 if isempty(p.Results.include)
     q = 'Plot which trials?';
@@ -59,7 +43,7 @@ else
     include = p.Results.include;
 end
 
-[data, isrej] = pupl_epoch_getdata(EYE(dataidx), set);
+[data, isrej, lims] = pupl_epoch_getdata(EYE(dataidx), set);
 data = cell2mat(data);
 
 switch include
@@ -70,29 +54,42 @@ switch include
 end
 data = data(~isrej, :);
 
-%{
-setidx = strcmp({EYE(dataidx).epochset.name}, set);
-if byRT
-    RTs = mergefields(EYE(dataidx).epoch(EYE(dataidx).epochset(setidx).epochidx), 'event', 'rt');
-    RTs = RTs(~isrej);
-    [~, I] = sort(RTs);
-    data = data(I, :);
-    xlab = 'RT rank (fastest to slowest)';
+if numel(EYE) > 1
+    if isequal(EYE.srate)
+        srate = EYE.srate;
+    else
+        srate = [];
+    end
 else
-    xlab = 'Trial';
+    srate = EYE.srate;
 end
-%}
 
-lims = EYE(1).epochset(strcmp({EYE(1).epochset.name}, set)).lims;
-if ~isempty(lims)
-    x = unfold(parsetimestr(lims, EYE(1).srate, 'smp'));
+if numel(lims) > 1
+    if isequal(lims{:})
+        lims = lims{1};
+    else
+        lims = [];
+    end
 else
-    warning('Trial set contains epochs in which the relative positions of the events are different\nX-axis will begin at 0 seconds');
-    x = 0:size(data, 2)-1;
+    lims = lims{1};
 end
-times = x / unique([EYE(dataidx).srate]);
+
+nt = size(data, 2); % Number of time points
+if isempty(srate)
+    warning('Inconsistent sample rates');
+    t = 1:nt;
+else
+    if isempty(lims)
+        warning('Inconsistent epoch limits');
+        t = (0:nt-1) / srate;
+    else
+        tl = parsetimestr(lims, srate);
+        t = linspace(tl(1), tl(2), nt);
+    end
+end
+
 figure;
-ii = image(times, 1:size(data, 1), data,'CDataMapping','scaled');
+ii = image(t, 1:size(data, 1), data,'CDataMapping','scaled');
 try
     set(ii, 'AlphaData', ~isnan(data));
 catch
@@ -101,11 +98,12 @@ end
 ylabel('Trial')
 xlabel('Time (s)')
 cb = colorbar;
-ylabel(cb, pupl_getunits(EYE, 'epoch'));
+epochs = pupl_epoch_get(EYE(dataidx), set);
+ylabel(cb, pupl_epoch_units(epochs));
 title([EYE(dataidx).name ' ' set], 'Interpreter', 'none');
 
 if isgraphics(gcbf)
-    fprintf('Equivalent command: %s\n', getcallstr(p, false));
+    fprintf('Equivalent command:\n\n%s\n\n', getcallstr(p, false));
 end
 
 end

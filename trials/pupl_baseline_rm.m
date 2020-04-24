@@ -1,14 +1,12 @@
 function out = pupl_baseline_rm(EYE, varargin)
-
-%   Inputs
-% correctionType: 'subtract mean' or 'percent change'
-% baselineDefs: struct with fields:
-%       event: event name defining baseline
-%       lims: lims around events
-%       
-%   Outputs
-% EYE: struct array
-
+% Undo baseline correction
+%
+% Inputs:
+%   epoch: cell array (see pupl_event_sel)
+%       selects the epochs to no longer baseline correct
+% Example:
+%   pupl_baseline_rm(eye_data,
+%       'epoch', {1 '.'})
 if nargin == 0
     out = @getargs;
 else
@@ -56,11 +54,11 @@ for epoch_idx = selected
     if isfield(EYE.epoch(epoch_idx), 'baseline')
         if ~isempty(EYE.epoch(epoch_idx).baseline)
             rm_cnt = rm_cnt + 1;
+            EYE.epoch(epoch_idx).baseline = [];
         end
-        EYE.epoch(epoch_idx) = rmfield(EYE.epoch(epoch_idx), 'baseline');
     end
 end
 
-fprintf('Removed baseline correction for %d/%d selected trials', rm_cnt, numel(selected))
+fprintf('Removed baseline correction for %d/%d selected epochs\n', rm_cnt, numel(selected))
 
 end

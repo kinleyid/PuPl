@@ -1,6 +1,16 @@
 
 function out = pupl_evar_hg(EYE, varargin)
-
+% Homogenize event variables within trials
+%
+% Inputs:
+%   onsets: cell array (see pupl_events_sel)
+%       selects the events signaling the onsets of trials
+%   ends: cell array (see pupl_events_sel)
+%       selects the events signaling the ends of trials
+% Example:
+%   pupl_evar_hg(eye_data,...
+%       'onsets', {1 'Scene'},...
+%       'ends', {1 'Response'});
 if nargin == 0
     out = @getargs;
 else
@@ -24,14 +34,14 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.onsets)
-    args.onsets = pupl_event_UIget([EYE.event], 'Which events mark the onset of a trial?');
+    args.onsets = pupl_event_selUI(EYE, 'Which events mark the onset of a trial?');
     if isempty(args.onsets)
         return
     end
 end
 
 if isempty(args.ends)
-    args.ends = pupl_event_UIget([EYE.event], 'Which events mark the end of a trial? (Select none to use the event immediately preceding the next trial)');
+    args.ends = pupl_event_selUI(EYE, 'Which events mark the end of a trial? (Select none to use the event immediately preceding the next trial)');
     if isempty(args.ends)
         return
     end

@@ -1,5 +1,23 @@
 function out = pupl_interp(EYE, varargin)
-
+% Interpolate missing data
+%
+% Inputs:
+%   data: string ('pupil' or 'gaze')
+%       specifies which data to interpolate
+%   interptype: string ('linear' or 'spline')
+%       specifies which interpolation method to use
+%   maxlen: string
+%       specifies the maximum gap length, in terms of time, to interpolate
+%       across
+%   maxdist: string
+%       specifies the maximum jump in data magnitude between the two ends
+%       of the gap for interpolation to be valid
+% Example:
+%   pupl_interp(eye_data,...
+%       'data', 'pupil',...
+%       'interptype', 'linear',...
+%       'maxlen', '400ms',...
+%       'maxdist', '1`sd');
 if nargin == 0
     out = @getargs;
 else

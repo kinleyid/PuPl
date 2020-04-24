@@ -1,12 +1,19 @@
 
 function out = pupl_epochset(EYE, varargin)
-
-%  Inputs
-% EYE--struct array
-% binDescriptions--struct array with fields:
-%   name: name of bin
-%   epochs: cell array of names of epochs included in bin
-
+% Define epoch sets
+%
+% Inputs:
+%   setdescriptions: struct array
+%       fields "name" and "members", where "members" selects the epochs
+%       that are members of that set (see pupl_epoch_sel)
+%   overwrite: boolean
+%       specifies whether to overwrite pre-existing epoch sets
+% Example:
+%   pupl_epochset(eye_data,...
+%       'setdescriptions', struct(...
+%           'name', {'easy' 'medium' 'Hard'},...
+%           'members', {{1 'Scene1'} {1 'Scene2'} {1 'Scene3'}}),...
+%       'overwrite', true);
 if nargin == 0
     out = @getargs;
 else
@@ -53,7 +60,7 @@ if isempty(args.setdescriptions)
         else
             currname = currname{:};
         end
-        currmembers = pupl_event_UIget(pupl_epoch_get(EYE, [], '_ev'), sprintf('Events in set "%s"', currname));
+        currmembers = pupl_epoch_selUI(EYE, sprintf('Events in set "%s"', currname));
         if isempty(currmembers)
             return
         end

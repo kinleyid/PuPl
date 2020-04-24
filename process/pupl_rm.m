@@ -1,5 +1,16 @@
 function out = pupl_rm(EYE, varargin)
-
+% Remove recordings
+%
+% Inputs:
+%   method: string
+%       specifies the method by which recordings are excluded
+%   cfg: struct
+%       configures the method used
+% Example:
+%   pupl_rm(eye_data,...
+%       'method', 'missing',...
+%       'cfg', struct(...
+%           'thresh', {'20'}));
 if nargin == 0
     out = @getargs;
 else

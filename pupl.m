@@ -1,5 +1,16 @@
 function pupl(varargin)
-
+% Interface to several functions
+%
+% Command line arguments:
+%   init: initialize PuPl
+%   history: print processing history
+%   redraw: redraw the user interface
+%   [settings/globals]: print the global settings
+%   path: print PuPl's home directory
+%   [save/cache]: save a copy of the current dataset to the undo/redo
+%      timeline
+% Example:
+%   >> pupl init noweb
 global pupl_globals
 
 args = lower(varargin);

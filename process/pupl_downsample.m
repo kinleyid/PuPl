@@ -1,6 +1,13 @@
 
 function out = pupl_downsample(EYE, varargin)
-
+% Downsample data
+%
+% Inputs:
+%   fac: integer
+%       the factor by which to downsample
+% Example:
+%   pupl_downsample(eye_data,...
+%       'fac', 50);
 if nargin == 0
     out = @getargs;
 else

@@ -1,18 +1,16 @@
-function out = pupl_normalization_rm(EYE, varargin)
-
-%   Inputs
-% correctionType: 'subtract mean' or 'percent change'
-% baselineDefs: struct with fields:
-%       event: event name defining baseline
-%       lims: lims around events
-%       
-%   Outputs
-% EYE: struct array
-
+function out = pupl_normalize_rm(EYE, varargin)
+% Undo nornalization
+%
+% Inputs:
+%   epoch: cell array (see pupl_event_sel)
+%       selects the epochs to no longer normalize
+% Example:
+%   pupl_normalize_rm(eye_data,
+%       'epoch', {1 '.'})
 if nargin == 0
     out = @getargs;
 else
-    out = sub_normalization_rm(EYE, varargin{:});
+    out = sub_normalize_rm(EYE, varargin{:});
 end
 
 end
@@ -46,7 +44,7 @@ outargs = args;
 
 end
 
-function EYE = sub_normalization_rm(EYE, varargin)
+function EYE = sub_normalize_rm(EYE, varargin)
 
 args = parseargs(varargin{:});
 
@@ -54,13 +52,14 @@ selected = find(pupl_epoch_sel(EYE, EYE.epoch, args.epoch));
 rm_cnt = 0;
 for epoch_idx = selected
     if isfield(EYE.epoch(epoch_idx), 'baseline')
-        if numel(EYE.epoch(epoch_idx).baseline > 1)
+        if numel(EYE.epoch(epoch_idx).baseline) > 1
             rm_cnt = rm_cnt + 1;
             EYE.epoch(epoch_idx).baseline = EYE.epoch(epoch_idx).baseline(1);
+            EYE.epoch(epoch_idx).units(4:end) = [];
         end
     end
 end
 
-fprintf('Removed normalization for %d/%d selected trials', rm_cnt, numel(selected))
+fprintf('Removed normalization for %d/%d selected trials\n', rm_cnt, numel(selected))
 
 end

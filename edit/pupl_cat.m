@@ -1,6 +1,19 @@
 
 function out = pupl_cat(EYE, varargin)
-
+% Concatenate recordings
+%
+% Inputs:
+%   sel: cell array
+%      each element selects a block of recordings
+%   ev_suffix: cellstr
+%       each element is a suffix for a the events in a different block
+%   rec_suffiv: cellstr
+%       the suffix to append to the recording name
+% Example:
+%   pupl_cat(eye_data,...
+%       'sel', {{1 'b1'} {1 'b2'} {1 'b3'} {1 'b4'} {1 'b5'} {1 'b6'}},...
+%       'ev_suffix', {'' '' '' '' '' ''},...
+%       'rec_suffix', {''});
 if nargin == 0
     out = @getargs;
 else

@@ -9,11 +9,16 @@ end
 
 listbox_str = {};
 for dataidx = 1:numel(EYE)
-    curr_evs = EYE(dataidx).event(:)';
-    rec_names = repmat({sprintf('[%s]', EYE(dataidx).name)}, size(curr_evs));
-    event_ns = cellfun(@(x) sprintf('%d.', x), num2cell(1:numel(curr_evs)), 'UniformOutput', false);
-    event_times = cellfun(@(x) sprintf('[%ss]', num2str(x)), {curr_evs.time}, 'UniformOutput', false);
-    event_names = pupl_epoch_get(EYE(dataidx), EYE(dataidx).epoch, 'name');
+    curr_eps = EYE(dataidx).epoch(:)';
+    rec_names = repmat({sprintf('[%s]', EYE(dataidx).name)}, size(curr_eps));
+    event_ns = cellfun(@(x) sprintf('%d.', x), num2cell(1:numel(curr_eps)), 'UniformOutput', false);
+    tls = pupl_epoch_get(EYE(dataidx), [], '_tl');
+    event_times = cellfun(@(x) sprintf('[%ss]', num2str(x)), {tls.time}, 'UniformOutput', false);
+    epoch_names = pupl_epoch_get(EYE(dataidx), EYE(dataidx).epoch, 'name');
+    num_idx = cellfun(@isnumeric, {EYE(dataidx).epoch.name});
+    event_names = {tls.name};
+    event_names(num_idx) = {''};
+    event_names(~num_idx) = strcat('[', event_names(~num_idx), ']');
     listbox_str{end + 1} = strcat(...
         rec_names,...
         {' '},...
@@ -21,10 +26,12 @@ for dataidx = 1:numel(EYE)
         {' '},...
         event_times,...
         {' '},...
+        epoch_names,...
+        {' '},...
         event_names);
 end
 listbox_str = [listbox_str{:}];
 
-sel = pupl_event_selUI(EYE, prompt, true, listbox_str);
+sel = pupl_event_selUI(EYE, prompt, true, listbox_str, pupl_epoch_get(EYE, [], '_tl'));
 
 end

@@ -2,9 +2,9 @@ function out = pupl_normalize(EYE, varargin)
 % Normalize epochs according to reference epochs
 %
 % Inputs:
-%   epoch: cell array
+%   epoch: cell array (see pupl_epoch_sel)
 %       selects epochs to normalize
-%   ref: cell array
+%   ref: cell array (see pupl_epoch_sel)
 %       selects reference epochs
 %   mapping: string
 %       specifies reference-to-epoch mapping
@@ -13,6 +13,13 @@ function out = pupl_normalize(EYE, varargin)
 %       epochs (if one:some mapping)
 %   correction: string
 %       specifies the normalization function
+% Example:
+%   pupl_normalize(eye_data,...
+%       'epoch', {1 'Scene'},...
+%       'ref', {1 'Start'},...
+%       'mapping', 'one:some',...
+%       'when', 'before',...
+%       'correction', 'proportion of reference epoch range');
 if nargin == 0
     out = @getargs;
 else
@@ -52,7 +59,7 @@ if isempty(args.correction)
         'proportion of reference epoch peak'
         'proportion of reference epoch range'
     };
-    sel = listdlg(...
+    sel = listdlgregexp(...
         'PromptString', 'Normalization type',...
         'ListString', correction_opts,...
         'regexp', false);
@@ -63,11 +70,11 @@ if isempty(args.correction)
     end
 end
 
-if isempty(args.epoch)
-    args.epoch = pupl_epoch_selUI(...
+if isempty(args.ref)
+    args.ref = pupl_epoch_selUI(...
         EYE,...
         'Which are the reference epochs?');
-    if isempty(args.epoch)
+    if isempty(args.ref)
         return
     end
 end
@@ -110,10 +117,12 @@ function EYE = sub_normalize(EYE, varargin)
 args = parseargs(varargin{:});
 
 switch args.correction
-    case 'proportion of reference epoch peak'
-        norm_func = @(tv, bv) tv / max(bv);
     case 'proportion of reference epoch range'
         norm_func = @(tv, bv) tv / (max(bv) - min(bv));
+    case 'proportion of reference epoch peak'
+        norm_func = @(tv, bv) tv / max(bv);
+    case 'proportion of reference epoch mean'
+        norm_func = @(tv, bv) tv / nanmean_bc(bv);
 end
 
 % get the epochs that will be normalized
@@ -153,11 +162,12 @@ end
 
 [references.func] = deal(norm_func);
 
-references = num2cell(references);
-
 for epoch_idx = 1:numel(norm_epochs)
     if isfield(norm_epochs(epoch_idx), 'baseline')
-        norm_epochs.baseline(2) = references(epoch_idx);
+        curr_ref = references(epoch_idx);
+        [norm_epochs(epoch_idx).baseline, curr_ref] = fieldconsistency(norm_epochs(epoch_idx).baseline, curr_ref);
+        norm_epochs(epoch_idx).baseline = [norm_epochs(epoch_idx).baseline(:)' curr_ref];
+        norm_epochs(epoch_idx).units{end + 1} = args.correction;
     else
         error('Epoch has not yet been baseline corrected');
     end

@@ -1,6 +1,18 @@
 
 function out = pupl_trim_dilationspeed(EYE, varargin)
-
+% Trims data based on dilation speed
+%
+% Citation:
+% Kret, M. E., & Sjak-Shie, E. E. (2019). Preprocessing pupil size data:
+% Guidelines and code. Behavior research methods, 51(3), 1336-1342.
+%
+% Inputs:
+%   thresh: string
+%       computes the dilation speed threshold, above which data will be
+%       removed
+% Example:
+%   pupl_trim_dilationspeed(eye_data,...
+%       'thresh', '`md + 5`madv');
 if nargin == 0
     out = @getargs;
 else
@@ -50,17 +62,13 @@ function EYE = sub_trim_dilationspeed(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-if isgraphics(gcbf)
-    fprintf('\n')
-end
-
 for field = reshape(fieldnames(EYE.pupil), 1, [])
     data = EYE.pupil.(field{:});
     badidx = trim_ds(data, args.thresh);
     badidx = badidx & ~isnan(data);
     data(badidx) = nan;
     EYE.pupil.(field{:}) = data;
-    fprintf('\t\t%s:\t%f%% previously extant data removed\n', field{:}, 100*nnz(badidx)/numel(badidx));
+    fprintf('%s:\t%f%% previously extant data removed\n', field{:}, 100*nnz(badidx)/numel(badidx));
 end
 
 end

@@ -1,6 +1,28 @@
 
-function out = pupl_evar_read(EYE, varargin)
-
+function out = pupl_evar_add(EYE, varargin)
+% Add event variables to events
+%
+% Inputs:
+%   method: string
+%       're': read from event name using regular expression capture
+%       'evar': compute based on pre-existing event variables
+%   sel: cell array (see pupl_event_sel)
+%       selects the events to add event variable(s) to
+%   expr: string
+%       regular expression or Matlab expression to evaluate, depending on
+%       the method being used to add event variables
+%   var: cellstr
+%       the name(s) of the resulting event variable(s)
+%   type: cellstr
+%       'numeric' or 'string', corresponding to the types of each event
+%       variable
+% Example:
+%   pupl_evar_add(eye_data,...
+%       'method', 're',...
+%       'sel', {1 'Response'},...
+%       'expr', 'FA=(\d+)',...
+%       'var', {'FA'},...
+%       'type', {'numeric'});
 if nargin == 0
     out = @getargs;
 else
@@ -28,10 +50,11 @@ args = parseargs(varargin{:});
 
 if isempty(args.method)
     opts = {'Regexp capture from event name' 'Based on other event variables'};
-        sel = listdlg(...
+        sel = listdlgregexp(...
             'PromptString', sprintf('How do you want to define a new event variable?'),...
             'ListString', opts,...
-            'SelectionMode', 'single');
+            'SelectionMode', 'single',...
+            'regexp', false);
         if isempty(sel)
             return
         else
@@ -47,7 +70,7 @@ if isempty(args.method)
 end
 
 if isempty(args.sel)
-    args.sel = pupl_event_UIget([EYE.event], 'Add event variables to which events?');
+    args.sel = pupl_event_selUI(EYE, 'Add event variables to which events?');
     if isempty(args.sel)
         return
     end
@@ -87,9 +110,9 @@ end
 
 if isempty(args.type)
     for idx = 1:numel(args.var)
-        opts = {'Numeric' 'String'};
+        opts = {'numeric' 'string'};
         sel = listdlgregexp(...
-            'PromptString', sprintf('What type of variable is\n#%s?', args.var{idx}),...
+            'PromptString', sprintf('What type of variable is #%s?', args.var{idx}),...
             'ListString', opts,...
             'SelectionMode', 'single',...
             'regexp', false);
@@ -102,7 +125,9 @@ if isempty(args.type)
 end
 
 fprintf('Adding the following event variables:\n');
-fprintf('\t#%s\n', args.var{:});
+for ii = 1:numel(args.var)
+    fprintf('\t#%s (%s)\n', args.var{ii}, args.type{ii});
+end
 
 outargs = args;
 
@@ -122,7 +147,7 @@ for eventidx = read_from
             for varidx = 1:numel(tokens)
                 var = tokens{varidx};
                 if strcmp(args.type{varidx}, 'Numeric')
-                    var = str2num(tokens{varidx});
+                    var = str2double(tokens{varidx});
                 end
                 if ~isempty(var)
                     n_val = n_val + 1;
@@ -132,12 +157,17 @@ for eventidx = read_from
         case 'evar'
             var = pupl_evar_eval(args.expr, EYE.event(eventidx));
             var = var{:};
-            if isnumeric(var)
-                if strcmp(args.type{1}, 'String')
+            if ~ischar(var)
+                if strcmp(args.type{1}, 'string')
                     var = num2str(var);
+                    if exist('string', 'file') % Convert to string scalar if supported
+                        var = string(var);
+                    end
+                else
+                    var = double(var);
                 end
-            elseif isstr(var)
-                if strcmp(args.type{1}, 'Numeric')
+            else
+                if strcmp(args.type{1}, 'numeric')
                     var = str2num(var);
                 end
             end

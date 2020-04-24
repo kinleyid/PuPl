@@ -85,7 +85,7 @@ else
 end
 
 if isgraphics(gcbf)
-    fprintf('Equivalent command:\n%s\n', getcallstr(p, false));
+    fprintf('Equivalent command:\n\n%s\n\n', getcallstr(p, false));
 end
 
 end
@@ -94,6 +94,7 @@ function applyplotargs(f, EYE, plotstruct, bycond)
 
 figure(f);
 
+all_epochs = {};
 for plotidx = 1:numel(plotstruct)
     dataidx = plotstruct(plotidx).dataidx;
     currset = plotstruct(plotidx).set;
@@ -115,8 +116,8 @@ for plotidx = 1:numel(plotstruct)
     n = 0;
     for curr_idx = datasets(:)'
         n = n + 1;
-        printprog(n);
-        [data, isrej, lims, bef_aft, rel_lats] = pupl_epoch_getdata_new(EYE(curr_idx{:}), currset);
+        % Get data
+        [data, isrej, lims, bef_aft, rel_lats] = pupl_epoch_getdata(EYE(curr_idx{:}), currset);
         if isequal(rel_lats{:})
             all_rel_lats{end + 1} = rel_lats{1};
         else
@@ -139,6 +140,9 @@ for plotidx = 1:numel(plotstruct)
             case 'participant'
                 alldata{end + 1} = nanmean_bc(data, 1);
         end
+        % Get units
+        all_epochs{end + 1} = pupl_epoch_get(EYE(curr_idx{:}), currset);
+        printprog(n);
     end
     % Check consistency
     all_bef_aft = cat(2, all_bef_aft{:});
@@ -239,7 +243,7 @@ for plotidx = 1:numel(plotstruct)
 end
 
 xlabel('Time (s)');
-ylabel(sprintf('Mean %s', lower(pupl_getunits(EYE, 'epoch'))));
+ylabel(sprintf('Mean %s', lower(pupl_epoch_units([all_epochs{:}]))));
 
 % Append to legend
 ud = get(f, 'UserData');
