@@ -24,14 +24,14 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.onsets)
-    args.onsets = pupl_event_UIget([EYE.event], 'Which events mark the onset of a trial?');
+    args.onsets = pupl_event_selUI(EYE, 'Which events mark the onset of a trial?');
     if isempty(args.onsets)
         return
     end
 end
 
 if isempty(args.responses)
-    args.responses = pupl_event_UIget([EYE.event], 'Which events mark a response?');
+    args.responses = pupl_event_selUI(EYE, 'Which events mark a response?');
     if isempty(args.responses)
         return
     end

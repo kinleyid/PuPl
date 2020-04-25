@@ -146,7 +146,7 @@ for eventidx = read_from
             tokens = tokens{:};
             for varidx = 1:numel(tokens)
                 var = tokens{varidx};
-                if strcmp(args.type{varidx}, 'Numeric')
+                if strcmp(args.type{varidx}, 'numeric')
                     var = str2double(tokens{varidx});
                 end
                 if ~isempty(var)

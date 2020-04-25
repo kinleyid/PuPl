@@ -4,7 +4,7 @@ function [p1, p2, cutoff, yhat] = PFE_quart(x, y)
 y = y(:);
 x = x(:);
 % Boxcar smooth y values to identify peak
-x_lims = linspace(min(x), max(x), 100);
+x_lims = linspace(min(x), max(x), 101);
 n_smoothed = numel(x_lims) - 1;
 y_smoothed = nan(1, n_smoothed);
 for idx = 1:n_smoothed

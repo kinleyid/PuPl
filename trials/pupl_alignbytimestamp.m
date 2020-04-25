@@ -1,6 +1,12 @@
 
 function out = pupl_alignbytimestamp(EYE, varargin)
-
+% Align eye tracker data and event logs by timestamps
+%
+% Inputs:
+%   attach: cell array
+%       selects the events to add from the event log (see pupl_event_sel)
+%   overwrite: boolean
+%       specifies whether eye tracker event data should be deleted
 if nargin == 0
     out = @getargs;
 else
@@ -13,6 +19,7 @@ function args = parseargs(varargin)
 
 args = pupl_args2struct(varargin, {
     'attach' []
+    'overwrite' []
 });
 
 end
@@ -36,6 +43,19 @@ if isempty(args.attach)
     end
 end
 
+if isempty(args.overwrite)
+    q = 'Overwrite events already in eye data?';
+    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'No');
+    switch a
+        case 'Yes'
+            args.overwrite = true;
+        case 'No'
+            args.overwrite = false;
+        otherwise
+            return
+    end
+end
+
 outargs = args;
 
 end
@@ -46,13 +66,19 @@ args = parseargs(varargin{:});
 
 event_idx = regexpsel(mergefields(EYE, 'eventlog', 'event', 'name'), args.attach);
 
+if args.overwrite
+    EYE.event = [];
+    max_uniqid = 0;
+else
+    max_uniqid = max([EYE.event.uniqid]);
+end
+
 curr_events = EYE.event;
 new_events = EYE.eventlog.event(event_idx);
 
 % Add new uniqids
-curr_ids = [curr_events.uniqid];
 new_ids = 1:numel(new_events);
-new_ids = num2cell(new_ids + max(curr_ids));
+new_ids = num2cell(new_ids + max_uniqid);
 [new_events.uniqid] = new_ids{:};
 % Append
 [curr_events, new_events] = fieldconsistency(curr_events, new_events);

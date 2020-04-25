@@ -1,4 +1,4 @@
-function pupl_export_new(EYE, varargin)
+function pupl_export(EYE, varargin)
 % Export data to a CSV spreadsheet
 %
 % Inputs
@@ -428,7 +428,7 @@ for dataidx = 1:numel(EYE)
                         if isempty(data_type)
                             data_type = {'pupil' 'both'};
                         end
-                        [curr_data, rej] = pupl_epoch_getdata_new(...
+                        [curr_data, rej] = pupl_epoch_getdata(...
                             EYE(dataidx),...
                             collected_epochidx{trialidx, winidx},...
                             data_type{:});
@@ -444,7 +444,7 @@ for dataidx = 1:numel(EYE)
                                     curr_win = mat2cell(curr_data, ones(size(curr_data, 1), 1), size(curr_data, 2));
                                 end
                         end
-                        curr_func = str2func(fun2str(stat_opts{statoptidx, 2}));
+                        curr_func = str2func(func2str(stat_opts{statoptidx, 2}));
                         other_args = {};
                         if nargin(curr_func) == 2
                             % data structure also provided as input
@@ -624,19 +624,5 @@ if ~isempty(gcbf)
     args = pupl_struct2args(args);
     fprintf('\nEquivalent command:\n\n%s(%s, %s)\n\n', mfilename, pupl_globals.datavarname, all2str(args{:}));
 end
-
-end
-
-function lat = peaklat(x, sr)
-
-[~, lat] = max(x);
-lat = lat / sr; % in seconds
-
-end
-
-function lat = diplat(x, sr)
-
-[~, lat] = min(x);
-lat = lat / sr; % in seconds
 
 end

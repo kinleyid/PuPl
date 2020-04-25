@@ -156,6 +156,9 @@ switch args.method
     case 'noise'
         pupil(isnan(pupil)) = 0;
         blinkidx = based_noise_blinks_detection(pupil(:), EYE.srate);
+        if mod(numel(blinkidx), 2) ~= 0
+            blinkidx(end) = [];
+        end
         blinkidx = reshape(blinkidx, 2, [])';
         % Go from integer to logical index
         tmp = false(size(pupil));

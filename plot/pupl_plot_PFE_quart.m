@@ -1,6 +1,6 @@
-function pupl_plot_PFE_quart(h, EYE, ax)
+function pupl_plot_PFE_quart(h, EYE)
 
-x = EYE.gaze.(ax);
+x = EYE.gaze.x;
 axes(h); hold on;
 y = mergelr(EYE);
 s = scatter(x, y, 5, 'k', 'filled');
@@ -17,7 +17,7 @@ line_y(p1_idx) = polyval(p1, line_x(p1_idx));
 line_y(p2_idx) = polyval(p2, line_x(p2_idx));
 plot(line_x, line_y, 'r');
 
-xlabel(sprintf('Gaze %s (%s, %s)', EYE.units.gaze.(ax){:}));
+xlabel(sprintf('Gaze %s (%s, %s)', EYE.units.gaze.x{:}));
 ylabel(sprintf('Pupil %s (%s, %s)', EYE.units.pupil{:}));
 
 plot([cutoff cutoff], [min(y) max(y)], 'r:');

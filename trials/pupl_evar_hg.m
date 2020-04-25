@@ -24,6 +24,7 @@ function args = parseargs(varargin)
 args = pupl_args2struct(varargin, {
 	'onsets' []
     'ends' []
+    'idx' []
 });
 
 end
@@ -44,6 +45,18 @@ if isempty(args.ends)
     args.ends = pupl_event_selUI(EYE, 'Which events mark the end of a trial? (Select none to use the event immediately preceding the next trial)');
     if isempty(args.ends)
         return
+    end
+end
+
+if isempty(args.idx)
+    a = questdlg('Add event variable #trial_idx (trial index) to keep track of which events are part of which trials?');
+    switch a
+        case 'Yes'
+            args.idx = true;
+        case 'No'
+            args.idx = false;
+        otherwise
+            return
     end
 end
 
@@ -72,6 +85,9 @@ for trialidx = 1:numel(trial_onsets)
                 [EYE.event(curr_trial_idx).(curr_evar{:})] = deal(var);
             end
         end
+    end
+    if args.idx
+        [EYE.event(curr_trial_idx).trial_idx] = deal(trialidx);
     end
 end
 

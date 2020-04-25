@@ -30,14 +30,14 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.primary)
-    args.primary = pupl_event_UIget([EYE.event], 'Which are the primary events?');
+    args.primary = pupl_event_selUI(EYE, 'Which are the primary events?');
     if isempty(args.primary)
         return
     end
 end
 
 if isempty(args.secondary)
-    args.secondary = pupl_event_UIget([EYE.event], 'Which are the secondary events?');
+    args.secondary = pupl_event_selUI(EYE, 'Which are the secondary events?');
     if isempty(args.secondary)
         return
     end
@@ -107,10 +107,14 @@ if isempty(args.method)
         'Rename primary events'
         'Add an event var to primary events'
     };
-    sel = listdlg(...
+    sel = listdlgregexp(...
         'PromptString', 'What should be done when a higher-order event is found?',...
         'ListString', opts,...
-        'SelectionMode', 'single');
+        'SelectionMode', 'single',...
+        'regexp', false);
+    if isempty(sel)
+        return
+    end
     switch sel
         case 1
             args.method = 'rename';
@@ -144,11 +148,12 @@ if isempty(args.cfg)
                 args.cfg.var = args.cfg.var{:};
                 args.cfg.var = regexprep(args.cfg.var, '#', '');
             end
-            opts = {'Numeric' 'String'};
-            sel = listdlg(...
+            opts = {'numeric' 'string'};
+            sel = listdlgregexp(...
                 'PromptString', sprintf('What type of variable is\n#%s?', args.cfg.var),...
                 'ListString', opts,...
-                'SelectionMode', 'single');
+                'SelectionMode', 'single',...
+                'regexp', false);
             if isempty(sel)
                 return
             else
@@ -213,13 +218,18 @@ for pri_idx = find(primary_matches)
             case 'evar'
                 sec_ev = EYE.event(sec_idx);
                 var = pupl_evar_get(args.cfg.expr, pri_ev, sec_ev);
-                if isnumeric(var)
-                    if strcmp(args.cfg.type, 'String')
+                if ~ischar(var)
+                    if strcmp(args.cfg.type, 'string')
                         var = num2str(var);
+                        if exist('string', 'file') % Convert to string scalar if supported
+                            var = string(var);
+                        end
+                    else
+                        var = double(var);
                     end
-                elseif isstr(var)
-                    if strcmp(args.cfg.type, 'Numeric')
-                        var = str2num(var);
+                else
+                    if strcmp(args.cfg.type, 'numeric')
+                        var = str2double(var);
                     end
                 end
                 EYE.event(pri_idx).(args.cfg.var) = var;

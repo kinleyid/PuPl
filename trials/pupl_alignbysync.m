@@ -1,6 +1,23 @@
 
 function out = pupl_alignbysync(EYE, varargin)
-
+% Align eye data and event logs by sync triggers
+%
+% Inputs
+%   eyesync: cell array
+%       selects sync events in eye data (see pupl_event_sel)
+%   elogsync: cell array
+%       selects sync events in event log (see pupl_event_sel)
+%   attach: cell array
+%       selects events in event log to write to eye data (see
+%       pupl_event_sel)
+%   overwrite: boolean
+%       overwrite event data from eye tracker?
+% Example:
+%   pupl_alignbysync(eye_data,...
+%       'eyesync', {1 'Oemtilde'},...
+%       'elogsync', {1 'sync'},...
+%       'attach', {'AnswerCorrect: 1Response: 1State point' 'AnswerCorrect: 1Response: 2State point' 'AnswerCorrect: 2Response: 1State point' 'AnswerCorrect: 2Response: 2State point' 'AnswerResponse: 1State point' 'AnswerResponse: 2State point' 'Show FixState start' 'Show ResultScreenState start' 'Show SelectionState start'},...
+%       'overwrite', true);
 if nargin == 0
     out = @getargs;
 else
@@ -26,7 +43,7 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.eyesync)
-    args.eyesync = pupl_event_UIget([EYE.event], 'Which events in the eye data are sync markers?');
+    args.eyesync = pupl_event_selUI(EYE, 'Which events in the eye data are sync markers?');
     if isempty(args.eyesync)
         return
     end
@@ -82,7 +99,6 @@ elog_synctimes = [EYE.eventlog.event(elog_sync).time];
 [offset_params, err] = findoffset(eye_synctimes, elog_synctimes);
 
 if isempty(offset_params)
-    EYE = [];
     error('Could not align sync markers');
 else
     fprintf('Sync markers aligned with MSE %f s^2\n', err);
@@ -97,8 +113,23 @@ elog_times = [elog_events.time];
 new_times = num2cell(elog_times * offset_params(1) + offset_params(2));
 [elog_events.time] = new_times{:};
 
-EYE.event = [EYE.event(:)' elog_events(:)'];
+if args.overwrite
+    EYE.event = [];
+    max_uniqid = 0;
+else
+    max_uniqid = max([EYE.event.uniqid]);
+end
 
+curr_events = EYE.event;
+
+% Add new uniqids
+new_ids = 1:numel(elog_events);
+new_ids = num2cell(new_ids + max_uniqid);
+[elog_events.uniqid] = new_ids{:};
+% Append
+[curr_events, elog_events] = fieldconsistency(curr_events, elog_events);
+EYE.event = [curr_events(:)' elog_events(:)'];
+% Sort by time
 [~, I] = sort([EYE.event.time]);
 EYE.event = EYE.event(I);
 

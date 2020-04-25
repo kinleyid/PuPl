@@ -21,6 +21,7 @@ else
 end
 cand_other_times = [EYE.event(cand_other_idx).time];
 other_idx = nan(size(timelocking_idx));
+bad_idx = [];
 for t_idx = 1:numel(timelocking_times)
     curr_t_lat = timelocking_times(t_idx);
     switch other.when
@@ -38,15 +39,23 @@ for t_idx = 1:numel(timelocking_times)
                 doing = 'ending';
         end
         curr_t = EYE.event(timelocking_idx(t_idx));
-        error('No %s-%s event occurs %s timelocking event %s (at %f seconds)',...
+        warning('No %s-%s event occurs %s timelocking event %s (at %f seconds)',...
             span_name,...
             doing,...
             other.when,...
             curr_t.name,...
             curr_t.time)
+        bad_idx(end + 1) = t_idx;
     else
         other_idx(t_idx) = cand_other_idx(o_idx);
     end
+end
+
+timelocking_idx(bad_idx) = [];
+other_idx = other_idx(~isnan(other_idx));
+
+if numel(timelocking_idx) ~= numel(other_idx)
+    error('Number of timelocking event does not match the number of non-timelocking events');
 end
 
 currlims = EYE.srate * parsetimestr(lims, EYE.srate);
