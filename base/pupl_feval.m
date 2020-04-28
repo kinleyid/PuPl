@@ -65,7 +65,7 @@ end
 if macro
     EYE = func(EYE, args{:});
 end
-fprintf('Done\n\n');
+fprintf('Done\n');
 EYE = pupl_check(EYE);
 out = EYE;
 

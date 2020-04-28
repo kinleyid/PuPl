@@ -1,3 +1,4 @@
+
 function pupl_export(EYE, varargin)
 % Export data to a CSV spreadsheet
 %
@@ -86,7 +87,7 @@ if isempty(args.cfg)
         case 'stats'
             while true
                 win = inputdlg({
-                    sprintf('Define statistics time window centred on timelocking events (if left empty, the window start and end default to the beginning and end of epoch, respectively)\n\nWindow start:')
+                    sprintf('Define statistics time window centred on epoch timelocking events (if left empty, the window start and end default to the beginning and end of the epoch, respectively)\n\nWindow start:')
                     'Window end:'
                 });
                 if isempty(win)
@@ -179,7 +180,12 @@ cond_colnames = unique(mergefields(EYE, 'cond')); % Condition membership
 set_colnames = unique(mergefields(EYE, 'epochset', 'name')); % Set membership
 switch args.trialwise
     case per_epoch
-        trial_colnames = {'timelocking_event' 'timelocking_time' 'epoch_idx' 'rejected'};
+        trial_colnames = {
+            'timelocking_event'
+            'timelocking_time'
+            'epoch_idx'
+            'epoch_type'
+            'rejected'}';
         evar_colnames = pupl_evar_getnames(mergefields(EYE, 'event'));
         evar_colnames = evar_colnames(:)';
     otherwise
@@ -199,7 +205,7 @@ all_condmemberships = {};
 all_setmemberships = {};
 all_trialinfo = {};
 all_evars = {};
-all_data = {};
+all_data_rows = {};
 all_epochsets = {};
 % Only used for downsampling:
 all_win_starts = {};
@@ -228,6 +234,7 @@ for dataidx = 1:numel(EYE)
             n_epochs = numel(EYE(dataidx).epoch);
             printprog('setmax', 10);
             last_pct = 0;
+            epoch_selector = [];
             for epochidx = 1:n_epochs
                 % Print progress
                 curr_pct = round(10 * epochidx / n_epochs);
@@ -236,13 +243,15 @@ for dataidx = 1:numel(EYE)
                     last_pct = curr_pct;
                 end
                 % Get epoch info
+                epoch_selector.idx = epochidx;
                 all_info{end + 1} = EYE(dataidx).name;
-                curr_epoch = EYE(dataidx).epoch(epochidx);
-                curr_event = pupl_epoch_get(EYE(dataidx), curr_epoch, '_ev');
+                curr_epoch = pupl_epoch_get(EYE(dataidx), epoch_selector);
+                curr_event = pupl_epoch_get(EYE(dataidx), epoch_selector, '_tl');
                 all_trialinfo(end + 1, :) = {
                     sprintf('"%s"', curr_event.name)
                     curr_event.time
                     epochidx
+                    curr_epoch.name
                     curr_epoch.reject
                 };
                 % Get trial vars
@@ -265,7 +274,7 @@ for dataidx = 1:numel(EYE)
                     % Relative latencies of current epoch:
                     rel_lats = pupl_epoch_get(...
                         EYE(dataidx),...
-                        EYE(dataidx).epoch(epochidx),...
+                        epoch_selector,...
                         '_rel');
                     % Relative latencies of current statistics window:
                     str_win = win{winidx};
@@ -356,10 +365,12 @@ for dataidx = 1:numel(EYE)
         end 
         switch args.which
             case 'downsampled'
+                epoch_selector = [];
+                epoch_selector.idx = collected_epochidx{trialidx, 1};
                 data_type = {'pupil' 'both'};
-                [curr_data, rej, ~, bef_aft, rel_lats] = pupl_epoch_getdata_new(...
+                [curr_data, rej, ~, bef_aft, rel_lats] = pupl_epoch_getdata(...
                     EYE(dataidx),...
-                    collected_epochidx{trialidx, 1},...
+                    epoch_selector,...
                     data_type{:});
                 if numel(bef_aft) > 1
                     if isequal(bef_aft{:})
@@ -408,11 +419,11 @@ for dataidx = 1:numel(EYE)
                         curr_win_ends{end + 1} = rel_lats(curr_win(end));
                     end
                 end
-                all_data{end + 1} = [curr_ds{:}];
+                all_data_rows{end + 1} = [curr_ds{:}];
                 all_win_starts{end + 1} = [curr_win_starts{:}];
                 all_win_ends{end + 1} = [curr_win_ends{:}];
                 if strcmp(bef_aft, 'before')
-                    all_data{end + 1} = fliplr(all_data{end + 1});
+                    all_data_rows{end + 1} = fliplr(all_data_rows{end + 1});
                     all_win_starts{end + 1} = fliplr(all_win_starts{end + 1});
                     all_win_ends{end + 1} = fliplr(all_win_ends{end + 1});
                 end
@@ -420,7 +431,10 @@ for dataidx = 1:numel(EYE)
             case 'stats'
                 % Compute statistics on vector
                 curr_stats = [];
+                epoch_selector = [];
                 for winidx = 1:size(collected_windows, 2)
+                    epoch_selector.idx = collected_epochidx{trialidx, winidx};
+                    cache = []; % Speeds things up a bit
                     for statidx = 1:numel(args.cfg(winidx).stats)
                         statname = args.cfg(winidx).stats{statidx};
                         statoptidx = strcmp(statname, stat_opts(:, 1));
@@ -428,10 +442,21 @@ for dataidx = 1:numel(EYE)
                         if isempty(data_type)
                             data_type = {'pupil' 'both'};
                         end
-                        [curr_data, rej] = pupl_epoch_getdata(...
-                            EYE(dataidx),...
-                            collected_epochidx{trialidx, winidx},...
-                            data_type{:});
+                        if isnonemptyfield(cache, data_type{:})
+                            tmp = getfield(cache, data_type{:});
+                            curr_data = tmp.data;
+                            rej = tmp.rej;
+                        else
+                            [curr_data, rej] = pupl_epoch_getdata(...
+                                EYE(dataidx),...
+                                epoch_selector,...
+                                data_type{:});
+                            tmp = struct(...
+                                'data', {curr_data},...
+                                'rej', {rej});
+                            cache = setfield(cache, data_type{:}, tmp);
+                        end
+                        
                         switch args.trialwise
                             case per_epoch
                                 curr_win = curr_data{1}(collected_windows{trialidx, winidx});
@@ -463,7 +488,7 @@ for dataidx = 1:numel(EYE)
                         curr_stats = [curr_stats curr_stat];
                     end
                 end
-                all_data{end + 1} = curr_stats;
+                all_data_rows{end + 1} = curr_stats;
         end
     end
 end
@@ -476,15 +501,15 @@ switch args.which
         
         srate = EYE(1).srate; % Ensured earlier that sample rates were consistent
         
-        max_cols = max(cellfun(@numel, all_data));
+        max_cols = max(cellfun(@numel, all_data_rows));
 
-        for row_idx = 1:numel(all_data)
-            n_missing = max_cols - numel(all_data{row_idx});
+        for row_idx = 1:numel(all_data_rows)
+            n_missing = max_cols - numel(all_data_rows{row_idx});
             if n_missing > 1
                 new_nans = nan(1, n_missing);
                 switch all_bef_aft{row_idx}
                     case 'before'
-                        all_data{row_idx} = [new_nans all_data{row_idx}];
+                        all_data_rows{row_idx} = [new_nans all_data_rows{row_idx}];
                         
                         win_step = diff(all_win_starts{dataidx}(1:2));
                         
@@ -496,7 +521,7 @@ switch args.which
                         new_ends = (curr_ends(1) - n_missing*win_step) : (curr_ends(1) - win_step);
                         all_win_ends{dataidx} = [new_ends all_win_ends{dataidx}];
                     case 'after'
-                        all_data{row_idx} = [all_data{row_idx} new_nans];
+                        all_data_rows{row_idx} = [all_data_rows{row_idx} new_nans];
                         
                         win_step = diff(all_win_starts{dataidx}(1:2));
                         
@@ -550,7 +575,7 @@ switch args.which
                 else
                     data_colnames = 'pupil_size';
                 end
-                all_data = num2cell([all_data{:}]');
+                all_data_rows = num2cell([all_data_rows{:}]');
         end
     case 'stats'
         data_colnames = {};
@@ -558,7 +583,7 @@ switch args.which
             data_colnames = [data_colnames strcat(args.cfg(ii).name, '_', args.cfg(ii).statsnames)];
         end
 end
-all_data = num2cell(cell2mat(all_data(:)));
+all_data_rows = num2cell(cell2mat(all_data_rows(:)));
 all_info = all_info(:);
 all_setmemberships = num2cell(cell2mat(all_setmemberships(:)));
 all_condmemberships = num2cell(cell2mat(all_condmemberships(:)));
@@ -589,7 +614,7 @@ end
 
 data_table = [
     data_colnames
-    all_data
+    all_data_rows
 ];
 
 if strcmp(args.which, 'downsampled')

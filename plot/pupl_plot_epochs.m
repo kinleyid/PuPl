@@ -63,7 +63,9 @@ end
 
 ud.trialidx = trialidx;
 
-epoch = EYE.epoch(trialidx);
+epoch_selector = [];
+epoch_selector.idx = trialidx;
+epoch = pupl_epoch_get(EYE, epoch_selector);
 
 % Get plot data
 plotinfo = struct(...
@@ -79,8 +81,8 @@ for side = {'left' 'right'}
         plotinfo.data = [
             plotinfo.data
             [
-                pupl_epoch_getdata(EYE, trialidx, 'ur', 'pupil', side{:})
-                pupl_epoch_getdata(EYE, trialidx, 'pupil', side{:})
+                pupl_epoch_getdata(EYE, epoch_selector, 'ur', 'pupil', side{:})
+                pupl_epoch_getdata(EYE, epoch_selector, 'pupil', side{:})
             ]
         ];
         plotinfo.legendentries = [
@@ -101,8 +103,8 @@ for side = {'left' 'right'}
         plotinfo.t = [
             plotinfo.t
             {
-                EYE.ur.times(unfold(pupl_epoch_get(EYE, epoch, '_abs', 'ur')))
-                EYE.times(unfold(pupl_epoch_get(EYE, epoch, '_abs')))
+                EYE.ur.times(unfold(pupl_epoch_get(EYE, epoch_selector, '_abs', 'ur')))
+                EYE.times(unfold(pupl_epoch_get(EYE, epoch_selector, '_abs')))
             }
         ];
         plotinfo.srate = [
@@ -118,7 +120,7 @@ end
 axes(findobj(h, 'Tag', 'axes'));
 cla; hold on
 
-tl_time = pupl_epoch_get(EYE, epoch, 'time');
+tl_time = pupl_epoch_get(EYE, epoch_selector, 'time');
 
 for dataidx = 1:numel(plotinfo.data)
     plot(...
@@ -129,18 +131,19 @@ end
 
 plot(repmat(tl_time, 1, 2), ud.ylims, 'k--');
 
-xlim(EYE.times(pupl_epoch_get(EYE, epoch, '_abs')));
+xlim(EYE.times(pupl_epoch_get(EYE, epoch_selector, '_abs')));
 ylim(ud.ylims);
 xlabel('Time (s)');
-ylabel(pupl_epoch_units(epoch));
+ylabel(pupl_epoch_get(EYE, epoch_selector, '_units'));
 legend(plotinfo.legendentries{:}, 'Timelocking event');
 
 currtitle = sprintf('Epoch %d.', trialidx);
 if epoch.reject
     currtitle = sprintf('%s [REJECTED]', currtitle);
 end
-epoch_name = pupl_epoch_get(ud.EYE, ud.trialidx, 'name');
-currtitle = sprintf('%s\n%s', currtitle, epoch_name{:});
+epoch_name = pupl_epoch_get(ud.EYE, epoch_selector, '_name');
+tl_name = pupl_epoch_get(ud.EYE, epoch_selector, 'name');
+currtitle = sprintf('%s %s\nTimelocking: %s', currtitle, epoch_name{:}, tl_name{:});
 title(currtitle, 'Interpreter', 'none');
 
 set(h, 'UserData', ud)

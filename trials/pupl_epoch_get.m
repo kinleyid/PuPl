@@ -1,91 +1,62 @@
 
-function out = pupl_epoch_get(EYE, sel, varargin)
+function out = pupl_epoch_get(EYE, epoch_selector, varargin)
 % Get attributes of epochs
 %
 % Inputs:
-%   sel
-%       [] <- select all epochs
-%       cell array <- selector (see pupl_epoch_sel)
-%       index <- numerical or logical index
-%       string <- name of epoch set
-%   ctrl
-%       attribute to get
+%   epoch_selector: struct
+%       see pupl_epoch_selector
+%   varargin{1}
+%       attribute to get (if empty, get epoch structs themselves)
+%   varargin{2}
+%       'ur', if computing latency based on undownsampled sample times
 if numel(varargin) == 0
     ctrl = '_'; % Get epochs themselves
 else
     ctrl = varargin{1};
 end
-extra_args = varargin(2:end);
+maybe_ur = varargin(2:end);
 if numel(EYE) > 1
     out = [];
     for dataidx = 1:numel(EYE)
-        out = [out pupl_epoch_get(EYE(dataidx), sel, ctrl, extra_args{:})];
+        out = [out pupl_epoch_get(EYE(dataidx), epoch_selector, ctrl, maybe_ur{:})];
     end
 else
     % From here on, EYE is a single struct
-    if isempty(sel)
-        % Select all epochs
-        sel = true(size(EYE.epoch));
-    elseif isstr(sel)
-        % Epoch set name
-        epochset = EYE.epochset(strcmp({EYE.epochset.name}, sel));
-        sel = epochset.members;
-    end
     
-    if iscell(sel)
-        sel = find(pupl_epoch_sel(EYE, [], sel));
-    end
+    % get epochs
+    epochs = EYE.epoch(pupl_epoch_sel(EYE, epoch_selector));
     
-    if ~isstruct(sel)
-        epochs = EYE.epoch(sel); % Index, logical or numeric
-    else
-        epochs = sel;
-    end
-
     switch ctrl
-        case {'_ev' '_tl'} % Get timelocking events
-            event_ids = [EYE.event.uniqid];
-            idx = nan(1, numel(epochs));
-            for epochidx = 1:numel(epochs)
-                idx(epochidx) = find(event_ids == epochs(epochidx).event);
-            end
+        case {'_tl' '_ev'} % Get timelocking events
+            [~, idx] = ismember([epochs.event], [EYE.event.uniqid]);
             out = EYE.event(idx);
         case '_o' % Get non-timelocking events
-            event_ids = [EYE.event.uniqid];
-            idx = nan(1, numel(epochs));
-            for epochidx = 1:numel(epochs)
-                idx(epochidx) = find(event_ids == epochs(epochidx).other.event);
-            end
+            [~, idx] = ismember(mergefields(epochs, 'other', 'event'), [EYE.event.uniqid]);
             out = EYE.event(idx);
         case {'_abs' '_abslats'}
-            lims = parsetimestr([epochs.lims], getfield(EYE, extra_args{:}, 'srate'), 'smp');
+            lims = parsetimestr([epochs.lims], getfield(EYE, maybe_ur{:}, 'srate'), 'smp');
             lims = reshape(lims, 2, [])';
             lats = nan(numel(epochs), 2);
-            lats(:, 1) = pupl_event_getlat(EYE, pupl_epoch_get(EYE, epochs, '_tl'), extra_args{:});
-            lats(:, 2) = pupl_event_getlat(EYE, pupl_epoch_get(EYE, epochs, '_o'), extra_args{:});
+            lats(:, 1) = pupl_event_getlat(EYE, pupl_epoch_get(EYE, epoch_selector, '_tl'), maybe_ur{:});
+            lats(:, 2) = pupl_event_getlat(EYE, pupl_epoch_get(EYE, epoch_selector, '_o'), maybe_ur{:});
             is_bef = strcmp(mergefields(epochs, 'other', 'when'), 'before');
             lats(is_bef, :) = fliplr(lats(is_bef, :));
             out = lats + lims;
         case {'_rel' '_rellats'}
-            abslats = pupl_epoch_get(EYE, epochs, '_abslats', extra_args{:});
-            t1_lats = pupl_epoch_get(EYE, epochs, '_lat', extra_args{:});
-            out = bsxfun(@minus, abslats, t1_lats(:));
+            abslats = pupl_epoch_get(EYE, epoch_selector, '_abslats', maybe_ur{:});
+            tl_lats = pupl_epoch_get(EYE, epoch_selector, '_lat', maybe_ur{:});
+            out = bsxfun(@minus, abslats, tl_lats(:));
         case '_lat' % Get timelocking event latencies
-            out = pupl_event_getlat(EYE, pupl_epoch_get(EYE, epochs, '_tl'), extra_args{:});
-        case 'name'
+            out = pupl_event_getlat(EYE, pupl_epoch_get(EYE, epoch_selector, '_tl'), maybe_ur{:});
+        case {'_name' '_type'}
             % Some epochs may have their own names
             out = {epochs.name};
-            num_idx = cellfun(@isnumeric, out);
-            if any(num_idx)
-                events = pupl_epoch_get(EYE, epochs(num_idx), '_tl');
-                out(num_idx) = {events.name};
-            end
         case '_units'
             out = pupl_epoch_units(epochs);
         case '_'
             out = epochs;
         otherwise % Get a field from the events
-            events = pupl_epoch_get(EYE, epochs, '_tl');
+            events = pupl_epoch_get(EYE, epoch_selector, '_tl');
             out = mergefields(events, ctrl);
     end
 end

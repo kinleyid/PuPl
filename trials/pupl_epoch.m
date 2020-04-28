@@ -15,7 +15,7 @@ function out = pupl_epoch(EYE, varargin)
 %       that mark their onsets and ends
 %   overwrite: boolean
 %       specifies whether existing epochs should be overwritten
-%   names: string or 0
+%   names: string
 %       specifies the names for epochs
 % Example:
 %   
@@ -47,7 +47,7 @@ args = parseargs(varargin);
 
 if any(arrayfun(@(x) ~isempty(x.epoch), EYE)) && isempty(args.overwrite)
     q = 'Overwrite existing epochs?';
-    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'Yes');
+    a = questdlg(q, q, 'Yes', 'No', 'Cancel', 'No');
     switch a
         case 'Yes'
             args.overwrite = true;
@@ -127,27 +127,20 @@ if isempty(args.lims)
 end
 
 if isempty(args.name)
-    q = 'How should epochs be named?';
-    a = questdlg(q, q, 'Use timelocking event names', 'Use a custom name', 'Cancel', 'Use timelocking event names');
-    switch a
-        case 'Use timelocking event names'
-            args.name = 0;
-        case 'Use a custom name'
-            args.name = inputdlg('Custom name for these epochs:');
-            if isempty(args.name)
-                return
-            else
-                args.name = args.name{:};
-            end
-        otherwise
-            return
+    args.name = inputdlg('Name for these epochs (e.g., baseline, fixation, etc.):');
+    if isempty(args.name)
+        return
+    else
+        args.name = args.name{:};
     end
 end
-if ~isnumeric(args.name)
-    fprintf('Defining epochs called "%s"\n', args.name);
-else
-    fprintf('Defining epochs\n');
+
+existing_names = mergefields(EYE, 'epoch', 'name');
+if ismember(args.name, existing_names)
+    error('An epoch type called "%s" has already been defined', args.name);
 end
+
+fprintf('Defining epochs called "%s"\n', args.name);
 switch args.other.when
     case 'before'
         if isnumeric(args.other.event)
@@ -187,13 +180,14 @@ end
 
 fprintf('Defining epochs...');
 epochs = epoch_(EYE, args.timelocking, args.lims, args.other, 'epoch');
-fprintf('%d epochs defined\n', numel(epochs));
+fprintf('%d new epochs defined, ', numel(epochs));
 [epochs.name] = deal(args.name);
 [epochs.reject] = deal(false);
 [epochs.units] = deal(EYE.units.pupil);
 
 [EYE.epoch, epochs] = fieldconsistency(EYE.epoch, epochs);
 EYE.epoch = [EYE.epoch epochs];
+fprintf('%d epochs defined total\n', numel(EYE.epoch));
 % Sort epochs by onset latency
 fprintf('Sorting epochs by onset time...');
 L = pupl_epoch_get(EYE, [], '_abs');

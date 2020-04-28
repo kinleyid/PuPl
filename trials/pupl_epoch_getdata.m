@@ -3,21 +3,26 @@ function [data, isrej, lims, bef_aft, rel_lats] = pupl_epoch_getdata(EYE, vararg
 % Get epoch data
 %
 % Inputs:
-%   varargin{1}: struct array (epochs), index (numerical index of epochs), empty (all epochs), or string (epochs within a set)
-%   varargin{2:end}: strings to specify which data to access
+%   varargin{1}: struct
+%       see pupl_epoch_selector
+%   varargin(2:end): strings
+%       data fields to get data from
 % Outputs:
 %   out: cell array of 1 x n numeric vectors
 % Example:
 %   pupl_epoch_getdata_new(eye_data,...
-%       [],... <- get from all epochs
-%       'pupil', 'left')
-if isempty(varargin)
-    sel = [];
+%       'filt', {2 '#rt < 0.2'},... <- get epochs where the reaction time is less than 200 ms
+%       'pupil', 'left') % Get left pupil size
+
+if numel(varargin) > 0
+    epoch_selector = varargin{1};
 else
-    sel = varargin{1};
+    epoch_selector = [];
 end
-data_fields = varargin(2:end);
-if isempty(data_fields)
+
+if numel(varargin) > 1
+    data_fields = varargin(2:end);
+else
     data_fields = {'pupil' 'both'};
 end
 
@@ -34,23 +39,27 @@ bef_aft = cell(1, numel(EYE));
 rel_lats = cell(1, numel(EYE));
 
 for dataidx = 1:numel(EYE)
-    epochs = pupl_epoch_get(EYE(dataidx), sel);
+    
+    epochs = pupl_epoch_get(EYE(dataidx), epoch_selector);
+    
+    abslats = pupl_epoch_get(EYE(dataidx), epoch_selector, '_abslats', maybe_ur{:});
+    rellats = pupl_epoch_get(EYE(dataidx), epoch_selector, '_rellats', maybe_ur{:});
     
     if isequal(data_fields, {'pupil' 'both'}) % Compute on the fly
         EYE(dataidx) = pupl_mergelr(EYE(dataidx));
     end
-    all_data = getfield(EYE(dataidx), data_fields{:}); % All data from current recording
+    all_data = getfield(EYE(dataidx), data_fields{:}); % Continuous data from current recording
     
-    curr_data = cell(1, numel(epochs)); % Epoch data from the current recording
+    curr_data = cell(1, numel(epochs)); % Container for epoch data from the current recording
     curr_bef_aft = cell(1, numel(epochs));
     curr_rel_lats = cell(1, numel(epochs));
     for epochidx = 1:numel(epochs)
         % Get data
         curr_epoch = epochs(epochidx);
-        curr_lims = pupl_epoch_get(EYE(dataidx), curr_epoch, '_abs', maybe_ur{:});
+        curr_lims = abslats(epochidx, :);
         curr_data{epochidx} = all_data(curr_lims(1):curr_lims(2));
         curr_bef_aft{epochidx} = curr_epoch.other.when;
-        curr_rel_lats{epochidx} = curr_lims - pupl_epoch_get(EYE(dataidx), curr_epoch, '_lat', maybe_ur{:});
+        curr_rel_lats{epochidx} = rellats(epochidx, :);
         % Baseline correction
         if ismember({'pupil'}, data_fields) && isfield(curr_epoch, 'baseline')
             for b_idx = 1:numel(curr_epoch.baseline)

@@ -1,5 +1,6 @@
 
 function event_lats = pupl_event_getlat(EYE, sel, varargin)
+% Get latency of event
 
 sample_times = getfield(EYE, varargin{:}, 'times');
 

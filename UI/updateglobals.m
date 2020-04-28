@@ -78,6 +78,8 @@ else
 end
 
 % Update the user interface
+fprintf('Redrawing UI...')
 update_UI
+fprintf('done\n');
 
 end

@@ -60,7 +60,7 @@ if isempty(args.setdescriptions)
         else
             currname = currname{:};
         end
-        currmembers = pupl_epoch_selUI(EYE, sprintf('Events in set "%s"', currname));
+        currmembers = pupl_epoch_selUI(EYE, sprintf('Epochs in set "%s"', currname));
         if isempty(currmembers)
             return
         end
@@ -108,10 +108,12 @@ end
 EYE.epochset = [EYE.epochset setdescriptions(:)'];
 if args.verbose
     for setidx = 1:numel(setdescriptions)
-        epochidx = find(pupl_epoch_sel(EYE, [], setdescriptions(setidx).members));
-        fprintf('Set %s contains %d trials\n',...
+        epoch_selector = [];
+        epoch_selector.filt = setdescriptions(setidx).members;
+        epochs = pupl_epoch_get(EYE, epoch_selector);
+        fprintf('Set %s contains %d epochs\n',...
             setdescriptions(setidx).name,...
-            numel(epochidx));
+            numel(epochs));
     end
 end
 

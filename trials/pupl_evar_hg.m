@@ -7,10 +7,14 @@ function out = pupl_evar_hg(EYE, varargin)
 %       selects the events signaling the onsets of trials
 %   ends: cell array (see pupl_events_sel)
 %       selects the events signaling the ends of trials
+%   idx: boolean
+%       specifies whether to add a #trial_idx event variable to keep track
+%       of which epochs are part of which trials
 % Example:
 %   pupl_evar_hg(eye_data,...
 %       'onsets', {1 'Scene'},...
-%       'ends', {1 'Response'});
+%       'ends', {1 'Response'},...
+%       'idx', false);
 if nargin == 0
     out = @getargs;
 else
