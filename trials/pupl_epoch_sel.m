@@ -7,6 +7,9 @@ function idx = pupl_epoch_sel(EYE, epoch_selector)
 %       eye data (single struct, not array)
 %   epoch_selector: struct
 %       see pupl_epoch_selector
+% Output:
+%   idx: logical array
+%       indices of selected epochs
 
 % Input check
 if numel(EYE) > 1

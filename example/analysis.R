@@ -22,11 +22,12 @@ stats_basic$epoch_set <- factor(stats_basic$epoch_set,
                                            'Medium',
                                            'Hard'))
 
-# Anova
-anova(
+# Repeated-measured ANOVA
+summary(
   aov(
     trial_mean ~
-      epoch_set,
+      epoch_set +
+      Error(recording),
     data = stats_basic
   )
 )
@@ -111,16 +112,17 @@ for (curr_col in data_cols) {
   # Create the new column that we will be analyzing
   ds_wide$curr <- ds_wide[, curr_col]
   # Run the anova
-  aov.res <- anova(
+  aov.res <- summary(
     aov(
       curr ~
-        epoch_set,
+        epoch_set +
+        Error(recording),
       data = ds_wide
     )
   )
   # Collect the statistics
-  all_Fs[length(all_Fs) + 1] <- aov.res['epoch_set', 'F value']
-  all_ps[length(all_ps) + 1] <- aov.res['epoch_set', 'Pr(>F)']
+  all_Fs[length(all_Fs) + 1] <- aov.res[['Error: Within']][[1]]['epoch_set', 'F value']
+  all_ps[length(all_ps) + 1] <- aov.res[['Error: Within']][[1]]['epoch_set', 'Pr(>F)']
 }
 
 # Bonferroni-correct the p-values
@@ -129,11 +131,23 @@ all_ps <- all_ps * length(all_ps)
 # Read window times from column names
 # Column names have the following format:
 #   t<window number>_<window start>_<window end>
-# We will use a regular expression to read the window starts
+# We will use a regular expression to read the window numbers, starts, and ends
+win_ns <- as.numeric(
+  stringr::str_match(
+    colnames(ds_wide)[data_cols],
+    't([0-9]+)'
+  )[, 2]
+)
 win_starts <- as.numeric(
   stringr::str_match(
     colnames(ds_wide)[data_cols],
     't[0-9]+_([0-9]+\\.*[0-9]*)'
+  )[, 2]
+)
+win_ends <- as.numeric(
+  stringr::str_match(
+    colnames(ds_wide)[data_cols],
+    't[0-9]+_.*_([0-9]+\\.*[0-9]*)'
   )[, 2]
 )
 
@@ -151,15 +165,19 @@ ggplot2::ggplot(anova_result,
   # Put the non-significant area plot in the background
   ggplot2::geom_area(ggplot2::aes(fill = F)) +
   # Put the significant area plot in the foreground
-  ggplot2::geom_area(data = subset(anova_result, p_value < 0.05),
-                     mapping = ggplot2::aes(fill = T)) +
+  ggplot2::geom_ribbon(ggplot2::aes(ymin = 0,
+                                    ymax = ifelse(
+                                      p_value < 0.05,
+                                      F_value,
+                                      NA),
+                                    fill = T)) +
   # Outline it with a line
   ggplot2::geom_line() +
   # Order the colours so that the warm colour indicates significance
   ggplot2::scale_fill_discrete(name = 'Significance\n(Bonferroni-\ncorrected)',
                                limits = c(T, F),
                                labels = c('p < 0.05', 'p > 0.05')) +
-  ggplot2::labs(x = 'Downsampled window start (s)',
+  ggplot2::labs(x = 'Downsampled window (s)',
                 y = 'F value')
 
 ## Long-format downsampled data
@@ -203,7 +221,7 @@ ggplot2::ggplot(mapping = ggplot2::aes(x = win_start,
                                                                 epoch_set)),
                      alpha = 0.5) +
   # LOESS regression (only for the data later than 5 seconds,
-  # otherwise the smoothing is too dang smooth)
+  # otherwise the smoothing doesn't capture the trend)
   ggplot2::geom_smooth(data = subset(ds_long, win_start > 5),
                        mapping = ggplot2::aes(color = epoch_set),
                        method = loess,
@@ -220,7 +238,18 @@ ggplot2::ggplot() +
                        mapping = ggplot2::aes(x = win_start,
                                               ymin = -400,
                                               ymax = -375,
-                                              fill = p_value < 0.05)) +
+                                              fill = F)) +
+  ggplot2::geom_ribbon(data = anova_result,
+                       mapping = ggplot2::aes(x = win_start,
+                                              ymin = ifelse(
+                                                p_value < 0.05,
+                                                -400,
+                                                NA), # NA values
+                                              ymax = ifelse(
+                                                p_value < 0.05,
+                                                -375,
+                                                NA),
+                                              fill = T)) +
   # Set the fill so that warm colours indicate significance
   ggplot2::scale_fill_discrete(name = 'Significance\n(Bonferroni-\ncorrected)',
                                limits = c(T, F),
