@@ -17,7 +17,7 @@ args = pupl_args2struct(varargin, {
 
 end
 
-function outargs = getargs(EYE, varargin)
+function outargs = getargs(varargin)
 
 outargs = [];
 

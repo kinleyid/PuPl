@@ -45,6 +45,8 @@ end
 
 function EYE = sub_downsample(EYE, varargin)
 
+fprintf('Previous sample rate: %f Hz\n', EYE.srate);
+
 args = parseargs(varargin{:});
 
 % get functions that will perform baseline correction and the new string
@@ -69,5 +71,7 @@ sacc_idx = any(old_interstices == 's', 1);
 new_interstices(sacc_idx) = 's';
 new_interstices(~sacc_idx) = old_interstices(1, ~sacc_idx);
 EYE.interstices = new_interstices;
+
+fprintf('New sample rate: %f Hz\n', EYE.srate);
 
 end

@@ -159,6 +159,9 @@ switch args.method
         if mod(numel(blinkidx), 2) ~= 0
             blinkidx(end) = [];
         end
+        if blinkidx(1) == 0
+            blinkidx(1) = 1;
+        end
         blinkidx = reshape(blinkidx, 2, [])';
         % Go from integer to logical index
         tmp = false(size(pupil));
@@ -302,7 +305,15 @@ function blinks_data_positions = based_noise_blinks_detection(pupil_data, sampli
     blink                 = 1;                         % initialize blink index for iteration
     blinks_data_positions = zeros(size(blinks, 1), 1); % initialize the array of blinks
     prev_offset           = -1;                        % initialize the previous blink offset (in order to detect consecutive sets)    
+    fprintf('%06.2f%%', 0);
+    last_pct = 0;
     while blink < size(blinks, 1)
+        pct = round(100 * blink / size(blinks, 1));
+        if pct > last_pct
+            last_pct = pct;
+            fprintf(repmat('\b', 1, 7));
+            fprintf('%06.2f%%', last_pct);
+        end
         % set the onset candidate
         onset_candidate = blinks(blink);
         if(onset_candidate>0 && blinks(blink) == -blinks(blink+1)) % wrong sorting
@@ -357,6 +368,8 @@ function blinks_data_positions = based_noise_blinks_detection(pupil_data, sampli
         % insert the offset into the result array
         blinks_data_positions(blink-1) = sampling_interval*(blink_offset-1);
     end
+    fprintf(repmat('\b', 1, 7));
+    fprintf('%06.2f%%\n', 100);
     
     %% Removing duplications (in case of consecutive sets): [a, b, b, c] => [a, c] (V3: better removing)
     id = 1;

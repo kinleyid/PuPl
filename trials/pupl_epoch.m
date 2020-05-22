@@ -135,11 +135,12 @@ if isempty(args.name)
     end
 end
 
-existing_names = mergefields(EYE, 'epoch', 'name');
-if ismember(args.name, existing_names)
-    error('An epoch type called "%s" has already been defined', args.name);
+if isnonemptyfield(EYE, 'epoch')
+    existing_names = mergefields(EYE, 'epoch', 'name');
+    if ismember(args.name, existing_names)
+        error('An epoch type called "%s" has already been defined', args.name);
+    end
 end
-
 fprintf('Defining epochs called "%s"\n', args.name);
 switch args.other.when
     case 'before'
@@ -158,7 +159,7 @@ switch args.other.when
         txt = pupl_event_selprint(args.timelocking);
         fprintf('\t%s\n', txt{:});
         if isnumeric(args.other.event)
-            fprintf('Epochs begin at %s relative to the timelocking events:\n', args.lims{1});
+            fprintf('Epochs end at %s relative to the timelocking events\n', args.lims{2});
         else
             fprintf('Epochs end at %s relative to the following events:\n', args.lims{2});
             txt = pupl_event_selprint(args.other.event);

@@ -64,6 +64,17 @@ if isempty(args.idx)
     end
 end
 
+fprintf('Homogenizing event variables within trials...\n');
+fprintf('The following events mark the beginning of a trial:\n');
+txt = pupl_event_selprint(args.onsets);
+fprintf('\t%s\n', txt{:});
+fprintf('The following events mark the end of a trial:\n');
+txt = pupl_event_selprint(args.onsets);
+fprintf('\t%s\n', txt{:});
+if args.idx
+    fprintf('Adding the event variable #trial_idx\n');
+end
+
 outargs = args;
 
 end
