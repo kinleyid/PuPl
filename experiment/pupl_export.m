@@ -304,12 +304,15 @@ for dataidx = 1:numel(EYE)
                 epochidx = pupl_epoch_sel(EYE(dataidx), epoch_selector);
                 % Get epoch info
                 all_info{end + 1} = EYE(dataidx).name;
-                % Compute mean and median of numeric event variables
-                curr_events = pupl_epoch_get(EYE, epochidx, '_ev');
+                % Compute mean and median of numeric event variables for
+                % unrejected epochs
+                curr_epochs = pupl_epoch_get(EYE(dataidx), epoch_selector);
+                curr_events = pupl_epoch_get(EYE(dataidx), epoch_selector, '_ev');
+                curr_events = curr_events(~[curr_epochs.reject]);
                 curr_evars = {};
                 for evar_idx = 1:numel(evar_colnames)
                     curr_evar_contents = [curr_events.(evar_colnames{evar_idx})];
-                    if ~isstr(curr_evar_contents)
+                    if ~iscell(curr_evar_contents)
                         % Compute mean, then median
                         curr_evars{end + 1} = nanmean_bc(curr_evar_contents);
                         curr_evars{end + 1} = nanmedian_bc(curr_evar_contents);
@@ -323,7 +326,7 @@ for dataidx = 1:numel(EYE)
                 % Get set membership
                 all_setmemberships{end + 1} = ismember(set_colnames, curr_set.name);
                 % Get windowed data
-                rel_lats = pupl_epoch_get(EYE(dataidx), EYE(dataidx).epoch(epochidx), '_rel');
+                rel_lats = pupl_epoch_get(EYE(dataidx), epoch_selector, '_rel');
                 rel_lats = [min(rel_lats(:, 1)) max(rel_lats(:, 2))];
                 for winidx = 1:numel(win)
                     str_win = win{winidx};
