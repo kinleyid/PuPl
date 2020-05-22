@@ -189,12 +189,13 @@ switch args.trialwise
         evar_colnames = pupl_evar_getnames(mergefields(EYE, 'event'));
         evar_colnames = evar_colnames(:)';
     otherwise
-        % Figure out which 
+        % Figure out which event variables to compute mean and median on
         all_evar_names = pupl_evar_getnames(mergefields(EYE, 'event'));
         evar_colnames = [];
         for curr_evar_name = all_evar_names
             curr_evar_contents = mergefields(EYE, 'event', curr_evar_name{:});
-            if ~any(@isstr, curr_evar_contents)
+            if ~iscell(curr_evar_contents)
+                % If not a cell, must be numeric
                 evar_colnames = [evar_colnames curr_evar_name];
             end
         end
@@ -299,7 +300,8 @@ for dataidx = 1:numel(EYE)
             for setidx = 1:n_sets
                 curr_set = EYE(dataidx).epochset(setidx);
                 all_epochsets{end + 1} = curr_set.name;
-                epochidx = pupl_epoch_sel(EYE(dataidx), EYE(dataidx).epoch, curr_set.members);
+                epoch_selector = struct('set', curr_set.name);
+                epochidx = pupl_epoch_sel(EYE(dataidx), epoch_selector);
                 % Get epoch info
                 all_info{end + 1} = EYE(dataidx).name;
                 % Compute mean and median of numeric event variables

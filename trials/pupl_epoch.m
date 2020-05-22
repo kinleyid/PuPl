@@ -18,7 +18,15 @@ function out = pupl_epoch(EYE, varargin)
 %   names: string
 %       specifies the names for epochs
 % Example:
-%   
+%   pupl_epoch(eye_data,...
+%       'overwrite', true,...
+%       'lims', {'0s';'29.5s'},...
+%       'len', 'fixed',...
+%       'timelocking', {1 'Scene'},...
+%       'other', struct(...
+%           'when', {'after'},...
+%           'event', {0}),...
+%       'name', 'trial');
 if nargin == 0
     out = @getargs;
 else
@@ -56,6 +64,8 @@ if any(arrayfun(@(x) ~isempty(x.epoch), EYE)) && isempty(args.overwrite)
         otherwise
             return
     end
+else
+    args.overwrite = false;
 end
 
 if isempty(args.timelocking)
@@ -135,7 +145,7 @@ if isempty(args.name)
     end
 end
 
-if isnonemptyfield(EYE, 'epoch')
+if isnonemptyfield(EYE, 'epoch') && ~args.overwrite
     existing_names = mergefields(EYE, 'epoch', 'name');
     if ismember(args.name, existing_names)
         error('An epoch type called "%s" has already been defined', args.name);

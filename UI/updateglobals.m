@@ -78,7 +78,7 @@ else
 end
 
 % Update the user interface
-fprintf('Redrawing UI...')
+fprintf('Rendering UI...')
 update_UI
 fprintf('done\n');
 

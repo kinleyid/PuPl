@@ -24,7 +24,11 @@ else
     % From here on, EYE is a single struct
     
     % get epochs
-    epochs = EYE.epoch(pupl_epoch_sel(EYE, epoch_selector));
+    if iscell(epoch_selector)
+        epochs = epoch_selector{:};
+    else
+        epochs = EYE.epoch(pupl_epoch_sel(EYE, epoch_selector));
+    end
     
     switch ctrl
         case {'_tl' '_ev'} % Get timelocking events

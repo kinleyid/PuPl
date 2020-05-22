@@ -10,8 +10,9 @@ function [data, isrej, lims, bef_aft, rel_lats] = pupl_epoch_getdata(EYE, vararg
 % Outputs:
 %   out: cell array of 1 x n numeric vectors
 % Example:
-%   pupl_epoch_getdata_new(eye_data,...
-%       'filt', {2 '#rt < 0.2'},... <- get epochs where the reaction time is less than 200 ms
+%   pupl_epoch_getdata(eye_data,...
+%       struct(...
+%           'filt', {2 '#rt < 0.2'}),... <- get epochs where the reaction time is less than 200 ms
 %       'pupil', 'left') % Get left pupil size
 
 if numel(varargin) > 0
@@ -66,7 +67,7 @@ for dataidx = 1:numel(EYE)
                 baseline = curr_epoch.baseline(b_idx);
                 corr_func = baseline.func;
                 corr_func = str2func(func2str(corr_func));  % Avoids "undefined function handle" error in r2015
-                baseline_data = pupl_epoch_getdata(EYE(dataidx), baseline, data_fields{:});
+                baseline_data = pupl_epoch_getdata(EYE(dataidx), {baseline}, data_fields{:});
                 curr_data{epochidx} = corr_func(curr_data{epochidx}, baseline_data{:});
             end
         end

@@ -146,7 +146,7 @@ for eventidx = read_from
             tokens = tokens{:};
             for varidx = 1:numel(tokens)
                 var = tokens{varidx};
-                if strcmp(args.type{varidx}, 'numeric')
+                if strcmpi(args.type{varidx}, 'numeric')
                     var = str2double(tokens{varidx});
                 end
                 if ~isempty(var)
@@ -158,7 +158,7 @@ for eventidx = read_from
             var = pupl_evar_eval(args.expr, EYE.event(eventidx));
             var = var{:};
             if ~ischar(var)
-                if strcmp(args.type{1}, 'string')
+                if strcmpi(args.type{1}, 'string')
                     var = num2str(var);
                     if exist('string', 'file') % Convert to string scalar if supported
                         var = string(var);
@@ -167,7 +167,7 @@ for eventidx = read_from
                     var = double(var);
                 end
             else
-                if strcmp(args.type{1}, 'numeric')
+                if strcmpi(args.type{1}, 'numeric')
                     var = str2num(var);
                 end
             end
@@ -178,6 +178,6 @@ for eventidx = read_from
     end
 end
 
-fprintf('%d non-empty event variables read from %d events\n', n_val, numel(read_from));
+fprintf('%d non-empty event variables added to %d events\n', n_val, numel(read_from));
 
 end
