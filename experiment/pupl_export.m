@@ -249,7 +249,7 @@ for dataidx = 1:numel(EYE)
                 curr_epoch = pupl_epoch_get(EYE(dataidx), epoch_selector);
                 curr_event = pupl_epoch_get(EYE(dataidx), epoch_selector, '_tl');
                 all_trialinfo(end + 1, :) = {
-                    sprintf('"%s"', curr_event.name)
+                    curr_event.name
                     curr_event.time
                     epochidx
                     curr_epoch.name
