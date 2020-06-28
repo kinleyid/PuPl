@@ -3,10 +3,10 @@ function selector = pupl_epoch_selector(EYE)
 % Creates a struct to select epochs
 %
 % Input:
-%   EYE (struct)
+%   EYE: struct
 %       eye data
 % Output:
-%   selector (struct)
+%   selector: struct
 %       can be used to select epochs
 % Example:
 %   manually select epochs and get data
@@ -22,6 +22,7 @@ if isempty(filt)
 else
     tmp.filt = filt;
 end
+
 %% Select by epoch type
 type_opts = mergefields(EYE, 'epoch', 'name');
 sel = listdlgregexp(...

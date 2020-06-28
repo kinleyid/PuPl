@@ -46,7 +46,6 @@ callstr = sprintf('%s = %s(%s, %s%s);',....
     pupl_globals.datavarname, mfilename, all2str(urfunc), pupl_globals.datavarname, args_str);
 
 % Apply the function
-fprintf('\t\t');
 if pupl_globals.isoctave
     fprintf('Running %s...\n', func2str(func));
 else
@@ -55,17 +54,17 @@ end
 for dataidx = 1:numel(EYE)
     EYE(dataidx).history{end + 1} = callstr;
     if ~macro
-        fprintf('\t%s...\n', EYE(dataidx).name);
+        fprintf('----Processing recording "%s"...\n', EYE(dataidx).name);
         tmp = func(EYE(dataidx), args{:});
         [tmp, EYE] = fieldconsistency(tmp, EYE);
         EYE(dataidx) = tmp;
-        fprintf('\tdone\n');
+        fprintf('...done\n');
     end
 end
 if macro
     EYE = func(EYE, args{:});
 end
-fprintf('Done\n');
+
 EYE = pupl_check(EYE);
 out = EYE;
 

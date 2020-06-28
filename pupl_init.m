@@ -105,6 +105,8 @@ if ~any(strcmpi(varargin, 'noGlobals'))
                     fprintf('Type "y" or "n"\n');
             end
         end
+    else
+        evalin('base', sprintf('%s = struct([]);', pupl_globals.datavarname));
     end
 end
 

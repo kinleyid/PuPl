@@ -3,11 +3,12 @@ function out = pupl_epoch_get(EYE, epoch_selector, varargin)
 % Get attributes of epochs
 %
 % Inputs:
-%   epoch_selector: struct
-%       see pupl_epoch_selector
-%   varargin{1}
-%       attribute to get (if empty, get epoch structs themselves)
-%   varargin{2}
+%   epoch_selector: struct or cell
+%       if struct: a structure to select epochs (see pupl_epoch_selector)
+%       if cell: a cell containing the epochs themselves
+%   varargin{1}: string
+%       attribute to get (if empty, get epochs themselves)
+%   varargin{2}: optional string
 %       'ur', if computing latency based on undownsampled sample times
 if numel(varargin) == 0
     ctrl = '_'; % Get epochs themselves

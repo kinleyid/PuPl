@@ -41,7 +41,7 @@ args = pupl_args2struct(varargin, {
 
 end
 
-function outargs = getargs(EYE, varargin)
+function outargs = getargs(varargin)
 
 outargs = [];
 args = parseargs(varargin{:});
@@ -131,7 +131,7 @@ if strcmp(args.avfunc, 'median')
     end
 end
 
-fprintf('filter width is %d data points\n', width); 
+fprintf('Filter width is %d data points\n', width); 
 
 switch lower(args.win)
     case 'flat'
@@ -149,7 +149,7 @@ end
 kern = kern + 1; % If zeros in the kernel, the initial fft is weird. It will be normalized later
 
 for stream = reshape(fieldnames(EYE.(args.data)), 1, [])
-    fprintf('\t\tFiltering %s...', stream{:});
+    fprintf('Filtering %s\t', stream{:});
     switch args.avfunc
         case 'median'
             try

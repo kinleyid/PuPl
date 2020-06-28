@@ -226,10 +226,6 @@ end
 nblinks = numel(blinkstarts);
 nmins = EYE.ndata / EYE.srate / 60;
 
-fprintf('According to method "%s":\n', args.method);
-fprintf('\t%f%% of data marked as blinks using this method\n', 100 * nnz(blinkidx) / EYE.ndata);
-fprintf('\t%d blinks in %0.2f minutes of recording (%.2f blinks/min)\n', nblinks, nmins, nblinks/nmins)
-
 if args.overwrite
     EYE.datalabel = repmat(' ', size(EYE.datalabel));
 end
@@ -244,9 +240,8 @@ if any(blinkidx)
     end
 end
 nblinks = numel(blinkstarts);
-fprintf('In total:\n');
-fprintf('\t%f%% of data marked as blinks\n', 100 * nnz(blinkidx) / EYE.ndata);
-fprintf('\t%d blinks in %0.2f minutes of recording (%.2f blinks/min)\n', nblinks, nmins, nblinks/nmins)
+fprintf('%f%% of data marked as blinks\n', 100 * nnz(blinkidx) / EYE.ndata);
+fprintf('%d blinks in %0.2f minutes of recording (%.2f blinks/min)\n', nblinks, nmins, nblinks/nmins)
 
 end
 
@@ -305,7 +300,7 @@ function blinks_data_positions = based_noise_blinks_detection(pupil_data, sampli
     blink                 = 1;                         % initialize blink index for iteration
     blinks_data_positions = zeros(size(blinks, 1), 1); % initialize the array of blinks
     prev_offset           = -1;                        % initialize the previous blink offset (in order to detect consecutive sets)    
-    fprintf('%06.2f%%', 0);
+    fprintf('Progress: %06.2f%%', 0);
     last_pct = 0;
     while blink < size(blinks, 1)
         pct = round(100 * blink / size(blinks, 1));

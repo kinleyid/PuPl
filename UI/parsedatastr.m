@@ -1,8 +1,9 @@
 
-function lim = parsedatastr(cmd, data)
+function res = parsedatastr(cmd, data)
 
 %   Inputs
-% str--something with %, m, sd
+% cmd--string: command to be evaluated
+% data--numerical array: data from which statistics will be computed
 
 % Deal with percentiles
 for x = {'%'}
@@ -20,8 +21,7 @@ for x = {'%'}
     end
 end
 
-subs = {
-    '\$'  @(x) x
+shorthands = {
     '`mu' @nanmean_bc
     '`md' @nanmedian_bc
     '`mn' @min
@@ -32,22 +32,26 @@ subs = {
     '`madv' @medianabsdev
 };
 
-for ii = 1:size(subs, 1)
-    if numel(regexp(cmd, subs{ii, 1})) > 0
-        cmd = strsubconstval(cmd, subs{ii, 1}, all2str(subs{ii, 2}(data)));
+for ii = 1:size(shorthands, 1)
+    if numel(regexp(cmd, shorthands{ii, 1})) > 0
+        cmd = strsubconstval(cmd, shorthands{ii, 1}, all2str(shorthands{ii, 2}(data)));
     end
 end
 
-try
-    lim = eval(cmd);
-catch
-    lim = nan;
+if numel(regexp(cmd, '\$')) > 0
+    cmd = strsubconstval(cmd, '\$', 'data');
 end
 
-if ischar(lim)
-    lim = str2double(lim);
-    if isempty(lim)
-        lim = nan;
+try
+    res = eval(cmd);
+catch
+    res = nan;
+end
+
+if ischar(res)
+    res = str2double(res);
+    if isempty(res)
+        res = nan;
     end
 end
 

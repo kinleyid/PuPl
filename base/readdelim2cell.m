@@ -40,10 +40,11 @@ fseek(fid, endofheader, 'bof');
 txt = fread(fid, 'uint8=>char')';
 fclose(fid);
 
-nrows = nnz(txt == eol);
-if txt(end) ~= eol
-    nrows = nrows + 1;
+% Delete trailing newline
+if strcmp(txt(end-length(eol)+1:end), eol)
+    txt(end-length(eol)+1:end) = [];
 end
+nrows = length(regexp(txt, eol, 'split'));
 
 txt = strrep(txt, eol, d); % Get it all as one line, replacing newlines with delimiters
 if any(txt == q) % Some text is quoted, do it the slow way
@@ -81,8 +82,6 @@ else
     txt = regexp(txt, d, 'split'); % Get cell array
 end
 
-txt(end-mod(numel(txt), nrows)+1:end) = []; % Future source of bugs
-ncols = numel(txt)/nrows;
-out = reshape(txt, ncols, [])';
+out = reshape(txt, [], nrows)';
 
 end

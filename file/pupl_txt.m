@@ -83,7 +83,7 @@ switch file_ctrl
             end
         end
         %% Read event data?
-        if any(ctrl == 'e')
+        if any(type_ctrl == 'e')
             EYE.event = [];
             [p, f] = fileparts(full_path);
             events_path = fullfile(p, sprintf('%s.csv', f));
@@ -91,15 +91,22 @@ switch file_ctrl
                 raw = readdelim2cell(events_path, ',');
                 col_names = raw(1, :);
                 for colidx = 1:numel(col_names)
-                    curr_dat = raw(2:end, colidx);
-                    if isnan(str2double(curr_dat{1}))
-                        curr_dat = [curr_dat{:}];
-                    else
-                        curr_dat = cellstr2num(curr_dat);
-                    end
-                    curr_dat = num2cell(curr_dat(:)');
+                    curr_col = raw(2:end, colidx);
+                    % Check for numerical elements
+                    as_double = cellfun(@str2double, curr_col);
+                    is_double = ~isnan(as_double);
+                    curr_col(is_double) = num2cell(as_double(is_double));
+                    % Check for "NA" or "NAN" and convert these to nan
+                    curr_col(strcmpi(curr_col, 'nan') | strcmpi(curr_col, 'na')) = {nan};
+                    % Check for "true" and "false", convert these to Booleans
+                    curr_col(strcmpi(curr_col, 'true')) = {true};
+                    curr_col(strcmpi(curr_col, 'false')) = {false};
+                    % Check for empties and convert them to double empties
+                    curr_col(cellfun(@isempty, curr_col)) = [];
                     curr_field = col_names{colidx};
-                    [EYE.event.(curr_field)] = curr_dat{:};
+                    for idx = 1:numel(curr_col)
+                        EYE.event(idx).(curr_field) = curr_col{idx};
+                    end
                 end
             end
         end

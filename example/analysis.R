@@ -76,6 +76,7 @@ anova(
   afex::lmer(
     trial_mean ~
       difficulty +
+      epoch_idx +
       (1 | recording),
     data = subset(stats_long, !rejected)
   )
@@ -125,7 +126,7 @@ for (curr_col in data_cols) {
   all_ps[length(all_ps) + 1] <- aov.res[['Error: Within']][[1]]['epoch_set', 'Pr(>F)']
 }
 
-# Bonferroni-correct the p-values
+# Dunn-Bonferroni-correct the p-values
 all_ps <- all_ps * length(all_ps)
 
 # Read window times from column names
@@ -163,22 +164,23 @@ ggplot2::ggplot(anova_result,
                 ggplot2::aes(x = win_start,
                              y = F_value)) +
   # Put the non-significant area plot in the background
-  ggplot2::geom_area(ggplot2::aes(fill = F)) +
+  ggplot2::geom_area(ggplot2::aes(fill = T)) +
   # Put the significant area plot in the foreground
   ggplot2::geom_ribbon(ggplot2::aes(ymin = 0,
                                     ymax = ifelse(
-                                      p_value < 0.05,
+                                      p_value > 0.05,
                                       F_value,
                                       NA),
-                                    fill = T)) +
+                                    fill = F)) +
   # Outline it with a line
   ggplot2::geom_line() +
   # Order the colours so that the warm colour indicates significance
-  ggplot2::scale_fill_discrete(name = 'Significance\n(Bonferroni-\ncorrected)',
+  ggplot2::scale_fill_discrete(name = 'Significance\n(Dunn-\nBonferroni-\ncorrected)',
                                limits = c(T, F),
                                labels = c('p < 0.05', 'p > 0.05')) +
-  ggplot2::labs(x = 'Downsampled window (s)',
-                y = 'F value')
+  ggplot2::labs(x = 'Downsampled window start (s)',
+                y = 'Effect of difficulty (F value from repeated measures ANOVA)') +
+  ggplot2::theme_classic()
 
 ## Long-format downsampled data
 
@@ -197,6 +199,12 @@ ggplot2::ggplot(ds_long,
                 mapping = ggplot2::aes(x = win_start,
                                        y = pupil_diameter,
                                        color = epoch_set)) +
+  # Plot each individual participant's data in the background with some transparency
+  ggplot2::geom_line(data = ds_long,
+                     mapping = ggplot2::aes(color = epoch_set,
+                                            group = interaction(recording,
+                                                                epoch_set)),
+                     alpha = 0.2) +
   # Line plots with ribbons for SEM
   ggplot2::geom_smooth(stat = 'summary',
                        fun.data = function(y) {
@@ -208,7 +216,8 @@ ggplot2::ggplot(ds_long,
                        }) +
   ggplot2::labs(x = 'Downsampled window start (s)',
                 y = 'Pupil diameter (arbitrary units, change from baseline)',
-                color = 'Difficulty')
+                color = 'Difficulty') +
+  ggplot2::theme_classic()
 
 ggplot2::ggplot(mapping = ggplot2::aes(x = win_start,
                                        y = pupil_diameter)) +
@@ -219,7 +228,7 @@ ggplot2::ggplot(mapping = ggplot2::aes(x = win_start,
                      mapping = ggplot2::aes(color = epoch_set,
                                             group = interaction(recording,
                                                                 epoch_set)),
-                     alpha = 0.5) +
+                     alpha = 0.2) +
   # LOESS regression (only for the data later than 5 seconds,
   # otherwise the smoothing doesn't capture the trend)
   ggplot2::geom_smooth(data = subset(ds_long, win_start > 5),
@@ -251,9 +260,16 @@ ggplot2::ggplot() +
                                                 NA),
                                               fill = T)) +
   # Set the fill so that warm colours indicate significance
-  ggplot2::scale_fill_discrete(name = 'Significance\n(Bonferroni-\ncorrected)',
+  ggplot2::scale_fill_discrete(name = 'Significance\n(Dunn-\nBonferroni-\ncorrected)',
                                limits = c(T, F),
                                labels = c('p < 0.05', 'p > 0.05')) +
+  ggplot2::geom_line(data = ds_long,
+                     mapping = ggplot2::aes(x = win_start,
+                                            y = pupil_diameter,
+                                            color = epoch_set,
+                                            group = interaction(recording,
+                                                                epoch_set)),
+                     alpha = 0.2) +
   # Plot the averages again
   ggplot2::geom_smooth(data = ds_long,
                        mapping = ggplot2::aes(x = win_start,
@@ -270,5 +286,6 @@ ggplot2::ggplot() +
   ggplot2::labs(x = 'Downsampled window start (s)',
                 y = 'Pupil diameter (arbitrary units, change from baseline)',
                 color = 'Difficulty',
-                fill = 'Significance')
+                fill = 'Significance') +
+  ggplot2::theme_classic()
 
