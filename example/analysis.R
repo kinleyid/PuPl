@@ -21,7 +21,7 @@ stats_basic$epoch_set <- factor(stats_basic$epoch_set,
                                            'Medium',
                                            'Hard'))
 
-# Repeated-measured ANOVA
+# Repeated-measures ANOVA
 summary(
   aov(
     trial_mean ~
@@ -30,14 +30,16 @@ summary(
     data = stats_basic
   )
 )
-# Linear model, to get estimates of the effects
-summary(
-  lm(
-    trial_mean ~
-      0 +
-      epoch_set,
-    data = stats_basic
-  )
+# Summary table
+aggregate(
+  trial_mean ~ epoch_set,
+  stats_basic, function(x) {
+    c(
+      n = length(x),
+      mean = mean(x),
+      sd = sd(x)
+    )
+  }
 )
 # Visualize
 ggplot(stats_basic,
@@ -72,20 +74,10 @@ stats_long$difficulty <- factor(difficulty,
 
 # Run a mixed effects model
 anova(
-  lmer(
+  m1 <- lmer(
     trial_mean ~
       difficulty +
       epoch_idx +
-      (1 | recording),
-    data = subset(stats_long, !rejected)
-  )
-)
-
-summary(
-  lmer(
-    trial_mean ~
-      0 +
-      difficulty +
       (1 | recording),
     data = subset(stats_long, !rejected)
   )
