@@ -74,7 +74,7 @@ stats_long$difficulty <- factor(difficulty,
 
 # Run a mixed effects model
 anova(
-  m1 <- lmer(
+  lmer(
     trial_mean ~
       difficulty +
       epoch_idx +
