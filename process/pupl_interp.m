@@ -107,7 +107,7 @@ fprintf('interpolating max. %d missing data points\n', currn)
 for field = reshape(fieldnames(EYE.(args.data)), 1, [])
     currv = EYE.(args.data).(field{:}); % Current data vector
     currm = parsedatastr(args.maxdist, currv); % Current max distance
-    fprintf('\t\t%s (max jump %.2f): ', field{:}, currm);
+    fprintf('\t%s (max jump %.2f):\n', field{:}, currm);
     EYE.(args.data).(field{:}) = applyinterpolation(interpfunc, currv, currn, currm);
 end
 
@@ -132,10 +132,11 @@ if ~isempty(s) && ~isempty(e)
     end
 end
 
-fprintf('%0.5f%% of data interpolated\n', 100*nnz(interpidx)/numel(interpidx))
-
+fprintf('Before interpolation, %0.2f%% of data is missing\n', 100*nnz(isnan(v))/numel(v));
+fprintf('%0.2f%% of missing data will interpolated\n', 100*nnz(interpidx)/nnz(isnan(v)));
 w = warning('off', 'all'); % Otherwise ugly warnings about ignoring NaN
 v(interpidx) = f(find(~interpidx), v(~interpidx), find(interpidx) );
 warning(w);
+fprintf('Interpolation complete. After interpolation, %0.2f%% of data is missing\n', 100*nnz(isnan(v))/numel(v));
 
 end

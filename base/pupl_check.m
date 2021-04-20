@@ -1,11 +1,11 @@
 
 function EYE = pupl_check(EYE)
 
-% Ensures that the EYE struct array conforms to this code's expectations
+% Ensures that the global data struct array conforms to PuPl's expectations
 
 global pupl_globals
 
-% Fill in default values
+% Fill in default values for each field of the struct
 defunitstruct = struct(...
     'gaze', struct(...
         'x', {{'x' 'unknown units' 'unknown relative position'}},...
@@ -41,11 +41,13 @@ for defidx = 1:size(defaults, 1)
     end
 end
 
+
+
 for dataidx = 1:numel(EYE)
-    % Set precision
+    % Set numerical precision according to the settings
     EYE(dataidx) = pupl_proc(EYE(dataidx), str2func(pupl_globals.precision), 'all');
     
-    % Set event to row vector
+    % Set event data to row vector (vs column)
     EYE(dataidx).event = EYE(dataidx).event(:)';
     
     baseeventstruct = [];
@@ -109,7 +111,12 @@ for dataidx = 1:numel(EYE)
             nstreams = nstreams + 1;
         end
     end
-    EYE(dataidx).ppnmissing = nmissing / nstreams / EYE(dataidx).ndata;
+    ppnmissing = nmissing / nstreams / EYE(dataidx).ndata;
+    EYE(dataidx).ppnmissing = ppnmissing;
+    if ppnmissing > 0.5
+        warning('PuPl:lotsmissing',...
+            '%.2f%% of pupil size data from "%s" is NaN (missing)', 100*ppnmissing, EYE(dataidx).name)
+    end
 end
 
 end

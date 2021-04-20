@@ -1,6 +1,6 @@
 function array = mergefields(array, varargin)
 
-% Recursively merges fields and their subfields to return a single array
+% Recursively merge fields and their subfields to return a single array
 %   Inputs
 % currArray--struct array
 % varargin--fields to access, in descending order

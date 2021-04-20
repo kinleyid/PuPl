@@ -1,13 +1,13 @@
 
 function pupl_plot_scroll(h, EYE, varargin)
 
+% Generates an ajustable plot of pupil size or gaze data
+
 %% Get data
 
 p = inputParser;
 addParameter(p, 'type', []);
 parse(p, varargin{:});
-
-set(ancestor(h, 'figure'), 'Name', EYE.name);
 
 if isempty(p.Results.type)
     q = 'Plot which type of data?';
@@ -73,13 +73,14 @@ if strcmpi(type, 'pupil')
             ];
         end
     end
-    if n == 3 % Both fields present
+    if n == 3 % Both eyes present in the data, therefore compute and display binocular average
         plotinfo.data{end + 1} = mergelr(EYE);
         plotinfo.colours{end + 1} = 'k';
         plotinfo.legendentries{end + 1} = 'Binocular average';
         plotinfo.t{end + 1} = EYE.times;
         plotinfo.srate{end + 1} = EYE.srate;
     end
+    % Compute y limits
     plotinfo.ylim = [min(structfun(@min, EYE.pupil)) max(structfun(@max, EYE.pupil))];
     % Get blink labels
     if any(EYE.datalabel == 'b')
@@ -194,13 +195,18 @@ set(h, 'UserData', struct(...
         't_scale', get(findobj(h, 'Tag', 't_scale'), 'String'),...
         'slider', 0)));
 
-sub_render(h);
+empty_warn = sub_render(h, true);
+if empty_warn
+    warndlg(sprintf('Data is all NaN (missing) for %s', EYE.name), 'No data!');
+end
 
 end
 
-function sub_render(h)
+function varargout = sub_render(h, varargin)
 
 %% Render data
+
+varargout = {};
 
 ud = get(h, 'UserData');
 
@@ -325,10 +331,21 @@ if get(findobj(h, 'Tag', 'displayevents'), 'Value')
         end
     end
 end
-ylim(plotinfo.ylim);
+
+try
+    ylim(plotinfo.ylim);
+catch
+    if ~isempty(varargin)
+        if varargin{1}
+            varargout{1} = true;
+        end
+    end
+end
+
+if nargout > numel(varargout)
+    varargout{1} = false;
+end
 
 legend(plotinfo.legendentries{:});
-
-
 
 end

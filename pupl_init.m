@@ -26,6 +26,7 @@ pupl_globals.ext = 'pupl'; % The extension to use for saving data files
 n_save = inf; % How many steps to save for undo/redo operations?
 pupl_globals.timeline = struct(...
     'n', n_save,...
+    'txt', {{}},...
     'data', {{'curr'}});
 
 % Is octave?
@@ -55,7 +56,7 @@ end
 if ~any(strcmpi(varargin, 'noweb'))
     fprintf('Checking web for new version...\n\t(use ''pupl init noweb'' to skip this)\n\t');
     try
-        newestVersion = urlread('https://kinleyid.github.io/newest.txt');
+        newestVersion = urlread('https://kinleyid.github.io/pupl/latest-version.txt');
         if ~strcmp(newestVersion, currVersion)
           fprintf('! A new version (%s) is out, download it from github.com/kinleyid/PuPl\n', newestVersion);
         else
@@ -70,8 +71,14 @@ pdir = fileparts(which('pupl'));
 addpath(pdir)
 
 % Add built-in subdirectories
-fprintf('Loading source');
-src_dirs = {'base' 'UI' 'file' 'tools' 'process' 'trials' 'experiment' 'plot' 'edit'};
+fprintf('Adding PuPl''s source code to ');
+if pupl_globals.isoctave
+    fprintf('Octave');
+else
+    fprintf('Matlab');
+end
+fprintf('''s path');
+src_dirs = {'base' 'UI' 'file' 'edit' 'tools' 'prep' 'process' 'trials' 'plot' 'experiment'};
 for src_idx = 1:numel(src_dirs)
     addpath(genpath(fullfile(pdir, src_dirs{src_idx}))) % Add folder and subfolders
     fprintf('.');
@@ -95,7 +102,7 @@ if ~any(strcmpi(varargin, 'noGlobals'))
     evalin('base', sprintf('global %s', pupl_globals.datavarname));
     if ~isempty(evalin('base', pupl_globals.datavarname))
         while true
-            switch input('Overwrite data variable? [y/n] ', 's')
+            switch input(sprintf('Overwrite global data variable "%s"? [y/n] ', pupl_globals.datavarname), 's')
                 case 'y'
                     evalin('base', sprintf('%s = struct([]);', pupl_globals.datavarname));
                     break

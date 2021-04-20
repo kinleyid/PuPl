@@ -1,12 +1,18 @@
 
 function out = pupl_feval(urfunc, EYE, varargin)
 
+% Runs a processing function and records it in the processing history
+
 if iscell(urfunc)
     macro = true; % Function takes entire array, not just a single struct
     func = urfunc{:};
 else
     macro = false;
     func = urfunc;
+end
+
+if ischar(func)
+    func = str2func(func);
 end
 
 % Get arguments
@@ -46,11 +52,14 @@ callstr = sprintf('%s = %s(%s, %s%s);',....
     pupl_globals.datavarname, mfilename, all2str(urfunc), pupl_globals.datavarname, args_str);
 
 % Apply the function
-if pupl_globals.isoctave
-    fprintf('Running %s...\n', func2str(func));
-else
+if ~pupl_globals.isoctave
+    % Matlab can display a clickable hyperlink to the source file
     fprintf('Running <a href="matlab:edit %s">%s</a>...\n', func2str(func), func2str(func));
+else
+    % Octave cannot
+    fprintf('Running %s...\n', func2str(func));
 end
+
 for dataidx = 1:numel(EYE)
     EYE(dataidx).history{end + 1} = callstr;
     if ~macro
@@ -61,6 +70,7 @@ for dataidx = 1:numel(EYE)
         fprintf('...done\n');
     end
 end
+
 if macro
     EYE = func(EYE, args{:});
 end

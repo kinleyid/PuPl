@@ -4,17 +4,25 @@ function pupl_PFE_surface(a, EYE, varargin)
 ngrid = 32;
 boxcar = 0.5;
 
-[surface, x, y] = compute_surface(EYE, ngrid, boxcar);
+any_data = EYE.ppnmissing < 1;
+if any_data
+    [surface, x_grid, y_grid] = compute_surface(EYE, ngrid, boxcar);
+else
+    surface = nan;
+    x_grid = 0;
+    y_grid = 0;
+end
 
 axes(a);
 if any(strcmpi(varargin, 'density'))
+    % DEPRECATED
     title('Measured dilation by gaze coordinates')
-    image(x, y, density,...
+    image(x_grid, y_grid, density,...
         'CDataMapping', 'scaled');
     cbarLabel = 'N. data points';
 elseif any(strcmpi(varargin, 'error'))
     title('Measured dilation by gaze coordinates')
-    im = image(x, y, surface,...
+    im = image(x_grid, y_grid, surface,...
         'CDataMapping', 'scaled');
     try
         set(im, 'AlphaData', ~isnan(surface))
@@ -27,6 +35,10 @@ ylabel(sprintf('Gaze %s (%s, %s)', EYE.units.gaze.y{:}));
 c = colorbar;
 l = get(c, 'Label');
 set(l, 'String', cbarLabel);
+
+if ~any_data
+    warndlg(sprintf('No data for %s', EYE.name), 'No data!');
+end
 
 end
 

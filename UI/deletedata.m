@@ -23,6 +23,6 @@ end
 UserData.activeEyeDataIdx(rmidx) = [];
 set(pupl_globals.UI, 'UserData', UserData);
 
-updateglobals(rmidx, @() [], 1);
+updateglobals(rmidx, @() [], 1, true, 'remove data');
 
 end

@@ -1,6 +1,8 @@
 
 function EYE = pupl_proc(EYE, func, varargin)
 
+% Apply a function to each field
+
 if isempty(varargin)
     fields1 = {'pupil'};
 else

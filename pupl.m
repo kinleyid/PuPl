@@ -2,7 +2,7 @@ function pupl(varargin)
 % Interface to several functions
 %
 % Command line arguments:
-%   init: initialize PuPl
+%   init: initialize PuPl (see pupl_init)
 %   history: print processing history
 %   redraw: redraw the user interface
 %   [settings/globals]: print the global settings
@@ -32,6 +32,18 @@ else
             fprintf('%s\n', fileparts(mfilename('fullpath')));
         case {'save' 'cache'}
             pupl_timeline('a', evalin('base', pupl_globals.datavarname));
+        case 'install'
+            % Add PuPl's path when Matlab/Octave starts up
+            pupl_path = fileparts(mfilename('fullpath'));
+            args = {'\naddpath(''%s''); %% add PuPl''s path \n' pupl_path}; % args to fprintf
+            if pupl_globals.isoctave
+                startup_file = fullfile('~', '.octaverc');
+            else
+                startup_file = fullfile(userpath, 'startup.m');
+            end
+            fid = fopen(startup_file, 'a');
+            fprintf(fid, args{:});
+            fclose(fid);
         otherwise
             pupl_init(args{:});
     end

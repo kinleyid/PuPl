@@ -4,9 +4,12 @@ function [B, Rsq, df, Yhat_nan] = nanlm(Y, varargin)
 % 
 % Usage:
 % [coeff, Rsq, df] = nanlm(y, x1, x2, ...)
+
+% Get x and y as columns
 Y = Y(:);
 X = cellfun(@(x) x(:), varargin, 'UniformOutput', false);
 urX = cat(2, ones(size(Y)), X{:});
+% Identify and exclude any incomplete rows
 bad_idx = isnan(Y) | (sum(isnan(urX), 2) > 0);
 Y = Y(~bad_idx);
 X = urX(~bad_idx, :);

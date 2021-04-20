@@ -1,6 +1,6 @@
 
 function out = pupl_epoch(EYE, varargin)
-% Pupulates the eye_data.epoch field
+% Define epochs
 %
 % Inputs:
 %   len: string ('fixed' or 'variable')
@@ -17,6 +17,8 @@ function out = pupl_epoch(EYE, varargin)
 %       specifies whether existing epochs should be overwritten
 %   names: string
 %       specifies the names for epochs
+% Output:
+%   eye_data, with .epoch field populated
 % Example:
 %   pupl_epoch(eye_data,...
 %       'overwrite', true,...

@@ -1,5 +1,5 @@
 
-function [sample_times, event_times, event_lats] = processtimestamps(sample_times, event_times, srate)
+function [sample_times, event_times] = processtimestamps(sample_times, event_times, srate)
 
 sp = 1000/srate;
 % Set first timestamp to 0

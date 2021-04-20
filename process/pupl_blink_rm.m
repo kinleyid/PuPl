@@ -1,6 +1,6 @@
 
 function out = pupl_blink_rm(EYE, varargin)
-% Remove blink and, optionally, blink-adjacent samples
+% Remove blink/blink-adjacent samples
 %
 % Inputs:
 %   trim: 2-element cell array of strings

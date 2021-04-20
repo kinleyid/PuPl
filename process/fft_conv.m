@@ -1,13 +1,23 @@
 
 function data = fft_conv(data, win, varargin)
 
+% FFT-based convolution
+%
+% Inputs:
+%   data: array
+%       data to be filtered
+%   win: array
+%       kernel to be convolved with the data
+%   varargin:
+%       {1}: 'omitnan'
+%           Omit NaN values
+
 if isempty(varargin)
     omitnan = false;
 elseif strcmp(varargin{1}, 'omitnan')
     omitnan = true;
 end
 
-% FFT-based convolution, ignoring NaNs
 nwin = numel(win);
 nconv = nwin + numel(data) - 1;
 wasnan = isnan(data);

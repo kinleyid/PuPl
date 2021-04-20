@@ -4,7 +4,7 @@ function out = pupl_cat(EYE, varargin)
 %
 % Inputs:
 %   sel: cell array
-%      each element selects a block of recordings
+%       each element selects a block of recordings
 %   ev_suffix: cellstr
 %       each element is a suffix for a the events in a different block
 %   rec_suffiv: cellstr

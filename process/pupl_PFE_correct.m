@@ -30,7 +30,7 @@ args = pupl_args2struct(varargin, {
 
 end
 
-function outargs = getargs(EYE, varargin)
+function outargs = getargs(varargin)
 
 outargs = [];
 args = parseargs(varargin{:});
@@ -97,8 +97,18 @@ for side = {'left' 'right'}
     pfe = numerator ./ denominator;
     badidx = pfe < args.minfac;
     pfe(badidx) = nan;
+    % Check if variance is increased
+    var_pre = nanvar_bc(EYE.pupil.(side{:}));
     % Correct for PFE
     EYE.pupil.(side{:}) = EYE.pupil.(side{:}) ./ pfe;
+    var_post = nanvar_bc(EYE.pupil.(side{:}));
+    var_pct_change = (var_post / var_pre - 1)*100;
+    if var_pct_change > 0
+        Warning('PuPl:PFE:varincrease',...
+            'Variance in pupil size increased by %.2f%%. You should inspect the data to make sure PFE correction has not introduced distortions.'\n', abs(var_pct_change));
+    else
+        fprintf('Variance in pupil size decreased by %.2f%%\n', abs(var_pct_change));
+    end
 end
 
 end

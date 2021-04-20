@@ -1,13 +1,16 @@
 
-function pupl_plot_sizehist(f, EYE)
+function pupl_plot_gap_durs(f, EYE)
 
 % Plot a histogram of gap durations
 eye_names = fieldnames(EYE.pupil);
 n_eyes = numel(eye_names);
 data = cell(1, n_eyes);
 for eye_idx = 1:n_eyes
-    data{eye_idx} = EYE.pupil.(eye_names{eye_idx});
-    data{eye_idx} = data{eye_idx}(:)';
+    db = diff([0 isnan(EYE.pupil.(eye_names{eye_idx})) 0]);
+    blink_starts = find(db == 1);
+    blink_ends = find(db == -1);
+    blink_durs = blink_ends - blink_starts; % in samples
+    data{eye_idx} = blink_durs / EYE.srate * 1000; % in ms
 end
 
 a = 0.4;
@@ -35,7 +38,7 @@ try
 end
 % Get rid of little starts along the x axis
 set(findobj(gca, 'Type', 'line'), 'Marker', 'none');
-xlabel('Blink duration')
+xlabel('Gap duration')
 ylabel('Data count')
 legend(h, eye_names{:});
 

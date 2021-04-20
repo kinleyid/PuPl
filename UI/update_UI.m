@@ -56,13 +56,41 @@ for panelidx = 1:numel(children)
 end
 set(userInterface, 'UserData', UserData);
 
-%% Inactivate or activate UI menu elements on the basis of whether
+%% Activate or deactivate UI menu elements
 
 allMenus = findobj('parent', userInterface);
 
 for currMenu = reshape(allMenus, 1, [])
     recursiveupdatemenu(currMenu);
 end
+
+%% Update text of undo/redo buttons
+
+timeline_idx = find(strcmp(pupl_globals.timeline.data, 'curr'));
+undo_idx = timeline_idx - 1;
+redo_idx = undo_idx + 1;
+
+if undo_idx == 0
+    undo_txt = '';
+else
+    undo_txt = sprintf(' %s', pupl_globals.timeline.txt{undo_idx});
+end
+undo_txt = regexprep(undo_txt, 'pupl_', '');
+undo_txt = regexprep(undo_txt, '_', ' ');
+undo_button = findobj(pupl_globals.UI, 'Tag', 'undo');
+set(undo_button, 'Label', sprintf('&Undo%s', undo_txt));
+
+if redo_idx > numel(pupl_globals.timeline.txt)
+    redo_txt = '';
+else
+    redo_txt = sprintf(' %s', pupl_globals.timeline.txt{redo_idx});
+end
+redo_txt = regexprep(redo_txt, 'pupl_', '');
+redo_txt = regexprep(redo_txt, '_', ' ');
+undo_button = findobj(pupl_globals.UI, 'Tag', 'redo');
+set(undo_button, 'Label', sprintf('&Redo%s', redo_txt));
+
+%% Redraw the UI
 
 set(userInterface, 'Visible', 'off');
 set(userInterface, 'Visible', 'on');

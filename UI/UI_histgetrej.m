@@ -1,5 +1,4 @@
 function lims = UI_histgetrej(data, varargin)
-
 % Data will be a cell array
 
 if ~iscell(data)
@@ -26,21 +25,28 @@ axes(...
     'NextPlot', 'add');
 p = uipanel(f,...
     'Units', 'normalized',...
-    'Position', [0.01 0.01 0.48 0.08]);
+    'Title', 'Lower cutoff',...
+    'Position', [0.01 0.01 0.23 0.08]);
+UI_adjust(p);
 uicontrol(p,...
     'Style', 'edit',...
     'Tag', 'lower',...
+    'TooltipString', pupl_gettooltip('datastr'),...
     'Callback', @(h,e) updateplot(f),...
-    'String', 'lower cutoff',...
     'Units', 'normalized',...
-    'Position', [0.01 0.01 0.48 0.98]);
+    'Position', [0.01 0.01 0.98 0.98]);
+p = uipanel(f,...
+    'Units', 'normalized',...
+    'Title', 'Upper cutoff',...
+    'Position', [0.25 0.01 0.23 0.08]);
+UI_adjust(p);
 uicontrol(p,...
     'Style', 'edit',...
     'Tag', 'upper',...
+    'TooltipString', pupl_gettooltip('datastr'),...
     'Callback', @(h,e) updateplot(f),...
-    'String', 'upper cutoff',...
     'Units', 'normalized',...
-    'Position', [0.51 0.01 0.48 0.98]);
+    'Position', [0.01 0.01 0.98 0.98]);
 p = uipanel(f,...
     'Units', 'normalized',...
     'Position', [0.51 0.01 0.48 0.08]);
@@ -84,11 +90,16 @@ n = 4*log2(numel(alldata));
 x1 = min(alldata);
 x2 = max(alldata);
 bins = [x1:(x2-x1)/(n-1):x2 x2+(x2-x1)/(n-1)];
-
+if any(isnan(bins)) % All data is missing
+    bins = 10; % Same value as histf. Shouldn't matter anyway, as nothing will be displayed.
+end
+% Generate histograms
+lims = {}; % <- keep track of cutoffs
 for dataidx = 1:numel(ud.data)
     data = ud.data{dataidx};
     badidx = false(size(data));
-
+    
+    lims{dataidx} = [];
     for limType = {'lower' 'upper'}
         currLim = parsedatastr(getlim(f, limType), data);
         if strcmp(limType, 'lower')
@@ -96,15 +107,47 @@ for dataidx = 1:numel(ud.data)
         else
             badidx = badidx | data >= currLim;
         end
+        lims{dataidx} = [lims{dataidx} currLim];
     end
-
-    histf(data(~badidx), bins, 'EdgeColor', 'w', 'FaceAlpha', 0.5);
-    % set(findobj(gca,'Type','line'), 'Marker', 'none');
+    hist(data(~badidx), bins);
+    % Keep track of the order in which the hists were added
+    patches = findobj(gca, 'Type', 'patch');
+    for patch_idx = 1:numel(patches)
+        if isempty(get(patches(patch_idx), 'UserData'))
+            set(patches(patch_idx), 'UserData', dataidx);
+        end
+    end
 end
+% Record prior xlims and ylims
+pre_xlim = xlim;
+pre_ylim = ylim;
+% Set alpha and colours
+patches = findobj(gca, 'Type', 'patch');
+set(patches, 'EdgeColor', 'w');
+try
+    alpha(patches, 0.4);
+end
+npatches = numel(patches);
+colours = lines(npatches);
+for patch_idx = 1:npatches
+    data_idx = get(patches(patch_idx), 'UserData');
+    set(patches(patch_idx), 'FaceColor', colours(data_idx, :));
+    % Plot cutoffs
+    for cutoff_idx = 1:2
+        p = plot(lims{data_idx}([cutoff_idx cutoff_idx]), [0 pre_ylim(2)/2], '--');
+        set(p, 'Color', colours(data_idx, :));
+    end
+end
+% Restore x lims and y lims, in case they were changed by line plots
+xlim(pre_xlim);
+ylim(pre_ylim);
+% Get rid of little starts along the x axis
+set(findobj(gca, 'Type', 'line'), 'Marker', 'none');
+% Set labels
 xlabel(ud.args.dataname);
 ylabel('Count');
 if ~isempty(ud.args.names)
-    legend(ud.args.names, 'Interpreter', 'none');
+    legend(patches, ud.args.names, 'Interpreter', 'none');
 end
 title(sprintf('%0.2f%% would be trimmed', 100*nnz(badidx)/numel(badidx)));
 

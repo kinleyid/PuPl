@@ -1,6 +1,6 @@
 
 function out = pupl_filt(EYE, varargin)
-% Filter pupil size or gaze data
+% Filter pupil size or gaze data by moving average
 %
 % Inputs:
 %   data: string ('pupil' or 'gaze')
@@ -117,7 +117,7 @@ function EYE = sub_filt(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-width = parsetimestr(args.width, EYE.srate, 'smp');
+width = parsetimestr(args.width, EYE.srate, 'smp'); % Window width in samples
 
 if strcmp(args.avfunc, 'median')
     if mod(width, 2) == 0
@@ -144,6 +144,32 @@ switch lower(args.win)
         sd = args.cfg.sd;
         x = linspace(-sd, sd, width);
         kern = 1 / sqrt(2*pi) * exp( -x.^2 / 2 );
+    case 'flattop'
+        L = width;
+        n = 0:L-1;
+        a0 = 0.21557895;
+        a1 = 0.41663158;
+        a2 = 0.277263158;
+        a3 = 0.083578947;
+        a4 = 0.006947368;
+        kern = ...
+            a0...
+            - a1*cos(2*pi*n/(L-1))...
+            + a2*cos(4*pi*n/(L-1))...
+            - a3*cos(6*pi*n/(L-1))...
+            + a4*cos(8*pi*n/(L-1));
+    case 'blackman'
+        L = width;
+        if mod(L, 2) == 0
+            M = width/2;
+        else
+            M = (width + 1)/2;
+        end
+        n = 0:M-1;
+        a0 = 7938/18608;
+        a1 = 9240/18608;
+        a2 = 1430/18608;
+        kern = a0 - a1*cos(2*pi*n/(L-1)) + a2*cos(2*pi*n/(L-1));
 end
 
 kern = kern + 1; % If zeros in the kernel, the initial fft is weird. It will be normalized later

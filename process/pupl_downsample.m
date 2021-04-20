@@ -30,7 +30,7 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.fac)
-    args.fac = inputdlg('Downsample by what factor? (Integers only)');
+    args.fac = inputdlg(sprintf('Downsample by what factor? (Integers only)\n\nThis is the factor by which the sample rate is divided.\nE.g. if your data was recorded at 1000 Hz, downsampling by a factor of 4 produces a new sample rate of 250 Hz.'));
     if isempty(args.fac)
         return
     else

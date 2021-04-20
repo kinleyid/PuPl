@@ -1,7 +1,19 @@
 
 function idx = ic_fft(lg, n, varargin)
 
-% Identify consecutive
+% Identify consecutive TRUEs in a logical array using FFT
+%
+% Inputs:
+%   lg: logical array
+%   n: integer
+%       see below
+%   varargin{1}: string
+%       'most' (default): identify islands of at MOST n consecutive TRUEs
+%       'least': identify islands of at LEAST n consecutive TRUEs
+% Example:
+%   x = [true(1, 10) false(1, 5) true(1, 9)];
+%   ic_fft(x, 9, 'most')
+%   ic_fft(x, 10, 'least')
 
 if numel(varargin) == 1
     t = varargin{1};

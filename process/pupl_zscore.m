@@ -1,6 +1,6 @@
 
 function out = pupl_zscore(EYE)
-% Z-score pupil size data across entire recording
+% Z-score pupil size data
 %
 % Example:
 %   pupl_zscore(eye_data)

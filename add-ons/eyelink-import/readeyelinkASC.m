@@ -99,7 +99,7 @@ EYE.srate = srate;
 sample_times = datamat(1, :);
 EYE.t1 = sample_times(1);
 [sample_times, event_times] = processtimestamps(sample_times, event_times, srate);
-EYE.times = sample_times;
+EYE.times = sample_times/1000   ;
 
 %% Get units
 

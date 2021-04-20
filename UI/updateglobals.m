@@ -5,7 +5,9 @@ function updateglobals(idx, func, outputidx, varargin)
 % idx--logical or integer array or 'append'/'a' or 'write'/'w'
 % func--function handle or data
 % outputidx--which serial output of func to use
-% varargin--update the timeline? true by default
+% varargin
+%   {1} update the undo/redo timeline? true by default
+%   {2} text to add to the undo/redo timeline
 
 global pupl_globals
 
@@ -37,7 +39,12 @@ else
         update_timeline = true;
     end
     if update_timeline
-        pupl_timeline('a', old_data);
+        if numel(varargin) > 1
+            timeline_txt = varargin{2};
+        else
+            timeline_txt = 'undefined operation';
+        end
+        pupl_timeline('a', old_data, timeline_txt);
     end
     
     % Make sure the new structs are consistent with the old ones

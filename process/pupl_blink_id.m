@@ -1,6 +1,6 @@
 
 function out = pupl_blink_id(EYE, varargin)
-% Identify blinks according to one of a number of criteria
+% Identify blinks
 %
 % Inputs:
 %   method: string
@@ -156,11 +156,13 @@ switch args.method
     case 'noise'
         pupil(isnan(pupil)) = 0;
         blinkidx = based_noise_blinks_detection(pupil(:), EYE.srate);
-        if mod(numel(blinkidx), 2) ~= 0
-            blinkidx(end) = [];
-        end
-        if blinkidx(1) == 0
-            blinkidx(1) = 1;
+        if numel(blinkidx) > 0
+            if mod(numel(blinkidx), 2) ~= 0
+                blinkidx(end) = [];
+            end
+            if blinkidx(1) == 0
+                blinkidx(1) = 1;
+            end
         end
         blinkidx = reshape(blinkidx, 2, [])';
         % Go from integer to logical index

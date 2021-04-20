@@ -49,16 +49,36 @@ if isempty(args.filepath) % Get path
                 args.filepath = strcat(directory, cellstr(filenames));
             case 2
                 args.filepath = cell(1, numel(EYE));
-                directory = '';
-                for dataidx = 1:numel(EYE)
-                    [filename, directory] = uigetfile([directory args.filefilt],...
-                        sprintf('Event log for %s', EYE(dataidx).name),...
-                        'MultiSelect', 'off');
-                    if isnumeric(filename)
-                        EYE = 0;
-                        return
-                    end
-                    args.filepath{dataidx} = fullfile(directory, filename);
+                a = questdlg('Import event logs one by one?');
+                switch lower(a)
+                    case 'yes'
+                        directory = '';
+                        for dataidx = 1:numel(EYE)
+                            [filename, directory] = uigetfile([directory args.filefilt],...
+                                sprintf('Event log for %s', EYE(dataidx).name),...
+                                'MultiSelect', 'off');
+                            if isnumeric(filename)
+                                EYE = 0;
+                                return
+                            end
+                            args.filepath{dataidx} = fullfile(directory, filename);
+                        end
+                    case 'no'
+                        [filenames, directory] = uigetfile(args.filefilt,...
+                            'Select event logs',...
+                            'MultiSelect', 'on');
+                        if isnumeric(filenames)
+                            EYE = 0;
+                            return
+                        end
+                        if numel(filenames) ~= numel(EYE)
+                            warning('PuPl:eventlognumber',...
+                                'Number of selected event logs (%d) does not match number of recordings (%d)',...
+                                numel(filenames),...
+                                numel(EYE));
+                        end
+                        msgbox('Read the console output to make sure there is a correct correspondence between event logs and recordings');
+                        args.filepath = fullfile(directory, filenames);
                 end
         end
     end
@@ -100,8 +120,8 @@ else
         if isempty(filepath{dataidx})
             continue
         end
-        [~, fname] = fileparts(filepath{dataidx});
-        fprintf('Loading %s...', fname);
+        [~, fname, ext] = fileparts(filepath{dataidx});
+        fprintf('Loading %s%s...', fname, ext);
         
         % Load data
         if args.native

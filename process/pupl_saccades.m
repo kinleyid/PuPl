@@ -1,8 +1,9 @@
+function out = pupl_saccades(EYE, varargin)
+% Identify saccades/fixations
+
 % Salvucci, D. D., & Goldberg, J. H. (2000, November). Identifying
 % fixations and saccades in eye-tracking protocols. In Proceedings of the
 % 2000 symposium on Eye tracking research & applications (pp. 71-78). ACM.
-
-function out = pupl_saccades(EYE, varargin)
 
 if nargin == 0
     out = @getargs;
@@ -29,7 +30,7 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.overwrite)
-    if any(mergefields(EYE, 'interstices') ~= ' ')
+    if any([EYE.interstices] ~= ' ')
         a = questdlg('Overwrite previous interstitial labels?');
         switch a
             case 'Yes'
@@ -55,6 +56,7 @@ if isempty(args.cfg)
         case 'velocity'
             data = arrayfun(@velocity, EYE, 'UniformOutput', false);
             args.cfg.thresh = UI_cdfgetrej([data{:}],...
+                'threshname', 'Gaze velocity',...
                 'outcomename', 'marked as saccades');
             if isempty(args.cfg.thresh)
                 return

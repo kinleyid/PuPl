@@ -1,5 +1,6 @@
 
 function out = pupl_trim_pupil(EYE, varargin)
+% Trim pupil size outliers
 
 if nargin == 0
     out = @getargs;
