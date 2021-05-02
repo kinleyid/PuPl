@@ -60,7 +60,7 @@ if ~any(strcmpi(varargin, 'noweb'))
         if ~strcmp(newestVersion, currVersion)
           fprintf('! A new version (%s) is out, download it from github.com/kinleyid/PuPl\n', newestVersion);
         else
-          fprintf('You are using the latest version\n');
+          fprintf('You are using the latest version: %s\n', currVersion);
         end
     catch
         fprintf('Error\n');
@@ -129,17 +129,22 @@ end
 if ~any(strcmpi(varargin, 'noAddOns'))
     fprintf('Loading add-ons:\n');
     addonsfolder = fullfile(pdir, 'add-ons');
-    folderContents = dir(addonsfolder);
-    for currFolder = reshape(folderContents([folderContents.isdir]), 1, [])
+    addonfolders = dir(addonsfolder);
+    for currFolder = reshape(addonfolders([addonfolders.isdir]), 1, [])
         if ~any(strcmp(currFolder.name, {'.' '..'}))
             fprintf('\t%s...', currFolder.name);
             addpath(genpath(fullfile(addonsfolder, currFolder.name)));
-            initfile = fullfile(addonsfolder, currFolder.name, 'init.m');
-            if exist(initfile, 'file')
-                run(initfile)
-                clear('init')
+            initfolder = fullfile(addonsfolder, currFolder.name, 'init');
+            if exist(initfolder, 'dir')
+                initfile = fullfile(initfolder, 'init.m');
+                if exist(initfile, 'file')
+                    run(initfile)
+                    rmpath(initfolder);
+                else
+                    fprintf('did not find expected file %s', initfile)
+                end
             else
-                fprintf('did not find expected file %s', initfile)
+                fprintf('did not find expected folder %s', initfolder)
             end
             fprintf('\n')
         end
