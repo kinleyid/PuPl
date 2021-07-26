@@ -1,6 +1,6 @@
 
 function out = pupl_filt(EYE, varargin)
-% Filter pupil size or gaze data by moving average
+% Filter by moving average
 %
 % Inputs:
 %   data: string ('pupil' or 'gaze')

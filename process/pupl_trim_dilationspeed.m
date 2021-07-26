@@ -1,6 +1,6 @@
 
 function out = pupl_trim_dilationspeed(EYE, varargin)
-% Trims data based on dilation speed
+% Trim data based on dilation speed
 %
 % Citation:
 % Kret, M. E., & Sjak-Shie, E. E. (2019). Preprocessing pupil size data:
@@ -46,7 +46,7 @@ if isempty(args.thresh)
     end
     args.thresh = UI_cdfgetrej(alld,...
         'threshname', 'Dilation speed',...
-        'defthresh', '`md + 5`madv',...
+        'defthresh', '`md + n`madv',...
         'names', allnames);
     if isempty(args.thresh)
         return

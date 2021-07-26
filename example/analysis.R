@@ -6,14 +6,12 @@ library(stringr)
 rm(list = ls())
 
 # Change this variable based on where you unzipped the Git repo
-proj_path <- file.path('C:', 'Users', 'isaac', 'Projects', 'pupl-worked-example')
-
-exp_path <- file.path(proj_path, 'export')
+eg_path <- file.path('C:', 'Users', 'isaac', 'Projects', 'PuPl', 'example')
 
 ## Standard analysis
 
 # Load the data
-stats_basic <- read.csv(file.path(exp_path, 'stats-basic.csv'))
+stats_basic <- read.csv(file.path(eg_path, 'stats-basic.csv'))
 
 # Order the difficulty factor
 stats_basic$epoch_set <- factor(stats_basic$epoch_set,
@@ -58,7 +56,7 @@ ggplot(stats_basic,
 ## Mixed effects analysis
 
 # Load the data
-stats_long <- read.csv(file.path(exp_path, 'stats-long.csv'))
+stats_long <- read.csv(file.path(eg_path, 'stats-long.csv'))
 
 # Convert difficulty from a design matrix to a single factor
 difficulty <- rep(NA, nrow(stats_long))

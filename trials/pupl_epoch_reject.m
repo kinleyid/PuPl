@@ -1,6 +1,6 @@
 
 function out = pupl_epoch_reject(EYE, varargin)
-% Reject epochs according to one of a number of criteria
+% Reject epochs
 %
 % Inputs:
 %   method: string
@@ -71,7 +71,7 @@ if isempty(args.cfg)
             else
                 args.cfg.thresh = thresh;
             end
-        case 'extremepupil'
+        case 'max'
             units = sprintf('%s (%s, %s)', EYE(1).units.epoch{:});
             if numel(EYE) > 1
                 tmp = [EYE.units];
@@ -80,10 +80,29 @@ if isempty(args.cfg)
                 end
             end
             thresh = UI_cdfgetrej(...
-                arrayfun(@(e) cellfun(@(x) max(abs(x)), pupl_epoch_getdata(e)), EYE, 'UniformOutput', false),...
+                arrayfun(@(e) cellfun(@(x) max(x), pupl_epoch_getdata(e)), EYE, 'UniformOutput', false),...
                 'names', {EYE.name},...
                 'dataname', 'epochs',...
-                'threshname', sprintf('Max abs. pupil %s in epoch', units));
+                'threshname', sprintf('Max. pupil %s in epoch', units));
+            if isempty(thresh)
+                return
+            else
+                args.cfg.thresh = thresh;
+            end
+        case 'min'
+            units = sprintf('%s (%s, %s)', EYE(1).units.epoch{:});
+            if numel(EYE) > 1
+                tmp = [EYE.units];
+                if ~isequal(tmp.epoch)
+                    units = 'size';
+                end
+            end
+            thresh = UI_cdfgetrej(...
+                arrayfun(@(e) cellfun(@(x) min(x), pupl_epoch_getdata(e)), EYE, 'UniformOutput', false),...
+                'func', @le,...
+                'names', {EYE.name},...
+                'dataname', 'epochs',...
+                'threshname', sprintf('Min. pupil %s in epoch', units));
             if isempty(thresh)
                 return
             else
@@ -111,7 +130,7 @@ if isempty(args.cfg)
             end
             args.cfg.thresh = thresh;
         case 'event'
-            args.cfg.sel = pupl_epoch_selUI(EYE, 'Reject which epochs?');
+            args.cfg.sel = pupl_UI_select(EYE, 'type', 'epoch', 'prompt', 'Reject which epochs?');
             if isempty(args.cfg.sel)
                 return
             end
@@ -128,7 +147,7 @@ if isempty(args.cfg)
             end
         case 'mad'
             thresh = UI_cdfgetrej(...
-                arrayfun(@(e) cellfun(@(x) nanmedian_bc(nanmedian_bc(x) - x), pupl_epoch_getdata(e, [])), EYE, 'UniformOutput', false),...
+                arrayfun(@(e) cellfun(@(x) nanmedian_bc(abs(nanmedian_bc(x) - x)), pupl_epoch_getdata(e)), EYE, 'UniformOutput', false),...
                 'names', {EYE.name},...
                 'dataname', 'epochs',...
                 'threshname', 'Median absolute deviation');
@@ -163,9 +182,12 @@ switch args.method
     case 'ppnmissing'
         data = cellfun(@(x) nnz(isnan(x))/numel(x), pupl_epoch_getdata(EYE));
         rejidx = data > parsedatastr(args.cfg.thresh, data);
-    case 'extremepupil'
-        data = cellfun(@(x) max(abs(x)), pupl_epoch_getdata(EYE));
+    case 'max'
+        data = cellfun(@(x) max(x), pupl_epoch_getdata(EYE));
         rejidx = data > parsedatastr(args.cfg.thresh, data);
+    case 'min'
+        data = cellfun(@(x) min(x), pupl_epoch_getdata(EYE));
+        rejidx = data < parsedatastr(args.cfg.thresh, data);
     case 'blink'
         data = cellfun(@(x) nnz(diff(x == 'b') == 1), pupl_epoch_getdata(EYE, [], 'datalabel'));
         rejidx = data > parsedatastr(args.cfg.thresh, data);

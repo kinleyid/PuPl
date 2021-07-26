@@ -39,14 +39,14 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.onsets)
-    args.onsets = pupl_event_selUI(EYE, 'Which events mark the onset of a trial?');
+    args.onsets = pupl_UI_select(EYE, 'prompt', 'Which events mark the onset of a trial?');
     if isempty(args.onsets)
         return
     end
 end
 
 if isempty(args.ends)
-    args.ends = pupl_event_selUI(EYE, 'Which events mark the end of a trial? (Select none to use the event immediately preceding the next trial)');
+    args.ends = pupl_UI_select(EYE, 'prompt', 'Which events mark the end of a trial? (Select none to use the event immediately preceding the next trial)');
     if isempty(args.ends)
         return
     end

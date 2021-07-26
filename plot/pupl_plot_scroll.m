@@ -250,7 +250,7 @@ elseif ~strcmp(new_t_scale, ud.scale.t_scale)
     end
     set(t_scale_edit, 'String', sprintf('%ss', num2str(t_scale)));
     % Slider value is set in part by t scale, so adjust:
-    set(slider, 'Value', min(0, (t_start - t_min) / (t_max - t_scale - t_min)));
+    set(slider, 'Value', (t_start - t_min) / (t_max - t_scale - t_min));
 else
     t_start = parsetimestr(ud.scale.t_start, ud.EYE.srate);
     t_scale = parsetimestr(ud.scale.t_scale, ud.EYE.srate);
@@ -291,45 +291,7 @@ switch ud.type
 end
 if get(findobj(h, 'Tag', 'displayevents'), 'Value')
     % Display events
-    if ~isempty(ud.EYE.event)
-        event_times = [ud.EYE.event.time];
-        currevents = find(event_times >= t_win(1) & event_times <= t_win(2));
-        cont = true;
-        warn_events = 100;
-        if numel(currevents) > warn_events
-            q = sprintf('Attempt to display over %d events?', warn_events);
-            a = questdlg(q, q, 'Yes', 'No', 'No');
-            if strcmp(a, 'Yes')
-                cont = true;
-            else
-                cont = false;
-            end
-        end
-        if cont
-            % Jitter Y location in case many events occur in rapid
-            % succession
-            spn = 0.8; % Y-axis span
-            n = 15; % Max events to draw before restarting from top of span
-            for idx = 1:numel(currevents)
-                eventIdx = currevents(idx);
-                t = ud.EYE.event(eventIdx).time;
-                plot(repmat(t, 1, 2), plotinfo.ylim, 'k');
-                currYlims = plotinfo.ylim;
-                yLoc = double(currYlims(1) + abs(diff(currYlims)) * (spn - mod(currevents(idx), n) * spn / n));
-                txt = ud.EYE.event(eventIdx).name;
-                try
-                    text(t, yLoc, txt,...
-                        'FontSize', 8,...
-                        'Rotation', 10,...
-                        'Interpreter', 'none');
-                catch
-                    text(t, yLoc, ud.EYE.event(eventIdx).name,...
-                        'FontSize', 8,...
-                        'Rotation', 10);
-                end
-            end
-        end
-    end
+    pupl_plot_events(ud.EYE, t_win, plotinfo.ylim);
 end
 
 try

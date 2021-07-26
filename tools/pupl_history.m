@@ -21,7 +21,7 @@ if numel(varargin) > 0 % Save to script file
         fullpath = [varargin{:}];
     end
     fprintf('Saving processing history to %s...', fullpath);
-    fid = fopen(fullpath, 'wt');
+    fid = fopen(fullpath, 'w');
 else
     fid = 1;
 end

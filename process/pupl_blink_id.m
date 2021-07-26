@@ -90,10 +90,16 @@ if isempty(args.cfg)
         case 'noise'
             % No configuration necessary
         case 'velocity'
+            smooth_len = inputdlg({'Smoothing window length'}, '', 1, {'11ms'});
+            if isempty(smooth_len)
+                return
+            end
+            smooth_len = smooth_len{:};
             vel = cell(size(EYE));
             for dataidx = 1:numel(EYE)
-                EYE(dataidx).pupil.both = mergelr(EYE(dataidx));
-                vel{dataidx} = diff(EYE(dataidx).pupil.both);
+                samples2smooth = parsetimestr(smooth_len, EYE(dataidx).srate, 'smp');
+                smooth_data = fft_conv(mergelr(EYE(dataidx)), ones(samples2smooth, 1));
+                vel{dataidx} = diff(smooth_data);
             end
             onset_lim = UI_cdfgetrej(vel,...
                 'dataname', 'dilation velocity samples',...
@@ -113,14 +119,10 @@ if isempty(args.cfg)
             if isempty(offset_lim)
                 return
             end
-            max_len = inputdlg('Max blink length', '', 1, {'400ms'});
-            if isempty(max_len)
-                return
-            end
             args.cfg = struct(...
                 'onset_lim', onset_lim,... 
                 'offset_lim', offset_lim,...
-                'max_len', max_len);
+                'smooth_len', smooth_len);
     end
 end
 
@@ -132,8 +134,8 @@ switch args.method
     case 'velocity'
         fprintf('Identifying blinks by dilation velocity (method "velocity").\n');
         fprintf('Blinks begin when dilation velocity becomes less than or equal to %s\n', args.cfg.onset_lim);
-        fprintf('Blinks end when dilation velocity becomes greater than or equal to %s\n', args.cfg.offset_lim);
-        fprintf('Blinks are constrained to a max length of %s\n', args.cfg.max_len);
+        fprintf('Reversal periods begin when dilation velocity becomes greater than or equal to %s\n', args.cfg.offset_lim);
+        fprintf('Blinks end when dilation velocity becomes less than or equal to 0\n');
 end
 
 outargs = args;
@@ -172,11 +174,13 @@ switch args.method
         end
         blinkidx = tmp;
     case 'velocity'
-        vel = diff(pupil);
+        samples2smooth = parsetimestr(args.cfg.smooth_len, EYE.srate, 'smp');
+        smooth_data = fft_conv(pupil, ones(samples2smooth, 1));
+        vel = diff(smooth_data);
         onset_lim = parsedatastr(args.cfg.onset_lim, vel);
         offset_lim = parsedatastr(args.cfg.offset_lim, vel);
-        max_len = parsetimestr(args.cfg.max_len, EYE.srate, 'smp');
-        blinkidx = false(size(pupil));
+        blinkidx = false(size(smooth_data));
+        stts = 'null'; % Status--null, onset, reversal, offset
         isblink = false;
         si = 0; % Sample index
         while true
@@ -185,29 +189,24 @@ switch args.method
             else
                 si = si + 1;
             end
-            
-            if vel(si) <= onset_lim
-                if ~isblink
-                    onsetidx = si + 1; % The point that was jumped to
-                end
-                isblink = true; % A new blink has begun
-            elseif vel(si) >= offset_lim
-                % Find latest offset sample
-                while true
-                    if si == numel(vel) || vel(si) < offset_lim
-                        si = si - 1; % Go back to when the threshold was exceeded
-                        break
-                    else
-                        si = si + 1;
+            switch stts
+                case 'null'
+                    % Check if first limit is exceeded
+                    if vel(si) <= onset_lim
+                        onsetidx = si + 1; % The point that was jumped to
+                        stts = 'onset';
                     end
-                end
-                if isblink % Onset already occured, therefore this is a reversal
-                    offsetidx = si;
-                    if offsetidx - onsetidx - 1 < max_len
+                case 'onset'
+                    if vel(si) >= offset_lim
+                        stts = 'reversal';
+                    end
+                case 'reversal'
+                    if vel(si) <= 0
+                        % Offset
+                        offsetidx = si + 1;
                         blinkidx(onsetidx:offsetidx) = true;
+                        stts = 'null';
                     end
-                    isblink = false;
-                end
             end
         end
 end

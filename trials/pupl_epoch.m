@@ -71,7 +71,7 @@ else
 end
 
 if isempty(args.timelocking)
-    args.timelocking = pupl_event_selUI(EYE, 'Which are the timelocking events?');
+    args.timelocking = pupl_UI_select(EYE, 'prompt', 'Which are the timelocking events?');
     if isempty(args.timelocking)
         return
     end

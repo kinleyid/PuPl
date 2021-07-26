@@ -28,9 +28,10 @@ if numel(side_indic) == 1
 end
 for fi = 1:size(fields, 1)
     for si = 1:numel(sides)
-        % Check if eye present
-        EYE = setfield(EYE, fields{fi, 1}{:}, sides{si},...
-            edf.FSAMPLE.(fields{fi, 2}{:})(si, :));
+        vec = edf.FSAMPLE.(fields{fi, 2}{:})(si, :);
+        % Replace missing data with nan
+        vec(vec == single(-32768)) = nan;
+        EYE = setfield(EYE, fields{fi, 1}{:}, sides{si}, vec);
     end
 end
 % Get sample rate

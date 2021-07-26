@@ -30,14 +30,14 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.primary)
-    args.primary = pupl_event_selUI(EYE, 'Which are the primary events?');
+    args.primary = pupl_UI_select(EYE, 'prompt', 'Which are the primary events?');
     if isempty(args.primary)
         return
     end
 end
 
 if isempty(args.secondary)
-    args.secondary = pupl_event_selUI(EYE, 'Which are the secondary events?');
+    args.secondary = pupl_UI_select(EYE, 'prompt', 'Which are the secondary events?');
     if isempty(args.secondary)
         return
     end

@@ -25,13 +25,11 @@ f = figure(...
     'UserData', struct(...
         'data', {data},...
         'args', {args}));
-axes(...
-    'Parent', f,...
+p = uipanel(f);
+axes(p,...
     'Tag', 'axis',...
     'Units', 'normalized',...
     'Position', [0.11 0.21 0.78 0.68]);
-p = uipanel(...
-    );
 UI_adjust(p);
 uicontrol(p,...
     'Style', 'edit',...
@@ -83,6 +81,7 @@ else
     lims = ud.args.lims;
 end
 
+n_violating = nan(1, numel(ud.data));
 for dataidx = 1:numel(ud.data)
     data = ud.data{dataidx};
     data = data(~isnan(data));
@@ -91,7 +90,9 @@ for dataidx = 1:numel(ud.data)
 
     thresholds = linspace(lims(1), lims(2), 1000);   
     ppnViolating = sum(bsxfun(ud.args.func, data(:), thresholds))/numel(data);
-    currPpnViolating = nnz(ud.args.func(data, currThreshold))/numel(data);
+    curr_n_violating = nnz(ud.args.func(data, currThreshold));
+    n_violating(dataidx) = curr_n_violating;
+    currPpnViolating = curr_n_violating/numel(data);
     p = plot(thresholds, ppnViolating);
     c = get(p, 'Color');
     plot(repmat(currThreshold, 1, 2), [0 1], '--', 'Color', c, 'HandleVisibility', 'off')
@@ -108,7 +109,11 @@ nmissing = sum(cellfun(@(x) nnz(ud.args.func(x, currThreshold)), ud.data));
 ntotal = sum(cellfun(@numel, ud.data));
 title(sprintf('%d %s (%.2f%%) would be %s', nmissing, ud.args.dataname, 100*nmissing/ntotal, ud.args.outcomename));
 if ~isempty(ud.args.names)
-    legend(ud.args.names, 'Interpreter', 'none');
+    leg_ents = cell(1, numel(ud.args.names));
+    for ii = 1:numel(leg_ents)
+        leg_ents{ii} = sprintf('%s (%d %s)', ud.args.names{ii}, n_violating(ii), ud.args.outcomename);
+    end
+    legend(leg_ents, 'Interpreter', 'none');
 end
 
 hold('off');

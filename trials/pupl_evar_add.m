@@ -70,7 +70,7 @@ if isempty(args.method)
 end
 
 if isempty(args.sel)
-    args.sel = pupl_event_selUI(EYE, 'Add event variables to which events?');
+    args.sel = pupl_UI_select(EYE, 'prompt', 'Add event variables to which events?');
     if isempty(args.sel)
         return
     end

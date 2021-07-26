@@ -60,6 +60,12 @@ else
             out = pupl_epoch_units(epochs);
         case '_'
             out = epochs;
+        case {'_base' '_baseline'}
+            if isfield(epochs, 'baseline')
+                out = [epochs.baseline];
+            else
+                out = [];
+            end
         otherwise % Get a field from the events
             events = pupl_epoch_get(EYE, epoch_selector, '_tl');
             out = mergefields(events, ctrl);

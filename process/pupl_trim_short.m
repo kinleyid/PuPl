@@ -1,6 +1,6 @@
 
 function out = pupl_trim_short(EYE, varargin)
-% Trim short "islands" of isolated data
+% Trim isolated data
 %
 % Citation:
 % Kret, M. E., & Sjak-Shie, E. E. (2019). Preprocessing pupil size data:
@@ -49,7 +49,7 @@ end
 
 if isempty(args.septhresh)
     prompt = sprintf('Trim islands of data shorter than or equal to %s AND at least this far from the nearest other datapoint:', args.lenthresh);
-    septhresh = inputdlg(prompt, prompt, [1 50], {'10ms'});
+    septhresh = inputdlg(prompt, prompt, [1 50], {'40ms'});
     if isempty(septhresh)
         return
     end

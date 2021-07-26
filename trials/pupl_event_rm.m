@@ -23,7 +23,7 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.sel)
-    args.sel = pupl_event_UIget([EYE.event], 'Delete which events?');
+    args.sel = pupl_UI_select(EYE, 'prompt', 'Delete which events?');
     if isempty(args.sel)
         return
     end

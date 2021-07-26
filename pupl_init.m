@@ -14,6 +14,8 @@ currVersion = '1.0.0';
 fprintf('PuPl, version %s\n', currVersion);
 
 global pupl_globals
+% Pupl's root file
+pupl_globals.pupl_root = fileparts(mfilename('fullpath'));
 if ~isfield(pupl_globals, 'UI')
     pupl_globals.UI = []; % The handle to the GUI is stored here
 end
