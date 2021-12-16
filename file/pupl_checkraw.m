@@ -10,12 +10,29 @@ args = pupl_args2struct(varargin, {
 
 if isfield(data, 'event')
     data.event = data.event(:)';
+    for ii = 1:numel(data.event)
+        if ~ischar(data.event(ii).name)
+            data.event(ii).name = num2str(data.event(ii).name);
+        end
+    end
 end
 
 if isfield(data, 'pupil')
     ur = [];
     for f = {'pupil' 'gaze' 'times' 'srate'}
         ur.(f{:}) = data.(f{:});
+    end
+    % Check if the original data has separate left and right eye streams
+    % for gaze coordinates--if not, assume both eyes are looking at the
+    % same place
+    for gaze_coord = {'x' 'y'}
+        coord_data = getfield(ur, 'gaze', gaze_coord{:});
+        if ~isstruct(coord_data)
+            ur = setfield(ur, 'gaze', gaze_coord{:}, []);
+            for side = {'left' 'right'}
+                ur = setfield(ur, 'gaze', gaze_coord{:}, side{:}, coord_data);
+            end
+        end
     end
     data.ur = ur;
     % Assign unique ID's to events
