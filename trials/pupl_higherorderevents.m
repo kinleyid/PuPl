@@ -30,14 +30,14 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.primary)
-    args.primary = pupl_UI_select(EYE, 'prompt', 'Which are the primary events?');
+    args.primary = pupl_UI_event_select(EYE, 'prompt', 'Which are the primary events?');
     if isempty(args.primary)
         return
     end
 end
 
 if isempty(args.secondary)
-    args.secondary = pupl_UI_select(EYE, 'prompt', 'Which are the secondary events?');
+    args.secondary = pupl_UI_event_select(EYE, 'prompt', 'Which are the secondary events?');
     if isempty(args.secondary)
         return
     end
@@ -175,11 +175,11 @@ if ~strcmp([args.lims{:}], 'none')
 else
     tlims = [];
 end
-primary_matches = pupl_event_sel(EYE.event, args.primary);
+primary_matches = pupl_event_select(EYE.event, args.primary);
 n_found = 0;
 for pri_idx = find(primary_matches)
     pri_ev = EYE.event(pri_idx);
-    sec_idx = pupl_event_sel(EYE.event, args.secondary);
+    sec_idx = pupl_event_select(EYE.event, args.secondary);
     % Time window filter
     if ~isempty(tlims)
         primary_time = pri_ev.time;

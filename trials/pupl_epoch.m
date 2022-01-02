@@ -5,7 +5,7 @@ function out = pupl_epoch(EYE, varargin)
 % Inputs:
 %   len: string ('fixed' or 'variable')
 %       specifies whether epochs are fixed-length or variable-length
-%   timelocking: cell array (see pupl-event_sel)
+%   timelocking: cell array (see pupl_event_select)
 %       specifies the timelocking events
 %   other: cell array
 %       specifies the non-timelocking event and whether it comes before or
@@ -71,7 +71,7 @@ else
 end
 
 if isempty(args.timelocking)
-    args.timelocking = pupl_UI_select(EYE, 'prompt', 'Which are the timelocking events?');
+    args.timelocking = pupl_UI_event_select(EYE, 'prompt', 'Which are the timelocking events?');
     if isempty(args.timelocking)
         return
     end

@@ -2,7 +2,7 @@ function out = pupl_normalize_rm(EYE, varargin)
 % Undo nornalization
 %
 % Inputs:
-%   epoch: cell array (see pupl_event_sel)
+%   epoch: cell array (see pupl_epoch_sel)
 %       selects the epochs to no longer normalize
 % Example:
 %   pupl_normalize_rm(eye_data,

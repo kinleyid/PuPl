@@ -2,7 +2,7 @@ function out = pupl_baseline(EYE, varargin)
 % Define baselines
 %
 % Inputs:
-%   epoch: cell array (see pupl_event_sel)
+%   epoch: struct (see pupl_event_select)
 %       selects the epochs to baseline correct
 %   correction: string
 %       specifies the type of correction
@@ -13,7 +13,7 @@ function out = pupl_baseline(EYE, varargin)
 %   when: string or numeric
 %       specifies whether baseline periods occur before or after epochs, if
 %       applicable
-%   timelocking: cell array (see pupl_event_sel)
+%   timelocking: struct (see pupl_event_select)
 %       selects the "timelocking" events for the baseline periods, if
 %       applicable
 %   lims: cellstr
@@ -62,7 +62,7 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.epoch)
-    args.epoch = pupl_UI_select(...
+    args.epoch = pupl_UI_event_select(...
         EYE,...
         'type', 'epoch',...
         'prompt',...
@@ -283,7 +283,7 @@ switch args.mapping
             baselines = [baselines cand_baselines(baseline_idx)];
         end
     case 'one:all'
-        tl_idx = find(pupl_event_sel(EYE.event, args.timelocking));
+        tl_idx = find(pupl_event_select(EYE.event, args.timelocking));
         tl_idx = tl_idx(1);
         tl_ev = EYE.event(tl_idx);
         baseline = epoch_(EYE, tl_ev.uniqid, args.lims, args.other, 'baseline');

@@ -1,5 +1,6 @@
 
 function out = pupl_event_rm(EYE, varargin)
+% Remove events
 
 if nargin == 0
     out = @getargs;
@@ -23,7 +24,7 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.sel)
-    args.sel = pupl_UI_select(EYE, 'prompt', 'Delete which events?');
+    args.sel = pupl_UI_event_select(EYE, 'prompt', 'Delete which events?');
     if isempty(args.sel)
         return
     end
@@ -41,7 +42,7 @@ function EYE = sub_event_rm(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-rm_idx = pupl_event_sel(EYE.event, args.sel);
+rm_idx = pupl_event_select(EYE.event, args.sel);
 
 EYE.event(rm_idx) = [];
 

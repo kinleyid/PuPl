@@ -3,8 +3,8 @@ function out = pupl_alignbytimestamp(EYE, varargin)
 % Align eye tracker data and event logs by timestamps
 %
 % Inputs:
-%   attach: cell array
-%       selects the events to add from the event log (see pupl_event_sel)
+%   attach: struct
+%       selects the events to add from the event log (see pupl_event_select)
 %   overwrite: boolean
 %       specifies whether eye tracker event data should be deleted
 if nargin == 0
@@ -31,11 +31,9 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.attach)
-    unique_types = unique(mergefields(EYE, 'eventlog', 'event', 'name'));
-    [~, sel] = listdlgregexp(...
-        'PromptString', 'Which events from the event log should be attached to the eye data?',...
-        'ListString', unique_types,...
-        'AllowRegexp', true);
+    sel = pupl_UI_event_select(EYE,...
+        'prompt', 'Which events from the event log should be attached to the eye data?',...
+        'from_log', true);
     if isempty(sel)
         return
     else
@@ -64,8 +62,7 @@ function EYE = sub_align(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-event_idx = regexpsel(mergefields(EYE, 'eventlog', 'event', 'name'), args.attach);
-
+event_idx = pupl_event_select(mergefields(EYE, 'eventlog', 'event'), args.attach);
 if args.overwrite
     EYE.event = [];
     max_uniqid = 0;

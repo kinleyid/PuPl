@@ -35,13 +35,18 @@ if ~isempty(epoch_selector)
     
     if isfield(epoch_selector, 'filt')
         % Select by event filter
-        idx = idx & pupl_event_sel(timelocking_events, epoch_selector.filt);
+        idx = idx & pupl_event_select(timelocking_events, epoch_selector.filt);
     end
     
     if isfield(epoch_selector, 'idx')
         % Select by index
+        if ~ischar(epoch_selector.idx)
+            sel = all2str(epoch_selector.idx);
+        else
+            sel = epoch_selector.idx;
+        end
         tmp = false(size(idx));
-        tmp(epoch_selector.idx) = true;
+        eval(sprintf('tmp([%s]) = true;', sel));
         idx = idx & tmp;
     end
     

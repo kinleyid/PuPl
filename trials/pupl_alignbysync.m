@@ -4,12 +4,12 @@ function out = pupl_alignbysync(EYE, varargin)
 %
 % Inputs
 %   eyesync: cell array
-%       selects sync events in eye data (see pupl_event_sel)
+%       selects sync events in eye data (see pupl_event_select)
 %   elogsync: cell array
-%       selects sync events in event log (see pupl_event_sel)
+%       selects sync events in event log (see pupl_event_select)
 %   attach: cell array
 %       selects events in event log to write to eye data (see
-%       pupl_event_sel)
+%       pupl_event_select)
 %   overwrite: boolean
 %       overwrite event data from eye tracker?
 % Example:
@@ -43,7 +43,7 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.eyesync)
-    args.eyesync = pupl_event_selUI(EYE, 'Which events in the eye data are sync markers?');
+    args.eyesync = pupl_UI_event_select(EYE, 'prompt', 'Which events in the eye data are sync markers?');
     if isempty(args.eyesync)
         return
     end
@@ -90,8 +90,8 @@ function EYE = sub_alignbysync(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-eye_sync = pupl_event_sel(EYE.event, args.eyesync);
-elog_sync = pupl_event_sel(EYE.eventlog.event, args.elogsync);
+eye_sync = pupl_event_select(EYE.event, args.eyesync);
+elog_sync = pupl_event_select(EYE.eventlog.event, args.elogsync);
 
 eye_synctimes = [EYE.event(eye_sync).time];
 elog_synctimes = [EYE.eventlog.event(elog_sync).time];
@@ -106,7 +106,7 @@ else
     fprintf('Drift parameter: %f s\n', offset_params(1));
 end
 
-attach_idx = pupl_event_sel(EYE.eventlog.event, args.attach);
+attach_idx = pupl_event_select(EYE.eventlog.event, args.attach);
 elog_events = EYE.eventlog.event(attach_idx);
 elog_events = fieldconsistency(elog_events, EYE.event);
 elog_times = [elog_events.time];

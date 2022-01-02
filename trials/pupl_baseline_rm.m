@@ -2,7 +2,7 @@ function out = pupl_baseline_rm(EYE, varargin)
 % Undo baseline correction
 %
 % Inputs:
-%   epoch: cell array (see pupl_event_sel)
+%   epoch: cell array (see pupl_epoch_sel)
 %       selects the epochs to no longer baseline correct
 % Example:
 %   pupl_baseline_rm(eye_data,

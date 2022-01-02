@@ -12,29 +12,29 @@ switch args.type
     case 'event'
         all_events = mergefields(EYE, 'event');
     case 'epoch'
-        % Get timelocking events
-        all_events = pupl_epoch_get(EYE, {mergefields(EYE, 'epoch')}, '_tl');
+        all_events = [];
+        for dataidx = 1:numel(EYE)
+            all_events = [all_events pupl_epoch_get(EYE(dataidx), {EYE(dataidx).epoch}, '_tl')];
+        end
 end
 % Get data for UI table
 [data, colnames] = pupl_event_toUITcell(all_events);
 
 if strcmp(args.type, 'epoch')
     colnames{strcmp(colnames, 'name')} = 'timelocking event';
+    colnames = [{'epoch'} colnames];
+    ep_names = mergefields(EYE, 'epoch', 'name');
+    data = [ep_names(:) data];
 end
 
 if numel(EYE) > 1
-    % Add columns for recording and event number
-    colnames = [{'recording' 'event n.'} colnames];
-    new_data = cell(numel(all_events, 2));
-    s_idx = 0;
+    % Add columns for recording
+    colnames = [{'recording'} colnames];
+    new_col = [];
     for dataidx = 1:numel(EYE)
-        event_n = 1:numel(EYE(dataidx).event);
-        row_idx = event_n + s_idx;
-        new_data(row_idx, 1) = {EYE(dataidx).name};
-        new_data(row_idx, 2) = num2cell(event_n);
-        s_idx = s_idx + numel(EYE(dataidx).event);
+        new_col = [new_col; repmat({EYE(dataidx).name}, numel(EYE(dataidx).(args.type)), 1)];
     end
-    data = [new_data data];
+    data = [new_col data];
 end
 
 colnames = ['selected' colnames];
@@ -45,9 +45,8 @@ f = figure(...
     'UserData', struct(...
         'events', all_events,...
         'n', 0,...
-        'checkboxes', false(numel(all_events), 1),...
-        'regexp', '',...
-        'evar', ''),...
+        'checkboxes', false(numel(all_events), 3),...
+        'selector', {{'' '' ''}}),...
     'Name', 'Event filter',...
     'NumberTitle', 'off',...
     'Menu', 'none');
@@ -150,24 +149,28 @@ sel_col_idx = strcmp(colnames, 'selected');
 filt_panel = findobj(f, 'Tag', 'filter-panel');
 filt_box = findobj(f, 'Tag', 'filter-box');
 set(filt_panel, 'Visible', 'on');
+
+ud.checkboxes(:, ud.n + 1) = [data{:, sel_col_idx}];
+ud.selector{ud.n + 1} = get(filt_box, 'String');
+
 switch str{val}
     case 'Checkbox'
         col_ed(sel_col_idx) = true;
-        data(:, sel_col_idx) = num2cell(ud.checkboxes);
         set(filt_panel, 'Title', '');
         set(filt_panel, 'Visible', 'off');
         ud.n = 0;
     case 'Regular expression'
         set(filt_panel, 'Title', 'Regular expression');
-        set(filt_box, 'String', ud.regexp);
         set(filt_box, 'TooltipString', pupl_gettooltip('regexp:edit'));
         ud.n = 1;
     case 'Event variable'
         set(filt_panel, 'Title', 'Event variable filter');
-        set(filt_box, 'String', ud.evar);
         set(filt_box, 'TooltipString', pupl_gettooltip('eventvar:edit'));
         ud.n = 2;
 end
+
+set(filt_box, 'String', ud.selector{ud.n + 1});
+data(:, sel_col_idx) = num2cell(ud.checkboxes(:, ud.n + 1));
 
 set(uit, 'ColumnEditable', col_ed(:)')
 set(uit, 'Data', data);

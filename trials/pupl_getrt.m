@@ -24,14 +24,14 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.onsets)
-    args.onsets = pupl_event_selUI(EYE, 'Which events mark the onset of a trial?');
+    args.onsets = pupl_UI_event_select(EYE, 'prompt', 'Which events mark the onset of a trial?');
     if isempty(args.onsets)
         return
     end
 end
 
 if isempty(args.responses)
-    args.responses = pupl_event_selUI(EYE, 'Which events mark a response?');
+    args.responses = pupl_UI_event_select(EYE, 'Which events mark a response?');
     if isempty(args.responses)
         return
     end
@@ -57,9 +57,9 @@ function EYE = sub_getrt(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-onset_idxs = find(pupl_event_sel(EYE.event, args.onsets));
+onset_idxs = find(pupl_event_select(EYE.event, args.onsets));
 onset_times = [EYE.event(onset_idxs).time];
-response_idxs = find(pupl_event_sel(EYE.event, args.responses));
+response_idxs = find(pupl_event_select(EYE.event, args.responses));
 response_times = [EYE.event(response_idxs).time];
 all_rts = cell(size(onset_times));
 n_rts = 0;

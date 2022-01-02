@@ -3,9 +3,9 @@ function out = pupl_evar_hg(EYE, varargin)
 % Homogenize event variables within trials
 %
 % Inputs:
-%   onsets: cell array (see pupl_events_sel)
+%   onsets: struct (see pupl_event_select)
 %       selects the events signaling the onsets of trials
-%   ends: cell array (see pupl_events_sel)
+%   ends: struct (see pupl_event_select)
 %       selects the events signaling the ends of trials
 %   idx: boolean
 %       specifies whether to add a #trial_idx event variable to keep track
@@ -39,14 +39,14 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.onsets)
-    args.onsets = pupl_UI_select(EYE, 'prompt', 'Which events mark the onset of a trial?');
+    args.onsets = pupl_UI_event_select(EYE, 'prompt', 'Which events mark the onset of a trial?');
     if isempty(args.onsets)
         return
     end
 end
 
 if isempty(args.ends)
-    args.ends = pupl_UI_select(EYE, 'prompt', 'Which events mark the end of a trial? (Select none to use the event immediately preceding the next trial)');
+    args.ends = pupl_UI_event_select(EYE, 'prompt', 'Which events mark the end of a trial? (Select none to use the event immediately preceding the next trial)');
     if isempty(args.ends)
         return
     end
@@ -83,11 +83,11 @@ function EYE = sub_evar_hg(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-trial_onsets = find(pupl_event_sel(EYE.event, args.onsets));
+trial_onsets = find(pupl_event_select(EYE.event, args.onsets));
 if numel(args.ends) == 1 && args.ends{1} == 0
     trial_ends = [trial_onsets(2:end) - 1 numel(EYE.event)];
 else
-    trial_ends = find(pupl_event_sel(EYE.event, args.ends));
+    trial_ends = find(pupl_event_select(EYE.event, args.ends));
 end
 
 for trialidx = 1:numel(trial_onsets)

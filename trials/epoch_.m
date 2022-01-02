@@ -6,7 +6,7 @@ if isnumeric(timelocking)
     timelocking_idx = find(ismember([EYE.event.uniqid], timelocking));
 else
     % Select by event filter
-    timelocking_idx = find(pupl_event_sel(EYE.event, timelocking));
+    timelocking_idx = find(pupl_event_select(EYE.event, timelocking));
 end
 timelocking_times = [EYE.event(timelocking_idx).time];
 % Candidate epoch ends
@@ -17,7 +17,7 @@ if isnumeric(other.event)
         
     end
 else
-    cand_other_idx = find(pupl_event_sel(EYE.event, other.event));
+    cand_other_idx = find(pupl_event_select(EYE.event, other.event));
 end
 cand_other_times = [EYE.event(cand_other_idx).time];
 other_idx = nan(size(timelocking_idx));

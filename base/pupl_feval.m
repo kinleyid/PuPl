@@ -67,7 +67,7 @@ for dataidx = 1:numel(EYE)
         tmp = func(EYE(dataidx), args{:});
         [tmp, EYE] = fieldconsistency(tmp, EYE);
         EYE(dataidx) = tmp;
-        fprintf('...done\n');
+        fprintf('----Done processing %s\n', EYE(dataidx).name);
     end
 end
 

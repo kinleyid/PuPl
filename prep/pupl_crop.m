@@ -45,7 +45,7 @@ if isempty(args.cfg)
     str = {'starting from' 'up until'};
     for i = 1:2
         curr_cfg = [];
-        curr_cfg.event = pupl_event_selUI(EYE, sprintf('Retain data %s which event?', str{i}));
+        curr_cfg.event = pupl_UI_event_select(EYE, 'prompt', sprintf('Retain data %s which event?', str{i}));
         if isempty(curr_cfg.event)
             return
         end
@@ -92,7 +92,7 @@ args = parseargs(varargin{:});
 
 bookend_event_times = [];
 for ii = 1:2
-    event_matches = find(pupl_event_sel(EYE.event, args.cfg(ii).event));
+    event_matches = find(pupl_event_select(EYE.event, args.cfg(ii).event));
     if args.cfg(ii).instance < 0
         inst = numel(event_matches) + args.cfg(ii).instance + 1;
     else

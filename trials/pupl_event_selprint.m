@@ -1,29 +1,24 @@
 
-function printable_cell = pupl_event_selprint(filter)
+function printable_cell = pupl_event_selprint(selector)
+% Print event selector in a nice way
 
-% Print selector in a nice way
-
-if ischar(filter) % Just one event name
-    filter = {filter};
-end
-
-num_idx = cellfun(@isnumeric, filter);
-if ~any(num_idx)
-    indic = 0;
-else
-    indic = filter{num_idx};
-end
-filter = filter(~num_idx);
-switch indic
-    case 0 % Select by name
-        printable_cell = filter;
-    case 1 % Select by regular expression applied to name
+switch selector.by
+    case 'idx'
+        if ischar(selector.sel)
+            sel = selector.sel;
+        else
+            sel = all2str(selector.sel);
+        end
         printable_cell = {
-            sprintf('"%s" (regular expression)', filter{:});
+            sprintf('event numbers %s', sel);
         };
-    case 2 % Select by trial var filter
+    case 'regexp'
         printable_cell = {
-            sprintf('"%s" (event variable criterion)', filter{:});
+            sprintf('events matching the regular expression "%s"', selector.sel);
+        };
+    case 'evar'
+        printable_cell = {
+            sprintf('events meeting the following criterion: "%s"', selector.sel);
         };
 end
 

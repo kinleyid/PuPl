@@ -6,7 +6,7 @@ function out = pupl_evar_add(EYE, varargin)
 %   method: string
 %       're': read from event name using regular expression capture
 %       'evar': compute based on pre-existing event variables
-%   sel: cell array (see pupl_event_sel)
+%   sel: struct (see pupl_event_select)
 %       selects the events to add event variable(s) to
 %   expr: string
 %       regular expression or Matlab expression to evaluate, depending on
@@ -70,7 +70,7 @@ if isempty(args.method)
 end
 
 if isempty(args.sel)
-    args.sel = pupl_UI_select(EYE, 'prompt', 'Add event variables to which events?');
+    args.sel = pupl_UI_event_select(EYE, 'prompt', 'Add event variables to which events?');
     if isempty(args.sel)
         return
     end
@@ -138,7 +138,7 @@ function EYE = sub_evar_read(EYE, varargin)
 args = parseargs(varargin{:});
 
 n_val = 0;
-read_from = find(pupl_event_sel(EYE.event, args.sel));
+read_from = find(pupl_event_select(EYE.event, args.sel));
 for eventidx = read_from
     switch args.method
         case 're'
