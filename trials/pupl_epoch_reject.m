@@ -130,7 +130,7 @@ if isempty(args.cfg)
             end
             args.cfg.thresh = thresh;
         case 'event'
-            args.cfg.sel = pupl_UI_select(EYE, 'type', 'epoch', 'prompt', 'Reject which epochs?');
+            args.cfg.sel = pupl_UI_epoch_select(EYE, 'prompt', 'Reject which epochs?');
             if isempty(args.cfg.sel)
                 return
             end
