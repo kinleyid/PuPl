@@ -84,10 +84,9 @@ function EYE = sub_evar_hg(EYE, varargin)
 args = parseargs(varargin{:});
 
 trial_onsets = find(pupl_event_select(EYE.event, args.onsets));
-if numel(args.ends) == 1 && args.ends{1} == 0
+trial_ends = find(pupl_event_select(EYE.event, args.ends));
+if isempty(trial_ends)
     trial_ends = [trial_onsets(2:end) - 1 numel(EYE.event)];
-else
-    trial_ends = find(pupl_event_select(EYE.event, args.ends));
 end
 
 for trialidx = 1:numel(trial_onsets)

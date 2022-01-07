@@ -54,6 +54,9 @@ function EYE = sub_evar_del(EYE, varargin)
 
 args = parseargs(varargin);
 
+fprintf('Removing event variables:\n');
+fprintf('\t#%s\n', args.which{:});
+
 EYE.event = rmfield(EYE.event, args.which);
 
 end

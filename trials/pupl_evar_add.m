@@ -83,6 +83,8 @@ if isempty(args.expr)
         case 'evar'
             q = sprintf('Write an expression that will return the new event variable\n\nVariables preceded by "#" (e.g. "#rt") will interpreted as event variables to be read from the event to which a new event variable is being added.');
     end
+    % To do: make this a dynamic GUI that lets you preview the results of
+    % the regexp capture
     args.expr = inputdlg(q);
     if isempty(args.expr)
         return
