@@ -1,6 +1,6 @@
 
 % Based on
-% http://sr-research.jp/support/EyeLink%201000%20User%20Manual%201.5.0.pdf,
+% https://sr-research.jp/support/EyeLink%201000%20User%20Manual%201.5.0.pdf,
 % section 4.9
 
 function EYE = readeyelinkASC(fullpath)
