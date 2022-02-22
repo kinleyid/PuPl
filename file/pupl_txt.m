@@ -71,7 +71,7 @@ switch file_ctrl
             col_names = raw(1, :);
             for colidx = 1:numel(col_names)
                 curr_dat = raw(2:end, colidx);
-                if isnan(str2double(curr_dat{1}))
+                if strcmp(col_names(colidx), 'datalabel')
                     curr_dat = [curr_dat{:}];
                 else
                     curr_dat = cellstr2num(curr_dat);

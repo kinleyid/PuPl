@@ -28,7 +28,7 @@ switch args.as
             default_filenames = strcat({EYE.name}, '.csv');
         end
         if isnonemptyfield(EYE, 'epoch') && ismember(args.data, {'eye' 'both'})
-            q = 'PuPl''s text formats save only continuous data, events, and basic metadata (e.g., sample rate and units; not epochs). To avoid data loss, use the binary format. Continue?';
+            q = 'PuPl''s text formats save only continuous data, events, and basic metadata (e.g., sample rate and units; not epochs). To avoid data loss, use the binary format (.pupl). Would you still like to save to the text format?';
             a = questdlg(q, '', 'Yes', 'No', 'Yes');
             switch a
                 case 'Yes'

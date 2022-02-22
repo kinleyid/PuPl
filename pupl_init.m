@@ -10,7 +10,7 @@ function pupl_init(varargin)
 % Example:
 %   >> pupl_init noui noaddons
 
-currVersion = '1.2.0';
+currVersion = '1.2.1';
 fprintf('PuPl, version %s\n', currVersion);
 
 global pupl_globals
@@ -155,6 +155,6 @@ end
 
 fprintf('Done\n')
 
-fprintf('\n\tSee the "Citations" tab for the papers PuPl is based on.\n\tPlease cite all the procedures you use to process your data.\n\n');
+fprintf('\n\tSee the "Citations" tab for the papers PuPl is based on.\n\tPlease cite all the procedures you use to process your data.\n\tIf you encounter any difficulties using this software,\n\tplease contact Isaac Kinley (kinleyid@mcmaster.ca).\n\n');
 
 end
