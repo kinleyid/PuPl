@@ -10,7 +10,7 @@ function pupl_init(varargin)
 % Example:
 %   >> pupl_init noui noaddons
 
-currVersion = '1.2.2';
+currVersion = '1.2.3';
 fprintf('PuPl, version %s\n', currVersion);
 
 global pupl_globals

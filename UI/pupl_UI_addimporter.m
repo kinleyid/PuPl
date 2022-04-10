@@ -10,9 +10,9 @@ if isgraphics(pupl_globals.UI)
     });
     switch args.type
         case 'eye'
-            tags = {'importEyeDataMenu' 'BIDSimportEyeDataMenu'};
+            tags = {'pupl:import-eye' 'pupl:bids-import-event'};
         case 'event'
-            tags = {'importEventLogsMenu' 'BIDSimportEventLogsMenu'};
+            tags = {'pupl:import-event' 'pupl:bids-import-event'};
     end
     
     args_to_pupl_import = rmfield(args, 'label');
