@@ -85,13 +85,15 @@ if isempty(args.rec_suffix)
 end
 
 if isempty(args.ev_suffix)
+    prompts = cell(1, numel(args.sel));
     for i = 1:numel(args.sel)
-        ev_suffix = inputdlg(sprintf('Suffix to add to the events from block %d of the recordings?', i));
-        if isempty(ev_suffix)
-            return
-        else
-            args.ev_suffix{i} = ev_suffix{:};
-        end
+        prompts{i} = sprintf('Suffix to add to the events from block %d of the recordings?', i);
+    end
+    ev_suffix = inputdlg(prompts);
+    if isempty(ev_suffix)
+        return
+    else
+        args.ev_suffix{i} = ev_suffix{:};
     end
 end
 

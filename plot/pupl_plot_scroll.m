@@ -310,4 +310,23 @@ end
 
 legend(plotinfo.legendentries{:});
 
+update_slider_scale(h);
+
+end
+
+function update_slider_scale(h)
+
+% Make it so that arrow click moves 10% across the window, and trough
+% click moves 50% across the window
+
+ud = get(h, 'UserData');
+slider = findobj(h, 'Style', 'slider');
+t_scale = parsetimestr(ud.scale.t_scale, ud.EYE.srate);
+t_min = ud.EYE.times(1);
+t_max = ud.EYE.times(end);
+
+ppn = t_scale / (t_max - t_min);
+
+set(slider, 'SliderStep', [0.1*ppn 0.5*ppn]);
+
 end

@@ -29,7 +29,7 @@ if ~isempty(epoch_selector)
     if isfield(epoch_selector, 'set')
         % Select by epoch set name (basically a shortcut)
         for set_idx = find(ismember({EYE.epochset.name}, epoch_selector.set))
-            idx = idx & pupl_event_sel(timelocking_events, EYE.epochset(set_idx).members);
+            idx = idx & pupl_epoch_sel(EYE, EYE.epochset(set_idx).members);
         end
     end
     
@@ -46,7 +46,11 @@ if ~isempty(epoch_selector)
             sel = epoch_selector.idx;
         end
         tmp = false(size(idx));
-        eval(sprintf('tmp([%s]) = true;', sel));
+        try
+            eval(sprintf('tmp([%s]) = true;', sel));
+        catch
+            eval(sprintf('tmp(%s) = true;', sel));
+        end
         idx = idx & tmp;
     end
     

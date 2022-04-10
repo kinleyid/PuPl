@@ -7,6 +7,7 @@ function out = pupl_PFE_lm(EYE)
 % Sirois, S. (2013). Pupil diameter measurement errors as a function of
 % gaze direction in corneal reflection eyetrackers. Behavior research
 % methods, 45(4), 1322-1331.
+
 if nargin == 0
     out = [];
     fprintf('Correcting pupil foreshortening error by multivariate linear regression\n');
@@ -26,8 +27,20 @@ pupil_fields = reshape(fieldnames(EYE.pupil), 1, []);
 for field = pupil_fields
     [B, Rsq, df, Yhat] = nanlm(EYE.pupil.(field{:}), gx, gy);
     fprintf('Modelling %s pupil %s as:\n', field{:}, pupl_getunits(EYE));
-    fprintf('Y = %f + %f Gx + %f Gy\n', B);
-    fprintf('R squared: %f on %d degrees of freedom\n', Rsq, df);
+    fprintf('\tY = %f ', B(1));
+    if (B(2) > 0)
+        fprintf('+ ');
+    else
+        fprintf('- ');
+    end
+    fprintf('%f GazeX ', abs(B(2)));
+    if (B(3) > 0)
+        fprintf('+ ');
+    else
+        fprintf('- ');
+    end
+    fprintf('%f GazeY\n', abs(B(3)));
+    fprintf('\tR squared: %f on %d degrees of freedom\n', Rsq, df);
     % Put NaNs back and correct
     Pc = EYE.pupil.(field{:});
     % Check for possible distortions in pupil size

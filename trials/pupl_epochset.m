@@ -110,8 +110,7 @@ end
 EYE.epochset = [EYE.epochset setdescriptions(:)'];
 if args.verbose
     for setidx = 1:numel(setdescriptions)
-        epoch_selector = [];
-        epoch_selector.filt = setdescriptions(setidx).members;
+        epoch_selector = setdescriptions(setidx).members;
         epochs = pupl_epoch_get(EYE, epoch_selector);
         fprintf('Set %s contains %d epochs\n',...
             setdescriptions(setidx).name,...
