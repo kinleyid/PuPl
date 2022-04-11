@@ -31,15 +31,15 @@ args = parseargs(varargin{:});
 if isempty(args.epoch)
     args.epoch = pupl_UI_epoch_select(...
         EYE,...
-        'Which epochs should no longer be baseline corrected?');
+        'prompt', 'Which epochs should no longer be baseline corrected?');
     if isempty(args.epoch)
         return
     end
 end
 
-fprintf('Removing baseline correction for the following epochs:\n');
-txt = pupl_event_selprint(args.epoch);
-fprintf('\t%s\n', txt{:});
+fprintf('Removing baseline correction\n'); %  for the following epochs:\n');
+% txt = pupl_event_selprint(args.epoch);
+% fprintf('\t%s\n', txt{:});
 outargs = args;
 
 end
@@ -48,7 +48,7 @@ function EYE = sub_baseline_rm(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-selected = find(pupl_epoch_sel(EYE, EYE.epoch, args.epoch));
+selected = find(pupl_epoch_sel(EYE, args.epoch));
 rm_cnt = 0;
 for epoch_idx = selected
     if isfield(EYE.epoch(epoch_idx), 'baseline')

@@ -48,7 +48,7 @@ args = parseargs(varargin{:});
 if isempty(args.epoch)
     args.epoch = pupl_UI_epoch_select(...
         EYE,...
-        'Which epochs should be normalized?');
+        'prompt', 'Which epochs should be normalized?');
     if isempty(args.epoch)
         return
     end
@@ -71,9 +71,9 @@ if isempty(args.correction)
 end
 
 if isempty(args.ref)
-    args.ref = pupl_epoch_selUI(...
+    args.ref = pupl_UI_epoch_select(...
         EYE,...
-        'Which are the reference epochs?');
+        'prompt', 'Which are the reference epochs?');
     if isempty(args.ref)
         return
     end
@@ -126,10 +126,10 @@ switch args.correction
 end
 
 % get the epochs that will be normalized
-norm_epoch_idx = pupl_epoch_sel(EYE, EYE.epoch, args.epoch);
+norm_epoch_idx = pupl_epoch_sel(EYE, args.epoch);
 norm_epochs = EYE.epoch(norm_epoch_idx);
 % get candidate reference epochs
-cand_reference_idx = pupl_epoch_sel(EYE, EYE.epoch, args.ref);
+cand_reference_idx = pupl_epoch_sel(EYE, args.ref);
 cand_references = EYE.epoch(cand_reference_idx);
 
 % compute the mapping from references to epochs

@@ -146,14 +146,17 @@ end
 t_lim = EYE.times(pupl_epoch_get(EYE, epoch_selector, '_abs'));
 
 % Display baseline period
-baseline = pupl_epoch_get(EYE, epoch_selector, '_base');
+baselines = pupl_epoch_get(EYE, epoch_selector, '_base');
 extra_entries = {};
-if ~isempty(baseline)
-    rel_b_lim = parsetimestr(baseline.lims, EYE.srate);
-    tl = pupl_epoch_get(EYE, {baseline}, '_tl', 'time');
-    b_lim = rel_b_lim + tl.time;
-    plot(b_lim([1 1]), ud.ylims, 'g--');
-    plot(b_lim([2 2]), ud.ylims, 'g--');
+if ~isempty(baselines)
+    for baselineidx = 1:numel(baselines)
+        baseline = baselines(baselineidx);
+        rel_b_lim = parsetimestr(baseline.lims, EYE.srate);
+        tl = pupl_epoch_get(EYE, {baseline}, '_tl', 'time');
+        b_lim = rel_b_lim + tl.time;
+        plot(b_lim([1 1]), ud.ylims, 'g--');
+        plot(b_lim([2 2]), ud.ylims, 'g--');
+    end
     extra_entries = {'Baseline'};
 end
 
