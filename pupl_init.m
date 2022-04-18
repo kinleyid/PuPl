@@ -10,7 +10,7 @@ function pupl_init(varargin)
 % Example:
 %   >> pupl_init noui noaddons
 
-currVersion = '1.2.4';
+currVersion = '1.2.5';
 fprintf('PuPl, version %s\n', currVersion);
 
 global pupl_globals
@@ -86,6 +86,13 @@ for src_idx = 1:numel(src_dirs)
     fprintf('.');
 end
 fprintf('\n');
+
+edf_converter_path = fullfile(pdir, 'edf-converter');
+if exist(edf_converter_path, 'dir')
+    fprintf('Adding edf-converter to the path...');
+    addpath(genpath(edf_converter_path)) % Add folder and subfolders
+    fprintf('\n');
+end
 
 if ~pupl_globals.isoctave
     % Octave's questdlg function works fine, but Matlab's returns the

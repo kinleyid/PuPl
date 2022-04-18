@@ -31,6 +31,7 @@ first_line = header(1:eol);
 if ~isempty(regexp(first_line, 'ZIP'))
     fprintf('The first line of this file contains the word "ZIP".\n');
     fprintf('Currently, PuPl cannot read files like this natively.');
+    fclose(fid);
     return
 end
 

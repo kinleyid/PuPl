@@ -330,14 +330,9 @@ for dataidx = 1:numel(EYE)
                 rel_lats = [min(rel_lats(:, 1)) max(rel_lats(:, 2))];
                 for winidx = 1:numel(win)
                     str_win = win{winidx};
-                    curr_win = nan(size(str_win));
-                    for ii = 1:2
-                        if isempty(str_win{ii})
-                            curr_win(ii) = rel_lats(ii);
-                        else
-                            curr_win(ii) = parsetimestr(str_win{ii}, EYE(dataidx).srate, 'smp');
-                        end
-                    end
+                    str_win(ismember(str_win, {'beginning of epoch' 'end of epoch'})) = {nan};
+                    curr_win = parsetimestr(str_win, EYE(dataidx).srate, 'smp');
+                    curr_win(isnan(curr_win)) = rel_lats(isnan(curr_win));
                     rel_lats = unfold(rel_lats);
                     rel_win = rel_lats >= curr_win(1) & rel_lats <= curr_win(2);
                     collected_windows{setidx, winidx} = rel_win;
