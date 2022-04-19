@@ -9,40 +9,35 @@ EYE = [];
 
 %% Read raw
 
-printprog('setmax', 14)
+printprog('setmax', 12)
 printprog(1)
 rawdata = fastfileread(fullpath);
 printprog(2)
-% Get data lines
+% Get data lines without empty lines
 lines = regexp(rawdata, '.*', 'match', 'dotexceptnewline');
 printprog(3)
-% Get first characters of lines
-tokens = regexp(rawdata, '^.', 'match', 'lineanchors');
+% Get first characters of lines, ignoring empty lines
+tokens = regexp(rawdata, '^.', 'match', 'lineanchors', 'dotexceptnewline');
 printprog(4)
-nonemptyidx = ~cellfun(@isempty, lines);
-printprog(5)
-tokens = tokens(nonemptyidx);
-lines = lines(nonemptyidx);
-printprog(6)
 
 issample = ismember([tokens{:}], '123456789'); % Lines beginning with a number are data samples
-printprog(7)
+printprog(5)
 samples = lines(issample); % Data sample lines
 infolines = lines(~issample); % All other lines contain metadata/events
-printprog(8)
+printprog(6)
 firstwords = cellfun(@(x) sscanf(x, '%s', 1), infolines, 'UniformOutput', false); % Other lines are identified by their first words
-printprog(9)
+printprog(7)
 
 %% Find data
 
 samples = regexprep(samples, '\s\.\s', ' nan '); % Missing data are dots, replace with space-padded nan
-printprog(10)
+printprog(8)
 datamat = cell2mat(cellfun(@(x) sscanf(x, '%g'), samples, 'UniformOutput', false));
-printprog(11)
+printprog(9)
 
 % Find an info line beginning with "samples"
 sampleinfo = lower(regexp(infolines{find(strcontains(lower(firstwords), 'samples'), 1)}, '\t', 'split'));
-printprog(12)
+printprog(10)
 for ii = 1:numel(sampleinfo)
     switch sampleinfo{ii}
         case 'gaze'
@@ -82,7 +77,7 @@ end
 
 %% Find events
 
-printprog(13)
+printprog(11)
 eventlines = infolines(strcontains(lower(firstwords), 'msg'));
 event_times = nan(size(eventlines));
 event_types = cell(size(eventlines));
@@ -92,7 +87,7 @@ for ii = 1:numel(eventlines)
     event_times(ii) = sscanf(curreventinfo{1}, '%g');
     event_types{ii} = strtrim(sprintf('%s ', curreventinfo{2:end}));
 end
-printprog(14)
+printprog(12)
 %% Process timestamps
 
 EYE.srate = srate;
