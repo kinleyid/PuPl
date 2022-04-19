@@ -10,7 +10,7 @@ function pupl_init(varargin)
 % Example:
 %   >> pupl_init noui noaddons
 
-currVersion = '1.2.5';
+currVersion = '1.2.6';
 fprintf('PuPl, version %s\n', currVersion);
 
 global pupl_globals
@@ -52,21 +52,6 @@ if any(badargidx)
     fprintf('Available arguments:\n');
     fprintf('\t''%s''\n', availableargs{:});
     return
-end
-
-% Check for updates
-if ~any(strcmpi(varargin, 'noweb'))
-    fprintf('Checking web for new version...\n\t(use ''pupl init noweb'' to skip this)\n\t');
-    try
-        newestVersion = urlread('https://kinleyid.github.io/pupl/latest-version.txt');
-        if ~strcmp(newestVersion, currVersion)
-          fprintf('! A new version (%s) is out, download it from github.com/kinleyid/PuPl\n', newestVersion);
-        else
-          fprintf('You are using the latest version: %s\n', currVersion);
-        end
-    catch
-        fprintf('Error\n');
-    end
 end
 
 pdir = fileparts(which('pupl'));
@@ -161,6 +146,21 @@ if ~any(strcmpi(varargin, 'noAddOns'))
 end
 
 fprintf('Done\n')
+
+% Check for updates
+if ~any(strcmpi(varargin, 'noweb'))
+    fprintf('Checking web for new version...\n\t(use ''pupl init noweb'' to skip this)\n\t');
+    try
+        newestVersion = urlread('https://kinleyid.github.io/pupl/latest-version.txt');
+        if ~strcmp(newestVersion, currVersion)
+          fprintf('! A new version (%s) is out, download it from github.com/kinleyid/PuPl\n', newestVersion);
+        else
+          fprintf('You are using the latest version: %s\n', currVersion);
+        end
+    catch
+        fprintf('Error\n');
+    end
+end
 
 fprintf('\n\tSee the "Citations" tab for the papers PuPl is based on.\n\tPlease cite all the procedures you use to process your data.\n\tIf you encounter any difficulties using this software,\n\tplease contact Isaac Kinley (kinleyid@mcmaster.ca).\n\n');
 
