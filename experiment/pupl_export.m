@@ -255,12 +255,14 @@ for dataidx = 1:numel(EYE)
                     curr_epoch.name
                     curr_epoch.reject
                 };
-                % Get trial vars
-                curr_evars = {};
-                for evar_idx = 1:numel(evar_colnames)
-                    curr_evars{end + 1} = curr_event.(evar_colnames{evar_idx});
+                % Get event variabes
+                if numel(evar_colnames) > 1
+                    curr_evars = {};
+                    for evar_idx = 1:numel(evar_colnames)
+                        curr_evars{end + 1} = curr_event.(evar_colnames{evar_idx});
+                    end
+                    all_evars(end + 1, :) = curr_evars;
                 end
-                all_evars(end + 1, :) = curr_evars;
                 % Determine set membership, lining up membership with column names
                 curr_setnames = {EYE(dataidx).epochset.name};
                 curr_setmembership = curr_setnames(...
@@ -306,22 +308,24 @@ for dataidx = 1:numel(EYE)
                 all_info{end + 1} = EYE(dataidx).name;
                 % Compute mean and median of numeric event variables for
                 % unrejected epochs
-                curr_epochs = pupl_epoch_get(EYE(dataidx), epoch_selector);
-                curr_events = pupl_epoch_get(EYE(dataidx), epoch_selector, '_ev');
-                curr_events = curr_events(~[curr_epochs.reject]);
-                curr_evars = {};
-                for evar_idx = 1:numel(evar_colnames)
-                    curr_evar_contents = [curr_events.(evar_colnames{evar_idx})];
-                    if ~iscell(curr_evar_contents)
-                        % Compute mean, then median
-                        curr_evars{end + 1} = nanmean_bc(curr_evar_contents);
-                        curr_evars{end + 1} = nanmedian_bc(curr_evar_contents);
-                    else
-                        curr_evars{end + 1} = nan;
-                        curr_evars{end + 1} = nan;
+                if numel(evar_colnames) > 1
+                    curr_epochs = pupl_epoch_get(EYE(dataidx), epoch_selector);
+                    curr_events = pupl_epoch_get(EYE(dataidx), epoch_selector, '_ev');
+                    curr_events = curr_events(~[curr_epochs.reject]);
+                    curr_evars = {};
+                    for evar_idx = 1:numel(evar_colnames)
+                        curr_evar_contents = [curr_events.(evar_colnames{evar_idx})];
+                        if ~iscell(curr_evar_contents)
+                            % Compute mean, then median
+                            curr_evars{end + 1} = nanmean_bc(curr_evar_contents);
+                            curr_evars{end + 1} = nanmedian_bc(curr_evar_contents);
+                        else
+                            curr_evars{end + 1} = nan;
+                            curr_evars{end + 1} = nan;
+                        end
                     end
+                    all_evars(end + 1, :) = curr_evars;
                 end
-                all_evars(end + 1, :) = curr_evars;
                 
                 % Get set membership
                 all_setmemberships{end + 1} = ismember(set_colnames, curr_set.name);
@@ -588,19 +592,21 @@ all_info = all_info(:);
 all_setmemberships = num2cell(cell2mat(all_setmemberships(:)));
 all_condmemberships = num2cell(cell2mat(all_condmemberships(:)));
 
-if strcmp(args.trialwise, per_epoch)
-    evar_colnames = strcat('evar_', evar_colnames);
-else
-    evar_colnames = strcat('evar_', evar_colnames);
-    evar_colnames = [
-        strcat(evar_colnames, '_mean')
-        strcat(evar_colnames, '_median')
-    ];
-    evar_colnames = evar_colnames(:)';
+if numel(evar_colnames) > 1
+    if strcmp(args.trialwise, per_epoch)
+        evar_colnames = strcat('evar_', evar_colnames);
+    else
+        evar_colnames = strcat('evar_', evar_colnames);
+        evar_colnames = [
+            strcat(evar_colnames, '_mean')
+            strcat(evar_colnames, '_median')
+        ];
+        evar_colnames = evar_colnames(:)';
+    end
 end
 
 nondata_table = [
-    info_colnames   trial_colnames  evar_colnames   strcat('cond_', cond_colnames)  strcat('set_', set_colnames)
+    info_colnames   trial_colnames  evar_colnames   strcat('recording_cond_', cond_colnames)  strcat('epoch_set_', set_colnames)
     all_info        all_trialinfo   all_evars       all_condmemberships             all_setmemberships
 ];
 
