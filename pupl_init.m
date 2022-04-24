@@ -150,14 +150,16 @@ end
 fprintf('Done\n')
 
 % Check for updates
+newer_version = false;
 if ~any(strcmpi(varargin, 'noweb'))
     fprintf('Checking web for new version...\n\t(use ''pupl init noweb'' to skip this)\n\t');
     try
         newestVersion = urlread('https://kinleyid.github.io/pupl/latest-version.txt');
         if ~strcmp(newestVersion, currVersion)
-          fprintf('! A new version (%s) is out, download it from github.com/kinleyid/PuPl\n', newestVersion);
+            fprintf('New version found: (%s)\n', newestVersion);
+            newer_version = true;
         else
-          fprintf('You are using the latest version: %s\n', currVersion);
+            fprintf('You are using the latest version: %s\n', currVersion);
         end
     catch
         fprintf('Error\n');
@@ -165,5 +167,9 @@ if ~any(strcmpi(varargin, 'noweb'))
 end
 
 fprintf('\n\tSee the "Citations" tab for the papers PuPl is based on.\n\tPlease cite all the procedures you use to process your data.\n\tIf you encounter any difficulties using this software,\n\tplease contact Isaac Kinley (kinleyid@mcmaster.ca).\n\n');
+
+if newer_version
+    fprintf('! A new version (%s) is out, download it from github.com/kinleyid/PuPl\n', newestVersion);
+end
 
 end

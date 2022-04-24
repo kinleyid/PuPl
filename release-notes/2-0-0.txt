@@ -1,0 +1,19 @@
+
+In version 2.0.0, the export tool has been simplified quite a bit.
+Previously, data could be downsampled at the export stage using a moving
+mean---when combined with variable-length epochs, it could easily become
+impossible to export the epoch data to wide format and have the data's
+column names mean anything. Moreover, this export-specific downsampling
+tool was always redundant with PuPl's pre-existing filtering and
+downsampling tools. Therefore it has been removed, and when exporting epoch
+data, undownsampled data is always used.
+
+Moreover, when exporting statistics computed on sub-epoch windows, the same
+statistics will be computed for each window. This simplifies the user
+interface so that you do not have to re-select your statistics for each
+sub-epoch window (it also simplifies the code internally).
+
+Finally, the UI options pertaining to exporting have been simplified. Now
+they are labelled "Export epoch statistics" and "Export epoch data", where
+prevoiusly they were called "Write statistics to spreadsheet" and "Export
+[un]downsampled data".

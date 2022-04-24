@@ -40,16 +40,17 @@ if args.regexp
         'Style', 'edit',...
         'Units', 'normalized',...
         'Position', [0.01 0.01 0.98 0.98],...
-        'Callback', @(h,e) selectbyregexp(h),...
-        'KeyPressFcn', @(h,e) enterdo(e, @() selectbyregexp(h)))
+        'Callback', @(h,e) selectbyregexp(parent),...
+        'KeyPressFcn', @(h,e) enterdo(e, @() selectbyregexp(parent)))
 end
 
 end
 
-function selectbyregexp(src)
+function selectbyregexp(f)
 
-listBox = findobj(get(src, 'Parent'), 'Style', 'listbox');
-value = find(~cellfun(@isempty, regexp(get(listBox, 'String'), get(src, 'String'))));
+listBox = findobj(f, 'Style', 'listbox');
+regexpBox = findobj(f, 'tag', 'regexp');
+value = find(~cellfun(@isempty, regexp(get(listBox, 'String'), get(regexpBox, 'String'))));
 args = get(listBox, 'UserData');
 if strcmp(args.SelectionMode, 'single')
     if isempty(value)

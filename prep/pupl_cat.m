@@ -93,7 +93,7 @@ if isempty(args.ev_suffix)
     if isempty(ev_suffix)
         return
     else
-        args.ev_suffix{i} = ev_suffix{:};
+        args.ev_suffix = ev_suffix;
     end
 end
 
