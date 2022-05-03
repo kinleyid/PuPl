@@ -8,10 +8,10 @@ if isempty(which('Edf2Mat'))
 else
     output = Edf2Mat(fullpath);
     edf = output.RawEdf;
-    % Get times
-    EYE.times = double(edf.FSAMPLE.time)/1000;
     % Get srate
     EYE.srate = double(edf.RECORDINGS(1).sample_rate);
+    % Get times
+    EYE.times = double(edf.FSAMPLE.time)/EYE.srate;
     % Get data
     fields = {
         {'gaze' 'x'} {'gx'}
