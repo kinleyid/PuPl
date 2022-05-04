@@ -116,8 +116,8 @@ end
 function v = applyinterpolation(f, v, n, m)
 
 interpidx = ic_fft(isnan(v), n, 'most');
-s = find([false diff(interpidx) == 1]);
-e = find([diff(interpidx) == -1 false]);
+s = find(diff([false, interpidx, false]) == 1);
+e = find(diff([false, interpidx, false]) == -1) - 1;
 if ~isempty(s) && ~isempty(e)
     if s(1) > e(1)
         e(1) = [];
