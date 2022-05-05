@@ -116,9 +116,15 @@ end
 function v = applyinterpolation(f, v, n, m)
 
 interpidx = ic_fft(isnan(v), n, 'most');
-s = find([false diff(interpidx) == 1]);
-e = find([diff(interpidx) == -1 false]);
+npoints = length(interpidx);
+s = find([interpidx(1),diff(interpidx) == 1]);
+e = find([diff(interpidx) == -1, interpidx(end)]);
 if ~isempty(s) && ~isempty(e)
+    s(s == 1) = []; % for interpolating
+    e(s == 1) = [];
+    s(e == npoints) = [];
+    e(e == npoints) = [];
+    
     if s(1) > e(1)
         e(1) = [];
     end
