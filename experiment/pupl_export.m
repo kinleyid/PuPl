@@ -1,5 +1,5 @@
 
-function pupl_export_2(EYE, varargin)
+function pupl_export(EYE, varargin)
 % Export data to a CSV spreadsheet
 %
 % Inputs
@@ -414,6 +414,10 @@ for dataidx = 1:numel(EYE)
             for setidx = 1:n_sets
                 curr_set = EYE(dataidx).epochset(setidx);
                 epoch_selector = struct('set', curr_set.name);
+                % Getting epoch data through calls to pupl_epoch_getdata is
+                % slow, so we'll create a cache to speed things up; we'll
+                % check the cache before calling pupl_epoch_getdata.
+                cache = [];
                 epochidx = pupl_epoch_sel(EYE(dataidx), epoch_selector);
                 curr_info = struct(...
                     'recording', EYE(dataidx).name,...
@@ -446,23 +450,38 @@ for dataidx = 1:numel(EYE)
                     curr_info.(sprintf('recording_cond_%s', cond{:})) = true;
                 end
                 % Compute percentage rejected
-                [~, rej] = pupl_epoch_getdata(...
+                [curr_epoch_data, rej, ~, ~, rel_lats] = pupl_epoch_getdata(...
                     EYE(dataidx),...
                     epoch_selector,...
                     'pupil', 'both');
+                % Based on the way pupl_epoch_getdata is written, we know
+                % that rel_lats will be a cell array whose elements are all
+                % the same---so we can safely just select the first one
+                rel_lats = rel_lats{1};
+                cache = setfield(cache, 'pupil', 'both', curr_epoch_data);
                 curr_info.n_rejected = sum(rej);
                 % Get the "response values"---the actual epoch data or the
                 % statistics computed on these
                 switch args.which
                     case 'data'
+                        %{
+                        Previously, a second call to pupl_epoch_getdata was
+                        done, but this is redundant---we're guaranteed to
+                        have already gotten the relevant data, rejection
+                        info, and relative latencies from the previous
+                        call. The data is stored in the cache and the other
+                        epoch-specific stuff is just stored in local
+                        variables.
                         [curr_epoch_data, rej, ~, ~, rel_lats] = pupl_epoch_getdata(...
                             EYE(dataidx),...
                             epoch_selector,...
                             'pupil', 'both');
+                        %}
+                        curr_epoch_data = cache.pupil.both; % Use the cache
                         curr_epoch_data = cell2mat(curr_epoch_data);
                         curr_response_values = struct(...
                             'data', nanmean_bc(curr_epoch_data(~rej, :), 1),...
-                            'rel_lats', rel_lats{1}); % We can safely take just the first one here---they'll all be the same
+                            'rel_lats', rel_lats); % We can safely take just the first one here---they'll all be the same
                     case 'stats'
                         n_stats = numel(args.cfg.stats);
                         n_windows = numel(args.cfg.sub_epoch_windows);
@@ -478,15 +497,15 @@ for dataidx = 1:numel(EYE)
                             if isempty(data_type)
                                 data_type = {'pupil' 'both'};
                             end
-                            [curr_epoch_data, rej, ~, ~, rel_lats] = pupl_epoch_getdata(...
-                                EYE(dataidx),...
-                                epoch_selector,...
-                                data_type{:});
-                            % Based on the way pupl_epoch_getdata is
-                            % written, we know that rel_lats will be a cell
-                            % array whose elements are all the same---so we
-                            % can safely just select the first one
-                            rel_lats = rel_lats{1};
+                            if isnonemptyfield(cache, data_type{:})
+                                curr_epoch_data = getfield(cache, data_type{:});
+                            else
+                                curr_epoch_data = pupl_epoch_getdata(...
+                                    EYE(dataidx),...
+                                    epoch_selector,...
+                                    data_type{:});
+                                cache = setfield(cache, data_type{:}, curr_epoch_data);
+                            end
                             curr_epoch_data = cell2mat(curr_epoch_data);
                             curr_epoch_data = curr_epoch_data(~rej, :);
                             % Compute the current statistic on the
