@@ -5,8 +5,8 @@ function idx = pupl_event_select(events, selector)
 % Inputs:
 %   events: struct
 %       structure array of events with name, time, and event variables
-%   epoch_selector: struct
-%       struct with fields "idx", "regexp", or "evar"
+%   selector: struct
+%       struct with fields "by" and "sel", produced by pupl_UI_event_select
 % Output:
 %   idx: logical array
 %       logical indices of selected epochs

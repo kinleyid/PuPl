@@ -8,7 +8,11 @@ function selector = pupl_UI_event_select(EYE, varargin)
 %       prompt to display to user
 % Output:
 %   selector: struct
-%       an event selector (see pupl_event_select)
+%       has fields "by" and "sel". "by" takes on a value of 'idx',
+%       'regexp', or 'evar' depending on whether events are to be selected
+%       by index, regular expression, or event variable. "sel" specifies
+%       the particular indices, regular expression, or event variable
+%       filter to be used. This selector is then used by pupl_event_select
 
 args = pupl_args2struct(varargin, {
     'prompt' 'Select events'

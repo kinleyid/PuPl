@@ -195,7 +195,7 @@ switch args.method
         data = mergefields(EYE, 'epoch', 'event', 'rt');
         rejidx = data > parsedatastr(args.cfg.thresh, data);
     case 'event'
-        rejidx = pupl_event_sel(pupl_epoch_get(EYE, [], '_ev'), args.cfg.sel);
+        rejidx = pupl_epoch_sel(EYE, args.cfg.sel);
     case 'sacc'
         rejidx = cellfun(@(x) any(x(1:end-1) == 's'), pupl_epoch_getdata(EYE, [], 'interstices'));
     case 'undo'

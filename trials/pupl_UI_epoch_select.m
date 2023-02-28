@@ -8,7 +8,11 @@ function selector = pupl_UI_epoch_select(EYE, varargin)
 %       prompt to display to user
 % Output:
 %   selector: struct
-%       an epoch selector (see pupl_epoch_select)
+%       an epoch selector with one attribute called "idx", "type", or
+%       "filt" depending on whether epochs are to be selected by index,
+%       epoch name, or something to do with timelocking events. If the
+%       latter, "filt" is an event selector to be used as input by
+%       pupl_event_select
 
 args = pupl_args2struct(varargin, {
     'prompt' 'Select epochs'

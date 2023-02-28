@@ -6,7 +6,7 @@ function idx = pupl_epoch_sel(EYE, epoch_selector)
 %   EYE: struct
 %       eye data (single struct, not array)
 %   epoch_selector: struct
-%       see pupl_epoch_selector
+%       produced by pupl_UI_epoch_select
 % Output:
 %   idx: logical array
 %       indices of selected epochs
