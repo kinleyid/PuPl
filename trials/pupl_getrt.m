@@ -31,7 +31,7 @@ if isempty(args.onsets)
 end
 
 if isempty(args.responses)
-    args.responses = pupl_UI_event_select(EYE, 'Which events mark a response?');
+    args.responses = pupl_UI_event_select(EYE, 'prompt', 'Which events mark a response?');
     if isempty(args.responses)
         return
     end
