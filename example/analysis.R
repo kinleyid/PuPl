@@ -84,30 +84,30 @@ anova(
 ## Wide-format downsampled data
 
 # Load the data
-ds_wide <- read.csv(file.path(exp_path, 'ds-wide.csv'))
+data_wide <- read.csv(file.path(exp_path, 'data-wide.csv'))
 
 # Order the difficulty factor
-ds_wide$epoch_set <- factor(ds_wide$epoch_set,
+data_wide$epoch_set <- factor(data_wide$epoch_set,
                             levels = c('Easy',
                                        'Medium',
                                        'Hard'))
 
 # Find the columns that contain the data
-data_cols <- grep('t\\d+', colnames(ds_wide))
+data_cols <- grep('t\\[\\d', colnames(data_wide))
 
 # Find where the 3 conditions are most differentiated
 all_Fs <- c()
 all_ps <- c()
 for (curr_col in data_cols) {
   # Create the new column that we will be analyzing
-  ds_wide$curr <- ds_wide[, curr_col]
+  data_wide$curr <- data_wide[, curr_col]
   # Run the anova
   aov.res <- summary(
     aov(
       curr ~
         epoch_set +
         Error(recording),
-      data = ds_wide
+      data = data_wide
     )
   )
   # Collect the statistics
@@ -118,32 +118,14 @@ for (curr_col in data_cols) {
 # Dunn-Bonferroni-correct the p-values
 all_ps <- all_ps * length(all_ps)
 
-# Read window times from column names
+# Read timestamps from column names using a regular expression
 # Column names have the following format:
-#   t<window number>_<window start>_<window end>
-# We will use a regular expression to read the window numbers, starts, and ends
-win_ns <- as.numeric(
-  str_match(
-    colnames(ds_wide)[data_cols],
-    't([0-9]+)'
-  )[, 2]
-)
-win_starts <- as.numeric(
-  str_match(
-    colnames(ds_wide)[data_cols],
-    't[0-9]+_([0-9]+\\.*[0-9]*)'
-  )[, 2]
-)
-win_ends <- as.numeric(
-  str_match(
-    colnames(ds_wide)[data_cols],
-    't[0-9]+_.*_([0-9]+\\.*[0-9]*)'
-  )[, 2]
-)
+#   t[<time>]
+times <- as.numeric(str_match(colnames(data_wide)[data_cols], 't\\[(.*)\\]')[, 2])
 
 # Create a new data frame for plotting
 anova_result <- data.frame(
-  win_start = win_starts,
+  win_start = times,
   F_value = all_Fs,
   p_value = all_ps
 )
@@ -167,7 +149,7 @@ ggplot(anova_result,
   scale_fill_discrete(name = 'Significance\n(Dunn-\nBonferroni-\ncorrected)',
                       limits = c(T, F),
                       labels = c('p < 0.05', 'p > 0.05')) +
-  labs(x = 'Downsampled window start (s)',
+  labs(x = 'Time (s)',
        y = 'Effect of difficulty (F value from repeated measures ANOVA)') +
   theme_classic()
 
@@ -203,7 +185,7 @@ ggplot(ds_long,
                   ymin = mean(y) - sd(y) / sqrt(length(y))
                 )
               }) +
-  labs(x = 'Downsampled window start (s)',
+  labs(x = 'Time (s)',
        y = 'Pupil diameter (arbitrary units, change from baseline)',
        color = 'Difficulty') +
   theme_classic()
@@ -224,7 +206,7 @@ ggplot(mapping = aes(x = win_start,
               mapping = aes(color = epoch_set),
               method = loess,
               formula = y ~ x) +
-  labs(x = 'Downsampled window start (s)',
+  labs(x = 'Time (s)',
        y = 'Pupil diameter (arbitrary units, change from baseline)',
        color = 'Difficulty')
 
@@ -272,7 +254,7 @@ ggplot() +
                   ymin = mean(y) - sd(y) / sqrt(length(y))
                 )
               }) +
-  labs(x = 'Downsampled window start (s)',
+  labs(x = 'Time (s)',
        y = 'Pupil diameter (arbitrary units, change from baseline)',
        color = 'Difficulty',
        fill = 'Significance') +
