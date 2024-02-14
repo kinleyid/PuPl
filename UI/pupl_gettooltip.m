@@ -9,10 +9,14 @@ switch elem
         txt = sprintf('Enter a regular expression to select items from the list above. After writing a regular expression, press Enter to highlight the items that match it. You can learn about regular expressions by:\n1) going to PuPl''s Help menu\n2) typing "help regexp" into the Command Window');
     case 'regexp:button'
         txt = 'Click this button to select the items matched by the regular expression in the text box above. To see which items match the current regular expression, click the text box above and then press Enter.';
+    case 'regexp:capture'
+        txt = 'Input regular expression capture';
     case 'eventvar:edit'
         txt = 'Enter an event variable filter to select events from the list. For example, if you have computed reaction times, you can select events where the reaction time was less than 100ms using "#rt < 0.1"';
     case 'eventvar:button'
         txt = 'Click this button to select the items matched by the regular expression in the text box above. To see which items match the current regular expression, click the text box above and then press Enter.';
+    case 'eventvar:compute'
+        txt = 'Write an expression that will return the new event variable. Variables preceded by "#" (e.g. "#rt") will interpreted as event variables to be read from the event to which a new event variable is being added.';
     case 'highlighted:button'
         txt = sprintf('Click this button to select the currently highlighted items. Note: this operation will be logged in the processing history such that, if you were to rerun the pipeline, only the particular highlighted values would be selected. This may make your processing pipeline less reusable.');
     case 'datastr'

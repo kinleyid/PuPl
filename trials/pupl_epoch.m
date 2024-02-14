@@ -107,9 +107,8 @@ if isempty(args.other)
                 otherwise
                     return
             end
-            args.other.event = pupl_event_selUI(...
-                EYE,...
-                sprintf('Epoch %s are defined relative to which events?', pick_next));
+            args.other.event = pupl_UI_event_select(EYE,...
+                'prompt', sprintf('Epoch %s are defined relative to which events?', pick_next));
             if isempty(args.other.event)
                 return
             end

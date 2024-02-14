@@ -161,9 +161,7 @@ else
                             otherwise
                                 return
                         end
-                        args.other.event = pupl_event_UIget(...
-                            [EYE.event],...
-                            sprintf('Baseline %s are defined relative to which events?', pick_next));
+                        args.other.event = pupl_UI_event_select(EYE, 'prompt',sprintf('Baseline %s are defined relative to which events?', pick_next));
                         if isempty(args.other.event)
                             return
                         end
@@ -171,18 +169,18 @@ else
             otherwise
                 switch args.len
                     case 'fixed'
-                        args.timelocking = pupl_event_UIget(mergefields(EYE, 'event'), 'Baselines are defined relative to which events?');
+                        args.timelocking = pupl_UI_event_select(EYE, 'prompt', 'Baselines are defined relative to which events?');
                         if isempty(args.timelocking)
                             return
                         end
                         args.other.event = args.timelocking;
                         args.other.when = 'after';
                     case 'variable'
-                        args.timelocking = pupl_event_UIget(mergefields(EYE, 'event'), 'Baseline beginnings are defined relative to which events?');
+                        args.timelocking = pupl_UI_event_select(EYE, 'prompt', 'Baseline beginnings are defined relative to which events?');
                         if isempty(args.timelocking)
                             return
                         end
-                        args.other.event = pupl_event_UIget(mergefields(EYE, 'event'), 'Baseline ends are defined relative to which events?');
+                        args.other.event = pupl_UI_event_select(EYE, 'prompt', 'Baseline ends are defined relative to which events?');
                         if isempty(args.other.event)
                             return
                         end

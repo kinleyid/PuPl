@@ -29,9 +29,9 @@ outargs = [];
 args = parseargs(varargin{:});
 
 if isempty(args.epoch)
-    args.epoch = pupl_epoch_selUI(...
+    args.epoch = pupl_UI_epoch_select(...
         EYE,...
-        'Which epochs should no longer be normalized?');
+        'prompt', 'Which epochs should no longer be normalized?');
     if isempty(args.epoch)
         return
     end

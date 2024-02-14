@@ -48,6 +48,9 @@ function outargs = getargs(EYE, varargin)
 outargs = [];
 args = parseargs(varargin{:});
 
+args.method = 're'
+args.sel = struct('sel', {'!V'}, 'by', {'regexp'})
+
 if isempty(args.method)
     opts = {'Regexp capture from event name' 'Based on other event variables'};
         sel = listdlgregexp(...
@@ -80,8 +83,10 @@ if isempty(args.expr)
     switch args.method
         case 're'
             q = 'Input regular expression capture';
+            pupl_UI_evar_add(EYE, 'sel', args.sel, 'type', 're', 'prompt', 'Read event variables');
         case 'evar'
             q = sprintf('Write an expression that will return the new event variable\n\nVariables preceded by "#" (e.g. "#rt") will interpreted as event variables to be read from the event to which a new event variable is being added.');
+            pupl_UI_evar_add(EYE, 'sel', args.sel, 'type', 're', 'prompt', 'Compute event variables');
     end
     % To do: make this a dynamic GUI that lets you preview the results of
     % the regexp capture

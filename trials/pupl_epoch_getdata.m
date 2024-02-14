@@ -4,7 +4,7 @@ function [data, isrej, lims, bef_aft, rel_lats] = pupl_epoch_getdata(EYE, vararg
 %
 % Inputs:
 %   varargin{1}: struct
-%       see pupl_epoch_selector
+%       see pupl_UI_epoch_select
 %   varargin(2:end): strings
 %       data fields to get data from
 % Outputs:
