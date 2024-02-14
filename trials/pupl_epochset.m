@@ -60,7 +60,6 @@ if isempty(args.setdescriptions)
         else
             currname = currname{:};
         end
-        % currmembers = pupl_epoch_selUI(EYE, sprintf('Epochs in set "%s"', currname));
         currmembers = pupl_UI_epoch_select(EYE,...
             'prompt', sprintf('Epochs in set "%s"', currname));
         if isempty(currmembers)
