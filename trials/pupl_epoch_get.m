@@ -4,7 +4,7 @@ function out = pupl_epoch_get(EYE, epoch_selector, varargin)
 %
 % Inputs:
 %   epoch_selector: struct or cell
-%       if struct: a structure to select epochs (see pupl_epoch_selector)
+%       if struct: a structure to select epochs (see pupl_UI_epoch_select)
 %       if cell: a cell containing the epochs themselves
 %   varargin{1}: string
 %       attribute to get (if empty, get epochs themselves)
