@@ -35,7 +35,7 @@ try
 end
 % Get rid of little starts along the x axis
 set(findobj(gca, 'Type', 'line'), 'Marker', 'none');
-xlabel('Blink duration')
+xlabel(pupl_getunits(EYE))
 ylabel('Data count')
 legend(h, eye_names{:});
 
