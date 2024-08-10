@@ -62,16 +62,16 @@ function EYE = sub_align(EYE, varargin)
 
 args = parseargs(varargin{:});
 
-event_idx = pupl_event_select(mergefields(EYE, 'eventlog', 'event'), args.attach);
+event_idx = pupl_event_select(mergefields(EYE, 'eventlog'), args.attach);
 if args.overwrite
-    EYE.event = [];
+    EYE.event = struct([]);
     max_uniqid = 0;
 else
     max_uniqid = max([EYE.event.uniqid]);
 end
 
 curr_events = EYE.event;
-new_events = EYE.eventlog.event(event_idx);
+new_events = EYE.eventlog(event_idx);
 
 % Add new uniqids
 new_ids = 1:numel(new_events);

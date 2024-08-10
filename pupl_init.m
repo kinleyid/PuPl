@@ -166,7 +166,7 @@ if ~any(strcmpi(varargin, 'noweb'))
     end
 end
 
-fprintf('\n\tSee the "Citations" tab for the papers PuPl is based on.\n\tPlease cite all the procedures you use to process your data.\n\tIf you encounter any difficulties using this software,\n\tplease contact Isaac Kinley (kinleyid@mcmaster.ca).\n\n');
+fprintf('\n\tSee the "Citations" tab for the papers PuPl is based on.\n\tPlease cite all the procedures you use to process your data.\n\tIf you encounter any difficulties using this software,\n\tplease contact Isaac Kinley (isaac.kinley@gmail.com).\n\n');
 
 if newer_version
     fprintf('! A new version (%s) is out, download it from github.com/kinleyid/PuPl\n', newestVersion);

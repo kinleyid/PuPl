@@ -10,7 +10,7 @@ args = pupl_args2struct(varargin, {
     'loadfunc' []; % required
     'filepath' []; % optional
     'filefilt' '*.*' % optional
-    'type' 'eye' % 'eye', 'event', or 'both'--required
+    'type' 'eye' % 'eye' or 'event'--required
     'bids' false % use BIDS?
     'args' {} % cell array of extra args passed to loadfunc
     'native' false % load data from pupl's built-in format?
@@ -122,7 +122,7 @@ else
         end
         [~, fname, ext] = fileparts(filepath{dataidx});
         fprintf('Loading %s%s...', fname, ext);
-        
+
         % Load data
         if args.native
             switch num_type
@@ -138,17 +138,21 @@ else
                 EYE = 0;
                 return
             end
-            curr = pupl_checkraw(...
-                data,...
-                'src', filepath{dataidx},...
-                'type', args.type);
-            curr.getraw = sprintf('@() pupl_import(''type'', %s, ''loadfunc'', %s, ''filepath'', %s, ''args'', %s)',... % Brings us back here next time
-                all2str(args.type),...
-                all2str(args.loadfunc),...
-                all2str(filepath{dataidx}),...
-                all2str(args.args));
+            if strcmp(args.type, 'eye')
+                curr = pupl_checkraw(...
+                    data,...
+                    'src', filepath{dataidx},...
+                    'type', args.type);
+                curr.getraw = sprintf('@() pupl_import(''type'', %s, ''loadfunc'', %s, ''filepath'', %s, ''args'', %s)',... % Brings us back here next time
+                    all2str(args.type),...
+                    all2str(args.loadfunc),...
+                    all2str(filepath{dataidx}),...
+                    all2str(args.args));
+            else
+                curr = data;
+            end
         end
-        
+
         % Concatenate eye data to output or attach event log to eye data
         switch num_type
             case 1

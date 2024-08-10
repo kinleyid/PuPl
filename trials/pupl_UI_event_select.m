@@ -23,7 +23,7 @@ table_data = [];
 for dataidx = 1:numel(EYE)
     % Get data for UI table for each recording
     if args.from_log
-        events = mergefields(EYE(dataidx), 'eventlog', 'event');
+        events = mergefields(EYE(dataidx), 'eventlog');
     else
         events = mergefields(EYE(dataidx), 'event');
     end

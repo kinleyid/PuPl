@@ -1,5 +1,5 @@
 
-function eventlog = pupl_mat(fullpath)
+function eventlog = pupl_mat(fullpath, varargin)
 
 % Load event logs in .mat format
 m = load(fullpath);
