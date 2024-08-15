@@ -157,9 +157,7 @@ if ~any(strcmpi(varargin, 'noweb'))
         % Old method
         % newestVersion = urlread('https://kinleyid.github.io/pupl/latest-version.txt');
         % New method
-        jsonStr = urlread('https://kinleyid.github.io/pupl/latest-version.txt');
-        versionInCell = regexp(json_str, '"tag_name":\s*"v([^"]+)"', 'tokens');
-        newestVersion = versionInCell{1}{1};
+        newestVersion = strtrim(urlread('https://raw.githubusercontent.com/kinleyid/PuPl/master/version.txt'));
         if ~strcmp(newestVersion, currVersion)
             fprintf('New version found: (%s)\n', newestVersion);
             newer_version = true;
@@ -174,7 +172,7 @@ end
 fprintf('\n\tSee the "Citations" tab for the papers PuPl is based on.\n\tPlease cite all the procedures you use to process your data.\n\tIf you encounter any difficulties using this software,\n\tplease contact Isaac Kinley (isaac.kinley@gmail.com).\n\n');
 
 if newer_version
-    fprintf('! A new version (%s) is out, download it from github.com/kinleyid/PuPl\n', newestVersion);
+    fprintf('! A new version (%s) is out, download it from https://github.com/kinleyid/pupl/releases/latest\n', newestVersion);
 end
 
 end
