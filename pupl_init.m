@@ -154,7 +154,12 @@ newer_version = false;
 if ~any(strcmpi(varargin, 'noweb'))
     fprintf('Checking web for new version...\n\t(use ''pupl init noweb'' to skip this)\n\t');
     try
-        newestVersion = urlread('https://kinleyid.github.io/pupl/latest-version.txt');
+        % Old method
+        % newestVersion = urlread('https://kinleyid.github.io/pupl/latest-version.txt');
+        % New method
+        jsonStr = urlread('https://kinleyid.github.io/pupl/latest-version.txt');
+        versionInCell = regexp(json_str, '"tag_name":\s*"v([^"]+)"', 'tokens');
+        newestVersion = versionInCell{1}{1};
         if ~strcmp(newestVersion, currVersion)
             fprintf('New version found: (%s)\n', newestVersion);
             newer_version = true;

@@ -15,7 +15,7 @@ data_fmt = cell(1, ncols);
 % Check which columns need to be converted to numeric
 for colidx = 1:ncols
     curr_col = data(2:end, colidx);
-    if ~all(cellfun(@isstr, curr_col))
+    if ~all(cellfun(@ischar, curr_col))
         curr_col(cellfun(@isempty, curr_col)) = {nan};
         as_str = num2str([curr_col{:}]);
         data(2:end, colidx) = regexp(as_str, '\s+', 'split');

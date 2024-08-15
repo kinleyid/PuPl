@@ -22,8 +22,9 @@ nwin = numel(win);
 nconv = nwin + numel(data) - 1;
 wasnan = isnan(data);
 data(wasnan) = 0;
+% win = win/sum(win); % Normalize here instead of dividing the FT
 winx = fft(win(:)', nconv);
-winx = winx / max(winx);
+% winx = winx / max(winx);
 datax = fft(data(:)', nconv);
 mult = winx.*datax;
 data = ifft(mult);
@@ -45,5 +46,7 @@ if omitnan
     data = data ./ sums;
     data(wasnan) = nan;
 end
+
+data = real(data); % In Octave, the imaginary parts are still returned even if they're all 0
 
 end

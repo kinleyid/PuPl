@@ -73,7 +73,7 @@ if ~strcmp(args.avfunc, 'median')
             args.win = lower(winOptions{sel});
         end
         if strcmp(args.win, 'gaussian')
-            args.cfg.sd = inputdlg(sprintf('Half width of Gaussian window (in standard deviations)\n'));
+            args.cfg.sd = inputdlg(sprintf('Half width of Gaussian window, in standard deviations\n(i.e., how many standard deviations should the Gaussian go to in either direction?)'), '', 1, {'3'});
             if isempty(args.cfg.sd)
                 return
             else
@@ -131,7 +131,7 @@ if strcmp(args.avfunc, 'median')
     end
 end
 
-fprintf('Filter width is %d data points\n', width); 
+fprintf('Filter width is %d data points\n', width);
 
 switch lower(args.win)
     case 'flat'
@@ -186,15 +186,19 @@ for stream = reshape(fieldnames(EYE.(args.data)), 1, [])
             fprintf('\n');
         case 'mean'
             % FFT-based convolution
+            convd = fft_conv(EYE.(args.data).(stream{:}), kern/sum(kern), 'omitnan');
+            EYE.(args.data).(stream{:}) = convd;
+            %{
             printprog('setmax', 8);
             nkern = numel(kern);
             nconv = nkern + EYE.ndata - 1;
             data = EYE.(args.data).(stream{:});
             wasnan = isnan(data);
             data(wasnan) = 0;
+            kern = kern / sum(kern); %!!!!!!!!!
             kernx = fft(kern(:)', nconv);
             printprog(1);
-            kernx = kernx / max(kernx);
+            kernx = kernx; % / max(kernx);
             datax = fft(data(:)', nconv);
             printprog(2);
             mult = kernx.*datax;
@@ -222,6 +226,7 @@ for stream = reshape(fieldnames(EYE.(args.data)), 1, [])
             printprog(8);
             data(wasnan) = nan;
             EYE.(args.data).(stream{:}) = data;
+            %}
     end
 end
 
