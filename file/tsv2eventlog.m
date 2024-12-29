@@ -15,7 +15,7 @@ times = cellstr2num(contents(:, strcmp(cols, 'onset')));
 
 events = struct(...
     'time', num2cell(times),...
-    'type', contents(:, strcmp(cols, 'trial_type')));
+    'name', contents(:, strcmp(cols, 'trial_type')));
 
 rts = cellstr2num(contents(:, strcmp(cols, 'response_time')));
 if ~isempty(rts)
