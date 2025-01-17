@@ -37,10 +37,12 @@ if isfield(data, 'pupil')
     data.ur = ur;
     % Assign unique ID's to events
     if isfield(data, 'event')
-        uniqid = num2cell(1:numel(data.event));
-        [data.event.uniqid] = uniqid{:};
+        if numel(data.event) > 0
+            uniqid = num2cell(1:numel(data.event));
+            [data.event.uniqid] = uniqid{:};
+        end
     end
-    
+
     % Check units
     def_pupil = {'size' 'unknown units' 'assumed absolute'};
     def_gaze = {'unknown units' 'unknown relative position'};
@@ -64,9 +66,9 @@ data.src = args.src;
 [~, n] = fileparts(data.src);
 data.name = n;
 if strcmp(args.type, 'eye')
-    
+
     % Handle monocular recordings
-    
+
     sides = {'left' 'right'};
     fields = {
         {'ur' 'pupil'}
@@ -81,21 +83,21 @@ if strcmp(args.type, 'eye')
             end
         end
     end
-    
+
     % Reshape data fields to 1 x n
-    
+
     for ii1 = 1:numel(sides)
         for ii2 = 1:numel(fields)
             data = setfield(data, fields{ii2}{:}, sides{ii1},...
                 reshape(getfield(data, fields{ii2}{:}, sides{ii1}), 1, []));
         end
     end
-    
+
     for field = {'gaze' 'pupil'}
         data.(field{:}) = getfromur(data, field{:});
     end
     data = pupl_check(data);
-    
+
 else
     data.event = data.event(:);
 end
