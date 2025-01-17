@@ -17,13 +17,13 @@ first_2_chars = regexp(rawdata, '^..', 'match', 'lineanchors', 'dotexceptnewline
 nonheader_lines = lines(~strcmp(first_2_chars, '##'));
 
 % Column names are first data line
-colnames_line = nonheader_lines(1);
-colnames = lower(regexp(colnames_line, '\t', 'split'){1});
+colnames_line = nonheader_lines{1};
+colnames = lower(regexp(colnames_line, '\t', 'split'));
 % Data lines are remainder
 noncolnames_lines = nonheader_lines(2:end);
 
 % MSG lines contain "MSG"
-  msg_line_idx = ~cellfun(@isempty, regexp(noncolnames_lines, 'MSG', 'once'));
+msg_line_idx = ~cellfun(@isempty, regexp(noncolnames_lines, 'MSG', 'once'));
 msg_lines = noncolnames_lines(msg_line_idx); % These will be read as events later
 data_lines = noncolnames_lines(~msg_line_idx);
 
